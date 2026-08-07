@@ -1,4 +1,15 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
+import {
+  getDinamicas, saveDinamica, deleteDinamica,
+  getSesiones, saveSesion,
+  getGrupos, saveGrupo, deleteGrupo,
+  getPlaylists, savePlaylists as savePlaylistsDB,
+  getEfectos, saveEfectos as saveEfectosDB,
+  abrirSala, cerrarSala, getSalaStatus,
+  enviarProposta, getPropostas, subscribeToPropostas, getHistorialSalas,
+  getUserStimuli, addUserStimulus,
+  trackGenSupa, trackMinsSupa,
+} from './db.js';
 
 const ThemeCtx = createContext(null);
 
@@ -173,7 +184,7 @@ function TabGenerar({onStimulus}){
     const baseFiltered=base.filter((_,i)=>!deleted.includes(i)).map((t,i)=>edits[base.indexOf(t)]||t);
     return [...baseFiltered,...userAdds];
   };
-  const generate=cat=>{const list=getList(cat);const raw=pick(list);const isIdea=raw.endsWith("👥");const word=isIdea?raw.slice(0,-2):raw;const s={cat,word,isIdea};setSel(s);setSpotlight(s);onStimulus?.({word,category:cat});trackGen(cat);};
+  const generate=cat=>{const list=getList(cat);const raw=pick(list);const isIdea=raw.endsWith("👥");const word=isIdea?raw.slice(0,-2):raw;const s={cat,word,isIdea};setSel(s);setSpotlight(s);onStimulus?.({word,category:cat});trackGen(cat);trackGenSupa(cat);};
   const generateRandom=()=>generate(CATS[Math.floor(Math.random()*CATS.length)]);
   const generateScene=()=>{
     const newScene=sceneCats.map(cat=>{
@@ -472,8 +483,10 @@ function TabSesiones({onLaunchTimer}){
   const [view,setView]=useState("plantillas");
   const [sesion,setSesion]=useState(null);
   const [editMode,setEditMode]=useState(false);
+  const [showPomodoro,setShowPomodoro]=useState(false);
   const [historial,setHistorial]=useState(()=>ls.get("impro_sesiones",[]));
   const [notas,setNotas]=useState("");
+  useEffect(()=>{getSesiones().then(setHistorial);},[]);
   const load=p=>{setSesion({id:UID(),nombre:p.nombre,bloques:p.bloques.map((b,i)=>({...b,id:i,completado:false}))});setView("sesion");};
   const toggle=id=>setSesion(s=>({...s,bloques:s.bloques.map(b=>b.id===id?{...b,completado:!b.completado}:b)}));
   const upd=(id,f,v)=>setSesion(s=>({...s,bloques:s.bloques.map(b=>b.id===id?{...b,[f]:v}:b)}));
@@ -481,7 +494,13 @@ function TabSesiones({onLaunchTimer}){
   const add=()=>sesion&&setSesion(s=>({...s,bloques:[...s.bloques,{id:Date.now(),tipo:"entrenamiento",titulo:"Nuevo bloque",duracion:15,notas:"",completado:false}]}));
   const total=sesion?.bloques.reduce((a,b)=>a+(parseInt(b.duracion)||0),0)||0;
   const done=sesion?.bloques.filter(b=>b.completado).length||0;
-  const guardar=()=>{trackMins(total);const entry={id:UID(),nombre:sesion.nombre,fecha:new Date().toLocaleDateString("es-ES"),minutos:total,completados:done,notas,bloques:sesion.bloques};const h=[entry,...historial].slice(0,30);setHistorial(h);ls.set("impro_sesiones",h);setSesion(null);setNotas("");setView("historial");};
+  const guardar=async()=>{
+    trackMinsSupa(total);
+    const entry={id:UID(),nombre:sesion.nombre,fecha:new Date().toLocaleDateString("es-ES"),minutos:total,completados:done,notas,bloques:sesion.bloques};
+    await saveSesion(entry);
+    setHistorial(h=>[entry,...h].slice(0,30));
+    setSesion(null);setNotas("");setView("historial");
+  };
 
   if(showPomodoro)return(<ModoPomodoroImpro onClose={()=>setShowPomodoro(false)} audio={{playBell:()=>{try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.5,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.5);o.start();o.stop(ctx.currentTime+1.5);}catch(e){}}}}/>);
   if(view==="historial")return(<div>
@@ -644,6 +663,7 @@ function TabGuia(){
   const [sel,setSel]=useState(null);
   const [showForm,setShowForm]=useState(false);
   const [favDins,setFavDins]=useState(()=>ls.get("impro_fav_dins",[]));
+  useEffect(()=>{getDinamicas(DINAMICAS_BASE).then(setDinamicas);},[]);
   const toggleFavDin=id=>{const u=favDins.includes(id)?favDins.filter(x=>x!==id):[...favDins,id];setFavDins(u);ls.set("impro_fav_dins",u);};
   const isFav=id=>favDins.includes(id);
   const [editId,setEditId]=useState(null);
@@ -653,12 +673,12 @@ function TabGuia(){
   const lista=dinamicas.filter(d=>(filtro==="★ Favoritas"?isFav(d.id):(filtro==="todos"||d.tipo===filtro))&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())||d.descripcion.toLowerCase().includes(search.toLowerCase())));
   const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);setSel(null);};
   const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);setSel(null);};
-  const saveForm=()=>{
-    const d={...form,id:editId||Date.now(),duracion:Number(form.duracion),pasos:form.pasos.split("\n").map(s=>s.trim()).filter(Boolean),variantes:form.variantes.split("\n").map(s=>s.trim()).filter(Boolean)};
+  const saveForm=async()=>{
+    const d={...form,id:editId||String(Date.now()),duracion:Number(form.duracion),pasos:form.pasos.split("\n").map(s=>s.trim()).filter(Boolean),variantes:form.variantes.split("\n").map(s=>s.trim()).filter(Boolean)};
     const updated=editId?dinamicas.map(x=>x.id===editId?d:x):[...dinamicas,d];
-    setDinamicas(updated);ls.set("impro_dinamicas_v2",updated);setShowForm(false);
+    setDinamicas(updated);await saveDinamica(d);setShowForm(false);
   };
-  const deleteDin=id=>{if(!confirm("¿Eliminar esta dinámica?"))return;const u=dinamicas.filter(d=>d.id!==id);setDinamicas(u);ls.set("impro_dinamicas_v2",u);setSel(null);};
+  const deleteDin=async id=>{if(!confirm("¿Eliminar esta dinámica?"))return;const u=dinamicas.filter(d=>d.id!==id);setDinamicas(u);await deleteDinamica(id);setSel(null);};
 
   if(showForm)return(<div>
     <button onClick={()=>setShowForm(false)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button>
@@ -748,6 +768,7 @@ function TabShow({audio,onRundownChange}){
   const {T}=useTheme();const S=mkS(T);
   const [playlists,setPlaylists]=useState(()=>ls.get("impro_playlists_v2",PLAYLISTS_DEFAULT));
   const [efectos,setEfectos]=useState(()=>ls.get("impro_efectos_v2",EFECTOS_DEFAULT));
+  useEffect(()=>{getPlaylists(PLAYLISTS_DEFAULT).then(setPlaylists);getEfectos(EFECTOS_DEFAULT).then(setEfectos);},[]);
   const [activeMusic,setActiveMusic]=useState(null);
   const [showMusicEdit,setShowMusicEdit]=useState(false);
   const [showEfectosEdit,setShowEfectosEdit]=useState(false);
@@ -775,8 +796,8 @@ function TabShow({audio,onRundownChange}){
   },[metroOn,bpm,beats]);
 
   const stopMetro=()=>{setMetroOn(false);clearInterval(metroRef.current);beatRef.current=0;setBeatCount(0);};
-  const savePlaylists=u=>{setPlaylists(u);ls.set("impro_playlists_v2",u);};
-  const saveEfectos=u=>{setEfectos(u);ls.set("impro_efectos_v2",u);};
+  const savePlaylists=u=>{setPlaylists(u);savePlaylistsDB(u);};
+  const saveEfectos=u=>{setEfectos(u);saveEfectosDB(u);};
 
   const playEfecto=ef=>{
     if(ef.url){try{const a=new Audio(ef.url);a.play();}catch(e){}}
@@ -970,7 +991,8 @@ function TabGrupos({grupoActivo,setGrupoActivo}){
   const [miembro,setMiembro]=useState("");
   const [editGrupo,setEditGrupo]=useState(null);
   const sesiones=ls.get("impro_sesiones",[]);
-  const save=g=>{setGrupos(g);ls.set("impro_grupos",g);};
+  useEffect(()=>{getGrupos().then(setGrupos);},[]);
+  const save=g=>{setGrupos(g);g.forEach(x=>saveGrupo(x));};
   const crear=()=>{if(!nombre.trim())return;const g={id:UID(),nombre:nombre.trim(),miembros:[],fechaCreacion:new Date().toLocaleDateString("es-ES"),color:["#e040fb","#40c4ff","#69f0ae","#ffd740","#ff6e40"][grupos.length%5]};save([...grupos,g]);setNombre("");setView("lista");};
   const eliminar=id=>{save(grupos.filter(g=>g.id!==id));if(grupoActivo?.id===id){setGrupoActivo(null);ls.set("impro_grupo_activo",null);}};
   const activar=g=>{const nuevo=g?.id===grupoActivo?.id?null:g;setGrupoActivo(nuevo);};
@@ -1056,7 +1078,7 @@ function TabQR(){
   const [mode,setMode]=useState("idle");
   const [salaCode,setSalaCode]=useState("");
   const [propuestas,setPropuestas]=useState([]);
-  const [historial,setHistorial]=useState(()=>ls.get("impro_historial",[]));
+  const [historial,setHistorial]=useState([]);
   const [texto,setTexto]=useState("");
   const [catSel,setCatSel]=useState("PROFESIÓN");
   const [nivelSel,setNivelSel]=useState("simple");
@@ -1064,14 +1086,58 @@ function TabQR(){
   const [loading,setLoading]=useState(false);
   const [joinCode,setJoinCode]=useState("");
   const [error,setError]=useState("");
-  const pollRef=useRef(null);
+  const unsubRef=useRef(null);
   const genCode=()=>Math.random().toString(36).substring(2,6).toUpperCase();
-  useEffect(()=>{const params=new URLSearchParams(window.location.search);const sala=params.get("sala");if(sala){setJoinCode(sala.toUpperCase());setSalaCode(sala.toUpperCase());setMode("send");}return()=>clearInterval(pollRef.current);},[]);
-  const abrirSala=async()=>{const code=genCode();setSalaCode(code);setPropuestas([]);setMode("open");try{await window.storage.set(`sala:${code}:meta`,JSON.stringify({open:true,ts:Date.now()}),true);await window.storage.set(`sala:${code}:props`,JSON.stringify([]),true);}catch(e){}pollRef.current=setInterval(async()=>{try{const res=await window.storage.get(`sala:${code}:props`,true);if(res)setPropuestas(JSON.parse(res.value)||[]);}catch(e){}},3000);};
-  const cerrarSala=async()=>{clearInterval(pollRef.current);const entry={sala:salaCode,ts:Date.now(),fecha:new Date().toLocaleDateString("es-ES"),propuestas};const h=[entry,...historial].slice(0,50);setHistorial(h);ls.set("impro_historial",h);try{await window.storage.set(`sala:${salaCode}:meta`,JSON.stringify({open:false,ts:Date.now()}),true);}catch{}setSalaCode("");setMode("idle");};
-  const unirseASala=async()=>{if(!joinCode.trim())return;setLoading(true);setError("");try{const res=await window.storage.get(`sala:${joinCode.toUpperCase()}:meta`,true);if(!res){setError("Sala no encontrada.");setLoading(false);return;}const meta=JSON.parse(res.value);if(!meta.open){setError("Esta sala ya está cerrada.");setLoading(false);return;}setSalaCode(joinCode.toUpperCase());setMode("send");}catch(e){setError("Error al conectar.");}setLoading(false);};
-  const enviarPropuesta=async()=>{if(!texto.trim())return;setLoading(true);try{const res=await window.storage.get(`sala:${salaCode}:props`,true);const current=res?JSON.parse(res.value):[];await window.storage.set(`sala:${salaCode}:props`,JSON.stringify([...current,{texto:texto.trim(),cat:catSel,nivel:nivelSel,ts:Date.now()}]),true);setEnviado(true);setTexto("");}catch(e){setError("Error al enviar.");}setLoading(false);};
-  const aceptarPropuesta=p=>{const ideas=ls.get("impro_ideas_v2",{});const u={...ideas,[p.cat||"PROFESIÓN"]:[...(ideas[p.cat||"PROFESIÓN"]||[]),{text:p.texto,nivel:p.nivel||"simple",ts:p.ts}]};ls.set("impro_ideas_v2",u);};
+
+  useEffect(()=>{
+    getHistorialSalas().then(setHistorial);
+    const params=new URLSearchParams(window.location.search);
+    const sala=params.get("sala");
+    if(sala){setJoinCode(sala.toUpperCase());setSalaCode(sala.toUpperCase());setMode("send");}
+    return()=>{if(unsubRef.current)unsubRef.current();};
+  },[]);
+
+  const abrirSalaQR=async()=>{
+    const code=genCode();
+    setSalaCode(code);setPropuestas([]);setMode("open");
+    await abrirSala(code);
+    // Cargar propostas existentes
+    const existing=await getPropostas(code);
+    setPropuestas(existing);
+    // Subscribir a novas propostas en tempo real
+    unsubRef.current=subscribeToPropostas(code,nova=>{
+      setPropuestas(prev=>[...prev,nova]);
+    });
+  };
+
+  const cerrarSalaQR=async()=>{
+    if(unsubRef.current){unsubRef.current();unsubRef.current=null;}
+    await cerrarSala(salaCode,propuestas);
+    const h=await getHistorialSalas();
+    setHistorial(h);
+    setSalaCode("");setMode("idle");
+  };
+
+  const unirseASala=async()=>{
+    if(!joinCode.trim())return;
+    setLoading(true);setError("");
+    const status=await getSalaStatus(joinCode.toUpperCase());
+    if(!status){setError("Sala no encontrada.");setLoading(false);return;}
+    if(!status.open){setError("Esta sala ya está cerrada.");setLoading(false);return;}
+    setSalaCode(joinCode.toUpperCase());setMode("send");
+    setLoading(false);
+  };
+
+  const enviarPropuesta=async()=>{
+    if(!texto.trim())return;
+    setLoading(true);
+    const ok=await enviarProposta(salaCode,texto.trim(),catSel,nivelSel);
+    if(ok){setEnviado(true);setTexto("");}
+    else setError("Error al enviar.");
+    setLoading(false);
+  };
+
+  const aceptarPropuesta=p=>{const ideas=ls.get("impro_ideas_v2",{});const u={...ideas,[p.cat||"PROFESIÓN"]:[...(ideas[p.cat||"PROFESIÓN"]||[]),{text:p.texto,nivel:p.nivel||"simple",ts:p.created_at}]};ls.set("impro_ideas_v2",u);};
   const qrUrl=`${window.location.href.split("?")[0]}?sala=${salaCode}`;
 
   if(mode==="send")return(<div style={{minHeight:"100vh",background:T.bg,fontFamily:"'Inter',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
@@ -1108,7 +1174,7 @@ function TabQR(){
   if(mode==="open")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem",alignItems:"center",flexWrap:"wrap"}}>
       <h2 style={{margin:0,fontWeight:900,fontSize:"0.95rem",flex:1,color:T.text}}>Sala <span style={{color:T.accent,letterSpacing:"0.1em"}}>{salaCode}</span></h2>
-      <button onClick={cerrarSala} style={S.btn("#ff6e40")}>⏹ Cerrar sala</button>
+      <button onClick={cerrarSalaQR} style={S.btn("#ff6e40")}>⏹ Cerrar sala</button>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"1.25rem",marginBottom:"1rem",alignItems:"start"}}>
       <div style={{...S.panel,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.65rem",padding:"1rem"}}><QRCode value={qrUrl} size={150}/><p style={{color:T.accent,fontFamily:"monospace",fontSize:"1.2rem",fontWeight:900,letterSpacing:"0.2em",margin:0}}>{salaCode}</p></div>
@@ -1131,7 +1197,7 @@ function TabQR(){
       <div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
         <p style={S.ptitle(T.accent)}>🎭 Soy el facilitador</p>
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"1rem"}}>Abre una sala. El público elige la categoría y el nivel (simple/plus) al enviar.</p>
-        <button onClick={abrirSala} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>📺 Abrir sala</button>
+        <button onClick={abrirSalaQR} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>📺 Abrir sala</button>
       </div>
       <div style={{...S.panel,border:"1.5px solid #69f0ae33"}}>
         <p style={S.ptitle("#69f0ae")}>👥 Soy del público</p>
@@ -1468,6 +1534,55 @@ function TabIdioma(){
     {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducciones borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducciones</button>}
   </div>);
 }
+
+const MANUAL_SECCIONES=[
+  {id:"generar",emoji:"✦",titulo:"Xerador de estímulos",intro:"Xera palabras e escenas para os exercicios de impro.",items:[
+    {t:"Categorías",d:"Escolle entre PROFESIÓN, LUGAR, EMOCIÓN, ACCIÓN, OBXECTO, SUPERPODER, ESTILO, DUDA, CONFESIÓN, FRASE e NOME. Cada categoría ten nivel Simple e Plus."},
+    {t:"Escena",d:"Combina varias categorías para xerar unha escena completa. Usa as plantillas rápidas ou escolle manualmente. O botón 🔒 conxela elementos para rexenerar só o resto."},
+    {t:"Favoritos",d:"Garda estímulos que queiras recuperar. Accede dende a pestana ♡."},
+    {t:"Spotlight",d:"Toca o estímulo xerado para mostralo en pantalla completa ao grupo."},
+  ]},
+  {id:"reto",emoji:"⚡",titulo:"Xerador de retos",intro:"Combina unha dinámica cos seus estímulos nun reto listo para usar.",items:[
+    {t:"Como funciona",d:"Selecciona nivel Simple ou Plus e preme Xerar reto. A app escolle unha dinámica aleatoria e asígnalle estímulos compatibles."},
+    {t:"Nivel",d:"Simple usa estímulos máis accesibles. Plus usa estímulos máis complexos e creativos."},
+  ]},
+  {id:"sesiones",emoji:"📋",titulo:"Planificación de sesións",intro:"Organiza e rexistra as túas sesións de ensaio.",items:[
+    {t:"Plantillas",d:"Carga unha plantilla predefinida (90min estándar, 30min calentamento, Show Harold, Sesión musical) e modifícaa ao teu gusto."},
+    {t:"Bloques",d:"Cada sesión ten bloques con tipo, título, duración e notas. Podes reordenalos, editarlos e marcarlos como completados."},
+    {t:"Timer",d:"Cada bloque ten un botón ▶ timer que lanza o temporizador flotante coa duración exacta."},
+    {t:"Historial",d:"As sesións gardadas quedan no historial con data, minutos e bloques completados."},
+    {t:"Modo ensayo 🍅",d:"Modo Pomodoro adaptado a impro. Escolle entre presets Estándar, Show ou Maratón e deixa que a app xestione os tempos automaticamente."},
+  ]},
+  {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Catálogo completo de exercicios e xogos de impro.",items:[
+    {t:"Filtros",d:"Filtra por tipo: calentamento, entrenamento, xogo, formato, musical, pausa, peche. Ou busca por nome e descrición."},
+    {t:"Favoritas",d:"Marca dinámicas como favoritas con ★ para acceder rapidamente."},
+    {t:"Crear e editar",d:"Podes engadir as túas propias dinámicas ou editar as existentes. Inclúe pasos, obxectivo e variantes."},
+  ]},
+  {id:"show",emoji:"🎭",titulo:"Control de show",intro:"Ferramentas para xestionar un show en directo.",items:[
+    {t:"Rundown",d:"Crea o guión do show con actuacións ordenadas. Marca cada actuación como activa ou completada."},
+    {t:"Músicas",d:"Xestiona playlists por ambiente (tensión, comedia, drama...). Soporta URLs de YouTube embed e arquivos MP3."},
+    {t:"Efectos",d:"Botóns de efectos de son con síntese de audio. Podes asignar URLs MP3 propias."},
+    {t:"Metrónomo",d:"Control de BPM con visualización de pulsos. Útil para escenas musicais."},
+    {t:"Xeradores",d:"Xera nomes de show, sortea parellas, equipos e roles para o elenco."},
+  ]},
+  {id:"grupos",emoji:"👥",titulo:"Xestor de grupos",intro:"Organiza os teus grupos de impro e as súas estadísticas.",items:[
+    {t:"Crear grupo",d:"Crea un grupo co seu nome, cor e membros. O grupo activo úsase para rastrexar estadísticas por grupo."},
+    {t:"Estadísticas",d:"Cada grupo acumula datos de categorías xeradas e sesións feitas."},
+  ]},
+  {id:"qr",emoji:"📱",titulo:"QR para o público",intro:"Recolle propostas do público en tempo real.",items:[
+    {t:"Abrir sala",d:"Xera un código de 4 letras e un QR. O público escanea e envía propostas dende o seu móbil sen necesidade de conta."},
+    {t:"Unirse",d:"O público introduce o código ou escanea o QR para acceder á pantalla de envío."},
+    {t:"Propostas",d:"As propostas aparecen en tempo real grazas a Supabase Realtime. Podes aceptar propostas para engadilas ás ideas do grupo."},
+  ]},
+  {id:"admin",emoji:"🔐",titulo:"Panel de administración",intro:"Xestión avanzada da app. PIN por defecto: 1234.",items:[
+    {t:"Editar estímulos",d:"Engade, edita ou elimina estímulos de calquera categoría e nivel. Os cambios gárdanse en Supabase."},
+  ]},
+  {id:"ajustes",emoji:"⚙️",titulo:"Axustes",intro:"Configuración xeral da app.",items:[
+    {t:"Idioma",d:"Cambia entre Castelán, Galego e Inglés. Os campos sen traducir mostran o castelán por defecto."},
+    {t:"Tradución",d:"Exporta un JSON con todo o contido traducible e impórtao de volta trala tradución."},
+    {t:"Tema",d:"Alterna entre modo escuro (por defecto) e modo claro dende o botón ☀️/🌙 da cabeceira."},
+  ]},
+];
 
 function TabManual(){
   const {T}=useTheme();const S=mkS(T);
