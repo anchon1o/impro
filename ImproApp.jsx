@@ -1590,51 +1590,62 @@ function AdminConfig({T,S}){
 
 
 const MANUAL_SECCIONES=[
-  {id:"generar",emoji:"✦",titulo:"Xerador de estímulos",intro:"Xera palabras e escenas para os exercicios de impro.",items:[
-    {t:"Categorías",d:"Escolle entre PROFESIÓN, LUGAR, EMOCIÓN, ACCIÓN, OBXECTO, SUPERPODER, ESTILO, DUDA, CONFESIÓN, FRASE e NOME. Cada categoría ten nivel Simple e Plus."},
-    {t:"Escena",d:"Combina varias categorías para xerar unha escena completa. Usa as plantillas rápidas ou escolle manualmente. O botón 🔒 conxela elementos para rexenerar só o resto."},
-    {t:"Favoritos",d:"Garda estímulos que queiras recuperar. Accede dende a pestana ♡."},
-    {t:"Spotlight",d:"Toca o estímulo xerado para mostralo en pantalla completa ao grupo."},
+  {id:"generar",emoji:"✦",titulo:"Xerador de estímulos",intro:"1.653 estímulos reais do grupo de impro. Xera palabras e escenas para exercicios.",items:[
+    {t:"Categorías",d:"11 categorías: PROFESIÓN, LUGAR, EMOCIÓN, ACCIÓN, OBXECTO, SUPERPODER, ESTILO, DUDA, CONFESIÓN, FRASE e NOME. Cada unha ten nivel Simple (máis accesible) e Plus (máis creativo)."},
+    {t:"Escena combinada",d:"Pestana 🎬 Escena: combina varias categorías para xerar unha escena completa. Usa plantillas rápidas (Clásica, Conflito, Absurda...) ou escolle manualmente. O botón 🔒 conxela elementos para rexenerar só o resto."},
+    {t:"Spotlight",d:"Toca calquera estímulo xerado para mostralo en pantalla completa ao grupo. Ideal para que todos o vexan á vez."},
+    {t:"Favoritos",d:"Garda estímulos con ♡. Accede a todos os gardados dende a pestana ♡."},
   ]},
-  {id:"reto",emoji:"⚡",titulo:"Xerador de retos",intro:"Combina unha dinámica cos seus estímulos nun reto listo para usar.",items:[
-    {t:"Como funciona",d:"Selecciona nivel Simple ou Plus e preme Xerar reto. A app escolle unha dinámica aleatoria e asígnalle estímulos compatibles."},
-    {t:"Nivel",d:"Simple usa estímulos máis accesibles. Plus usa estímulos máis complexos e creativos."},
+  {id:"reto",emoji:"⚡",titulo:"Xerador de retos",intro:"Combina unha dinámica cos seus estímulos nun reto listo para usar de inmediato.",items:[
+    {t:"Como funciona",d:"Selecciona nivel Simple ou Plus e preme Xerar reto. A app escolle unha dinámica aleatoria da biblioteca e asígnalle estímulos compatibles automaticamente."},
+    {t:"O reto",d:"Ves a dinámica, os estímulos asociados e un resumo: 'Fai X usando Y en Z minutos'. Un clic e tes un exercicio completo."},
   ]},
-  {id:"sesiones",emoji:"📋",titulo:"Planificación de sesións",intro:"Organiza e rexistra as túas sesións de ensaio.",items:[
-    {t:"Plantillas",d:"Carga unha plantilla predefinida (90min estándar, 30min calentamento, Show Harold, Sesión musical) e modifícaa ao teu gusto."},
-    {t:"Bloques",d:"Cada sesión ten bloques con tipo, título, duración e notas. Podes reordenalos, editarlos e marcarlos como completados."},
-    {t:"Timer",d:"Cada bloque ten un botón ▶ timer que lanza o temporizador flotante coa duración exacta."},
-    {t:"Historial",d:"As sesións gardadas quedan no historial con data, minutos e bloques completados."},
-    {t:"Modo ensayo 🍅",d:"Modo Pomodoro adaptado a impro. Escolle entre presets Estándar, Show ou Maratón e deixa que a app xestione os tempos automaticamente."},
+  {id:"sesiones",emoji:"📋",titulo:"Planificación de sesións",intro:"Organiza, rexistra e cronometra as túas sesións de ensaio.",items:[
+    {t:"Plantillas",d:"4 plantillas predefinidas: Entrenamento estándar 90min, Calentamento rápido 30min, Show Harold 60min e Sesión musical 75min. Cárgaas e modifícaas ao teu gusto."},
+    {t:"Bloques",d:"Cada sesión ten bloques con tipo (calentamento, entrenamento, xogo...), título, duración e notas. Marca como completados durante a sesión."},
+    {t:"Timer integrado",d:"Cada bloque ten ▶ timer que lanza o temporizador flotante (barra inferior) coa duración exacta do bloque."},
+    {t:"Historial",d:"As sesións gardadas quedan en Supabase con data, minutos totais e bloques completados."},
+    {t:"Modo ensaio 🍅",d:"Pomodoro adaptado a impro. Presets: Estándar, Show e Maratón. A app xestiona os tempos e avisa con son ao cambiar de bloque."},
   ]},
-  {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Catálogo completo de exercicios e xogos de impro.",items:[
-    {t:"Filtros",d:"Filtra por tipo: calentamento, entrenamento, xogo, formato, musical, pausa, peche. Ou busca por nome e descrición."},
-    {t:"Favoritas",d:"Marca dinámicas como favoritas con ★ para acceder rapidamente."},
-    {t:"Crear e editar",d:"Podes engadir as túas propias dinámicas ou editar as existentes. Inclúe pasos, obxectivo e variantes."},
+  {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Máis de 85 exercicios e xogos de impro documentados.",items:[
+    {t:"Filtros e busca",d:"Filtra por tipo (calentamento, entrenamento, xogo, formato, musical, pausa, peche) ou busca por nome e descrición."},
+    {t:"Favoritas",d:"Marca dinámicas con ★ para acceder rapidamente. Filtro especial '★ Favoritas'."},
+    {t:"Detalle completo",d:"Cada dinámica ten descrición, pasos numerados, obxectivo pedagóxico e variantes. Toca calquera para ver o detalle completo."},
+    {t:"Crear e editar",d:"Engade as túas propias dinámicas con todos os campos. Edita ou elimina as existentes."},
   ]},
-  {id:"show",emoji:"🎭",titulo:"Control de show",intro:"Ferramentas para xestionar un show en directo.",items:[
-    {t:"Rundown",d:"Crea o guión do show con actuacións ordenadas. Marca cada actuación como activa ou completada."},
-    {t:"Músicas",d:"Xestiona playlists por ambiente (tensión, comedia, drama...). Soporta URLs de YouTube embed e arquivos MP3."},
-    {t:"Efectos",d:"Botóns de efectos de son con síntese de audio. Podes asignar URLs MP3 propias."},
-    {t:"Metrónomo",d:"Control de BPM con visualización de pulsos. Útil para escenas musicais."},
-    {t:"Xeradores",d:"Xera nomes de show, sortea parellas, equipos e roles para o elenco."},
+  {id:"show",emoji:"🎭",titulo:"Control de show",intro:"Panel completo para xestionar un show en directo.",items:[
+    {t:"Audio — pistas múltiples",d:"Pestana 🎵 Audio: engade pistas de música simultáneas con volume independente por pista. Soporta YouTube embed e MP3 directo. Parar todas cun clic."},
+    {t:"Efectos de son",d:"Pestana 🔊 Efectos: 8 efectos con síntese de audio (aplausos, campá, buzzer...). Asigna URLs MP3 propias para usar os teus sons."},
+    {t:"Metrónomo",d:"Pestana 🥁 Metro: control de BPM de 30 a 240, visualización de pulsos, presets rápidos. Útil para escenas musicais."},
+    {t:"Rundown",d:"Pestana 📋 Rundown: guión do show con actuacións ordenadas. Marca como activa (▶) ou completada (✓). Reordena con ▲▼."},
+    {t:"Sorteo",d:"Pestana 🎲 Sorteo: sorteo de parellas, equipos e roles. Xerador de número 1-9 e letra aleatoria."},
   ]},
-  {id:"grupos",emoji:"👥",titulo:"Xestor de grupos",intro:"Organiza os teus grupos de impro e as súas estadísticas.",items:[
-    {t:"Crear grupo",d:"Crea un grupo co seu nome, cor e membros. O grupo activo úsase para rastrexar estadísticas por grupo."},
-    {t:"Estadísticas",d:"Cada grupo acumula datos de categorías xeradas e sesións feitas."},
+  {id:"grupos",emoji:"👥",titulo:"Xestor de grupos",intro:"Xestiona os teus grupos de impro con membros e estadísticas.",items:[
+    {t:"Crear grupo",d:"Nome, cor e lista de membros. O grupo activo úsase para rastrexar estatísticas específicas por grupo."},
+    {t:"Activar grupo",d:"Só un grupo pode estar activo á vez. As categorías xeradas rexístranse nas estatísticas do grupo activo."},
+    {t:"Estatísticas",d:"Cada grupo acumula datos de categorías xeradas e número de sesións realizadas."},
   ]},
-  {id:"qr",emoji:"📱",titulo:"QR para o público",intro:"Recolle propostas do público en tempo real.",items:[
-    {t:"Abrir sala",d:"Xera un código de 4 letras e un QR. O público escanea e envía propostas dende o seu móbil sen necesidade de conta."},
-    {t:"Unirse",d:"O público introduce o código ou escanea o QR para acceder á pantalla de envío."},
-    {t:"Propostas",d:"As propostas aparecen en tempo real grazas a Supabase Realtime. Podes aceptar propostas para engadilas ás ideas do grupo."},
+  {id:"qr",emoji:"📱",titulo:"QR para o público",intro:"Recolle propostas do público en tempo real durante o show.",items:[
+    {t:"Configurar sala",d:"Preme '⚙️ Configurar e abrir sala'. Escolle preguntas dos presets ou escribe as túas propias (ex: 'Dime un secreto inconfesable'). Podes ter 1 ou máis preguntas por sala."},
+    {t:"Abrir sala",d:"Xérase un código de 4 letras e un QR. O público escanea e ve a pregunta concreta que ti configuraches. Sen necesidade de conta nin instalación."},
+    {t:"Tempo real",d:"As propostas aparecen en tempo real grazas a Supabase Realtime. Acepta propostas para engadilas ás ideas do grupo."},
+    {t:"Unirse como público",d:"O público introduce o código de 4 letras ou escanea o QR. Ve a pregunta e envía a súa resposta."},
   ]},
-  {id:"admin",emoji:"🔐",titulo:"Panel de administración",intro:"Xestión avanzada da app. PIN por defecto: 1234.",items:[
-    {t:"Editar estímulos",d:"Engade, edita ou elimina estímulos de calquera categoría e nivel. Os cambios gárdanse en Supabase."},
+  {id:"admin",emoji:"🔐",titulo:"Panel de administración",intro:"Xestión avanzada. PIN por defecto: 1234.",items:[
+    {t:"Estímulos",d:"Engade, edita ou elimina estímulos de calquera categoría e nivel. Os cambios gárdanse en Supabase e son visibles en todos os dispositivos."},
+    {t:"Dinámicas",d:"Lista completa de dinámicas con filtro por tipo. Elimina as que non queiras."},
+    {t:"Estatísticas",d:"Totais de estímulos xerados, minutos de ensaio e sesións. Gráfica das categorías máis usadas."},
+    {t:"Config",d:"Cambia o PIN de admin. Borra datos locais (favoritos, historial). Información da app."},
   ]},
-  {id:"ajustes",emoji:"⚙️",titulo:"Axustes",intro:"Configuración xeral da app.",items:[
-    {t:"Idioma",d:"Cambia entre Castelán, Galego e Inglés. Os campos sen traducir mostran o castelán por defecto."},
-    {t:"Tradución",d:"Exporta un JSON con todo o contido traducible e impórtao de volta trala tradución."},
-    {t:"Tema",d:"Alterna entre modo escuro (por defecto) e modo claro dende o botón ☀️/🌙 da cabeceira."},
+  {id:"ajustes",emoji:"⚙️",titulo:"Axustes",intro:"Configuración xeral e tradución da interface.",items:[
+    {t:"Idioma",d:"Cambia entre Castelán (base), Galego e Inglés. Os campos sen traducir mostran o castelán por defecto."},
+    {t:"Tradución",d:"Exporta un JSON con todo o contido traducible e impórtao de volta despois de traducilo. Fluxo: exportar → traducir con Claude → importar."},
+    {t:"Tema",d:"Alterna entre modo escuro (por defecto, fondo #0d0d0d) e modo claro dende o botón ☀️/🌙 da cabeceira."},
+  ]},
+  {id:"universo",emoji:"🌍",titulo:"Universo Impro",intro:"Directorio de compañías, festivais, escolas e persoas do mundo do impro.",items:[
+    {t:"Contido",d:"Máis de 20 entradas: compañías de referencia mundial (Second City, UCB, iO, Loose Moose...), festivais internacionais, escolas e figuras históricas como Keith Johnstone, Viola Spolin e Del Close."},
+    {t:"Filtros",d:"Filtra por tipo: Compañías, Festivais, Escolas, Persoas, Proxectos. Busca por nome, descrición ou etiquetas."},
+    {t:"Detalle",d:"Cada entrada ten descrición completa, ubicación, etiquetas temáticas e enlace á web oficial."},
   ]},
 ];
 
@@ -1781,6 +1792,195 @@ function TabUniverso(){
 }
 
 
+
+function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onClose}){
+  const [td,setTd]=useState(timerDisplay||0);
+  const [notif,setNotif]=useState(null);
+  const [prevActive,setPrevActive]=useState(null);
+  const [showTimer,setShowTimer]=useState(true);
+  const ref=useRef(null);
+  useEffect(()=>setTd(timerDisplay||0),[timerDisplay]);
+  useEffect(()=>{if(timerRunning){ref.current=setInterval(()=>setTd(p=>Math.max(0,p-1)),1000);}else clearInterval(ref.current);return()=>clearInterval(ref.current);},[timerRunning]);
+
+  useEffect(()=>{
+    if(!timerRunning)return;
+    if(td===30)showNotif("⏱ 30 segundos","#ffd740");
+    else if(td===10)showNotif("⚠️ 10 segundos","#ff6e40");
+    else if(td===0&&timerDisplay>0)showNotif("⏹ Tiempo agotado","#ff6e40");
+  },[td,timerRunning]);
+
+  const activeAct=rundown?.find(a=>a.activa);
+  useEffect(()=>{
+    if(activeAct?.id!==prevActive){
+      if(activeAct)showNotif(`▶ ${activeAct.nombre}`,"#e040fb");
+      setPrevActive(activeAct?.id||null);
+    }
+  },[activeAct?.id]);
+
+  const showNotif=(msg,col)=>{
+    setNotif({msg,col,id:Date.now()});
+    setTimeout(()=>setNotif(null),3500);
+  };
+
+  const urgent=td>0&&td<10,warning=td>0&&td<30;
+  const timerColor=urgent?"#ff6e40":warning?"#ffd740":"#e040fb";
+
+  return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:"'Inter',system-ui,sans-serif"}}>
+    <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Cerrar</button>
+
+    {/* Notificación flotante */}
+    {notif&&<div key={notif.id} style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",background:notif.col+"22",border:`1.5px solid ${notif.col}`,borderRadius:12,padding:"0.65rem 1.5rem",zIndex:20,animation:"pubIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",backdropFilter:"blur(12px)",whiteSpace:"nowrap"}}>
+      <span style={{color:notif.col,fontWeight:700,fontSize:"0.95rem"}}>{notif.msg}</span>
+    </div>}
+
+    {/* Área principal: estímulo */}
+    <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem",gap:"1.5rem"}}>
+      {stimulus?(
+        <>
+          <p style={{color:"#e040fb",fontFamily:"monospace",fontSize:"clamp(0.8rem,2vw,1rem)",letterSpacing:"0.3em",margin:0,textTransform:"uppercase",opacity:0.8}}>{stimulus.category}</p>
+          <h1 style={{fontSize:"clamp(3rem,10vw,8rem)",fontWeight:900,color:"#fff",textShadow:"0 0 80px rgba(224,64,251,0.5)",lineHeight:1.05,maxWidth:"85vw",textAlign:"center",margin:0,animation:"pubIn 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{stimulus.word}</h1>
+        </>
+      ):(
+        <div style={{textAlign:"center"}}>
+          <p style={{fontSize:"5rem",margin:"0 0 1rem"}}>🎭</p>
+          <p style={{color:"#333",fontSize:"1.2rem",fontWeight:700}}>improApp</p>
+          <p style={{color:"#222",fontSize:"0.85rem"}}>Pantalla de proxección</p>
+        </div>
+      )}
+    </div>
+
+    {/* Barra inferior */}
+    <div style={{background:"#0a0a0a",borderTop:"1px solid #1a1a1a",padding:"0.85rem 1.5rem",display:"flex",alignItems:"center",gap:"1.5rem",flexWrap:"wrap"}}>
+
+      {/* Timer */}
+      <div style={{display:"flex",alignItems:"center",gap:"0.85rem",cursor:"pointer"}} onClick={()=>setShowTimer(!showTimer)}>
+        {showTimer&&<div style={{fontFamily:"monospace",fontWeight:900,fontSize:"clamp(1.8rem,5vw,3rem)",color:timerColor,textShadow:urgent?`0 0 30px ${timerColor}`:"none",animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",lineHeight:1,minWidth:"4ch"}}>{FMT(td)}</div>}
+        {timerRunning&&<div style={{width:8,height:8,borderRadius:"50%",background:timerColor,boxShadow:`0 0 12px ${timerColor}`,animation:"urgentPulse 1s ease infinite alternate"}}/>}
+      </div>
+
+      {/* Actuación activa */}
+      {activeAct&&<div style={{flex:1}}>
+        <p style={{color:"#555",fontSize:"0.65rem",letterSpacing:"0.15em",margin:"0 0 0.15rem",fontFamily:"monospace"}}>EN ESCENA</p>
+        <p style={{color:"#40c4ff",fontWeight:900,fontSize:"clamp(0.9rem,2.5vw,1.3rem)",margin:0}}>{activeAct.nombre}{activeAct.formato&&<span style={{color:"#40c4ff88",fontWeight:400,fontSize:"0.8em",marginLeft:"0.5rem"}}>{activeAct.formato}</span>}</p>
+      </div>}
+
+      {/* Rundown mini */}
+      {rundown&&rundown.length>0&&<div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",maxWidth:"40vw"}}>
+        {rundown.map((act,i)=><div key={act.id} style={{background:act.activa?"#40c4ff22":act.hecho?"#1a1a1a":"#111",border:`1px solid ${act.activa?"#40c4ff":act.hecho?"#222":"#1a1a1a"}`,borderRadius:6,padding:"0.2rem 0.55rem",fontSize:"0.7rem",color:act.activa?"#40c4ff":act.hecho?"#333":"#444",textDecoration:act.hecho?"line-through":"none",transition:"all 0.3s"}}>{i+1}. {act.nombre.slice(0,12)}{act.nombre.length>12?"...":""}</div>)}
+      </div>}
+    </div>
+  </div>);
+}
+
+
+function TabAjustes(){
+  const {T}=useTheme();const S=mkS(T);
+  const [msg,setMsg]=useState("");
+  const [stats,setStats]=useState(()=>ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
+  const [view,setView]=useState("stats");
+  const exportAll=()=>{
+    const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo","impro_theme"];
+    const data={version:"v7",fecha:new Date().toISOString()};
+    keys.forEach(k=>{const v=ls.get(k,null);if(v!==null)data[k]=v;});
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;
+    a.download=`improapp_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;a.click();URL.revokeObjectURL(url);
+    setMsg("✓ Exportado");setTimeout(()=>setMsg(""),3000);
+  };
+  const importAll=(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{try{
+      const data=JSON.parse(ev.target.result);if(!data.version){setMsg("❌ Archivo no válido");return;}
+      const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo"];
+      let count=0;keys.forEach(k=>{if(data[k]!==undefined){ls.set(k,data[k]);count++;}});
+      setMsg(`✓ Importado: ${count} secciones. Recarga para aplicar.`);
+      setStats(ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
+    }catch{setMsg("❌ Error al leer el archivo");}};
+    reader.readAsText(file);e.target.value="";
+  };
+  const resetStats=()=>{if(!confirm("¿Borrar todas las estadísticas?"))return;ls.set("impro_stats",{cats:{},dins:{},total:0,mins:0});setStats({cats:{},dins:{},total:0,mins:0});};
+  const topCats=Object.entries(stats.cats||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topDins=Object.entries(stats.dins||{}).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxCat=topCats[0]?.[1]||1;const maxDin=topDins[0]?.[1]||1;
+  return(<div>
+    <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem"}}>
+      {[["stats","📊 Estadísticas"],["backup","💾 Backup"],["idioma","🌐 Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
+    </div>
+    {view==="stats"&&<div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1.25rem"}}>
+        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:"#40c4ff"},{label:"En Guía",val:ls.get("impro_dinamicas_v2",DINAMICAS_BASE).length,col:"#69f0ae"}].map((s,i)=>(
+          <div key={i} style={{...S.panel,textAlign:"center",border:`1.5px solid ${s.col}44`}}><div style={{color:s.col,fontWeight:900,fontSize:"1.6rem",lineHeight:1}}>{s.val}</div><div style={{color:T.text3,fontSize:"0.7rem",marginTop:"0.25rem"}}>{s.label}</div></div>
+        ))}
+      </div>
+      {(stats.total||0)===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem",color:T.text4}}><p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📊</p><p style={{margin:0}}>Genera estímulos y usa dinámicas para ver estadísticas aquí.</p></div>}
+      {topCats.length>0&&<><p style={S.ptitle(T.accent)}>Categorías más generadas</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1.25rem"}}>
+        {topCats.map(([cat,n])=>(<div key={cat} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",width:90,flexShrink:0}}>{CAT_ICONS[cat]||"◆"} {cat}</span><div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${(n/maxCat)*100}%`,background:T.accent,borderRadius:4,transition:"width 0.5s"}}/></div><span style={{color:T.accent,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
+      </div></>}
+      {topDins.length>0&&<><p style={S.ptitle("#ffd740")}>Dinámicas más usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
+        {topDins.map(([din,n])=>(<div key={din} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{din}</span><div style={{width:80,height:8,background:T.bg3,borderRadius:4,overflow:"hidden",flexShrink:0}}><div style={{height:"100%",width:`${(n/maxDin)*100}%`,background:"#ffd740",borderRadius:4}}/></div><span style={{color:"#ffd740",fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
+      </div></>}
+      {(stats.total||0)>0&&<button onClick={resetStats} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem"}}>↺ Borrar estadísticas</button>}
+    </div>}
+    {view==="idioma"&&<TabIdioma/>}
+    {view==="backup"&&<div>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #69f0ae33"}}><p style={S.ptitle("#69f0ae")}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos tus datos: sesiones, grupos, dinámicas, ideas, favoritos, playlists y estadísticas.</p><button onClick={exportAll} style={{...S.btn("#69f0ae","#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #40c4ff33"}}><p style={S.ptitle("#40c4ff")}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un archivo exportado anteriormente. Recarga la página tras importar.</p><label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
+      {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.85rem",marginBottom:"0.75rem"}}>{msg}</div>}
+
+    </div>}
+  </div>);
+}
+
+function TabIdioma(){
+  const {T}=useTheme();const S=mkS(T);
+  const {lang,setLang}=useLang();
+  const [msg,setMsg]=useState("");
+  const LANGS=[["es","🇪🇸 Español"],["gl","🏴 Galego"],["en","🇬🇧 English"]];
+
+  const exportForTranslation=()=>{
+    const data=buildTranslationExport();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=url;a.download=`improapp_traduccion_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;
+    a.click();URL.revokeObjectURL(url);
+    setMsg("✓ Exportado. Pásalo a Claude para traducir los campos vacíos.");
+    setTimeout(()=>setMsg(""),5000);
+  };
+
+  const importTranslation=(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(!data.meta){setMsg("❌ Archivo no válido");return;}importTranslations(data);setMsg("✓ Traducciones importadas correctamente.");}catch{setMsg("❌ Error al leer el archivo");}};
+    reader.readAsText(file);e.target.value="";
+  };
+
+  return(<div>
+    <div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}33`}}>
+      <p style={S.ptitle(T.accent)}>Idioma da interface</p>
+      <div style={{display:"flex",gap:"0.5rem"}}>
+        {LANGS.map(([code,label])=>(
+          <button key={code} onClick={()=>setLang(code)} style={{...S.btn(lang===code?T.accent:T.bg3,lang===code?"#fff":T.text2),flex:1}}>{label}</button>
+        ))}
+      </div>
+      <p style={{color:T.text4,fontSize:"0.75rem",marginTop:"0.6rem"}}>O galego e o inglés amósanse segundo as traducións importadas. Os campos sen traducir aparecen en español.</p>
+    </div>
+    <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #e040fb33"}}>
+      <p style={S.ptitle(T.accent)}>1. Exportar para traducir</p>
+      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Xera un JSON con todo o contido traducible. Pásallo a Claude con: <em style={{color:T.text3}}>"Traduce ao galego e inglés os campos gl e en baleiros."</em></p>
+      <button onClick={exportForTranslation} style={{...S.btn(T.accent),width:"100%"}}>⬇ Exportar para traducir</button>
+    </div>
+    <div style={{...S.panel,border:"1.5px solid #40c4ff33"}}>
+      <p style={S.ptitle("#40c4ff")}>2. Importar tradución</p>
+      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga o JSON devolto. Só enche os campos baleiros, nunca sobreescribe.</p>
+      <label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
+    </div>
+    {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
+    {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducciones borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducciones</button>}
+  </div>);
+}
+
+
 const TABS=[
   {id:"generar",label:"Generar",emoji:"✦"},
   {id:"reto",label:"Reto",emoji:"⚡"},
@@ -1792,32 +1992,88 @@ const TABS=[
   {id:"admin",label:"Admin",emoji:"🔐"},
   {id:"ajustes",label:"Ajustes",emoji:"⚙️"},
   {id:"manual",label:"Manual",emoji:"📘"},
+  {id:"universo",label:"Universo",emoji:"🌍"},
+];
 
-  {id:10,nombre:"Asociación libre",tipo:"calentamiento",duracion:8,participantes:"grupo",descripcion:"Círculo de palabras asociadas sin pensar. La velocidad es clave.",pasos:["Círculo de pie","Una persona dice una palabra","La siguiente dice la primera que le venga","Sin pausas, sin censura"],objetivo:"Desbloqueo mental, conexión grupal",variantes:["Solo con categorías (animales, colores...)","En parejas"]},
-  {id:11,nombre:"Tableau vivant",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"Crear imágenes congeladas con el cuerpo. Sin palabras.",pasos:["Facilitador dice un concepto o situación","Grupo tiene 5 segundos para crear la imagen","Congelar y mantener","Observar y comentar"],objetivo:"Expresión corporal, composición grupal",variantes:["Con luz y sombra","El público adivina"]},
-  {id:12,nombre:"Máquina",tipo:"calentamiento",duracion:12,participantes:"grupo",descripcion:"Construir una máquina humana con sonido y movimiento repetitivo.",pasos:["Una persona empieza con un movimiento y sonido repetitivo","Cada persona se engancha con su propio movimiento","Hasta formar una máquina completa","El facilitador puede pedir acelerar/frenar"],objetivo:"Sincronización, escucha física",variantes:["Máquina con tema (lavadora, cohete...)"]},
-  {id:13,nombre:"Experto absurdo",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Hablar con total autoridad sobre un tema inventado.",pasos:["Sortear tema absurdo","5 minutos de conferencia/entrevista","El grupo hace preguntas serias","El experto responde con lógica interna"],objetivo:"Compromiso, coherencia interna, humor",variantes:["Panel de expertos","Con PowerPoint imaginario"]},
-  {id:14,nombre:"Historia en ronda",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Contar una historia colectiva. Cada persona añade una frase.",pasos:["Sentados en círculo","La primera persona empieza la historia","Cada una añade exactamente una frase","Sin veto, aceptar todo"],objetivo:"Narrativa colectiva, aceptación",variantes:["Una palabra por persona","Con géneros forzados"]},
-  {id:15,nombre:"Cambio de emoción",tipo:"entrenamiento",duracion:18,participantes:"parejas",descripcion:"Sostener una escena cambiando de emoción sin cambiar el texto.",pasos:["Pareja elige una escena cotidiana con texto fijo","Facilitador dice emoción","Actúan la escena con esa emoción","Cambio cada 30 segundos"],objetivo:"Versatilidad emocional, disociación texto/emoción",variantes:["Solo con el cuerpo, sin texto"]},
-  {id:16,nombre:"Propuesta y aceptación",tipo:"entrenamiento",duracion:20,participantes:"parejas",descripcion:"Una persona propone realidades, la otra las acepta sin excepción.",pasos:["A propone una realidad ('Tu eres mi madre'...)","B acepta completamente y añade","Alternar roles cada 3 minutos","Reflexionar sobre el bloqueo habitual"],objetivo:"Aceptación radical, construcción",variantes:["Con 3 personas en rueda"]},
-  {id:17,nombre:"Emoción prestada",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Entrar a una escena con la emoción del actor que se sale.",pasos:["Escena en curso con 2 actores","Uno sale, el nuevo entra con su misma emoción exacta","La historia puede cambiar pero la emoción no","Rotación continua"],objetivo:"Escucha emocional, coherencia",variantes:["Con estados físicos en lugar de emociones"]},
-  {id:18,nombre:"Subtext",tipo:"entrenamiento",duracion:20,participantes:"parejas",descripcion:"La escena tiene un subtexto oculto que el público conoce pero los personajes no.",pasos:["Facilitador susurra al público el subtexto real","Los actores juegan la escena normal","El humor surge de la brecha","Desvelar al final"],objetivo:"Subtexto, doble sentido, presencia",variantes:["El subtexto lo decide el público"]},
-  {id:19,nombre:"Formato corto: Harold",tipo:"formato",duracion:50,participantes:"grupo",descripcion:"El formato largo por excelencia. Tres actos con reincorporaciones.",pasos:["Sugerencia del público","3 monólogos de 45s","Acto 1: 3 escenas en tríos temáticos","Juego de grupo","Acto 2: continuación de las escenas","Juego de grupo","Acto 3: reincorporaciones y cierre"],objetivo:"Narrativa larga, temática, conexiones",variantes:["Harold de 30 min","Harold musical"]},
-  {id:20,nombre:"Formato: Armando",tipo:"formato",duracion:40,participantes:"grupo",descripcion:"Escenas cortas conectadas por un personaje recurrente (Armando).",pasos:["Establecer quién es Armando","Escenas de 3-4 min donde Armando aparece","Cada escena en un contexto diferente","Cierre con todas las líneas unidas"],objetivo:"Personaje recurrente, coherencia narrativa",variantes:["Con 2 personajes recurrentes"]},
-  {id:21,nombre:"Formato: Montaje",tipo:"formato",duracion:35,participantes:"grupo",descripcion:"Escenas temáticas sin continuidad narrativa. Poético y coral.",pasos:["Sugerencia abstracta del público","Escenas cortas de 1-3 min","Sin continuidad obligatoria","Ritmo y contraste entre escenas"],objetivo:"Poesía escénica, variedad tonal",variantes:["Con narrador en off"]},
-  {id:22,nombre:"Musical: Canción del personaje",tipo:"musical",duracion:15,participantes:"grupo",descripcion:"Cada personaje en escena tiene derecho a una canción que exprese su estado interior.",pasos:["Escena normal en curso","Cuando el personaje lo necesita, canta","El grupo hace de coro/acompañamiento","La escena continúa después"],objetivo:"Exteriorización emocional, comicidad",variantes:["Solo en momentos de crisis"]},
-  {id:23,nombre:"Musical: Rap battle",tipo:"musical",duracion:12,participantes:"parejas",descripcion:"Dos personajes resuelven un conflicto a través del rap.",pasos:["Establecer el conflicto entre dos personajes","Rap de 30 segundos cada uno, alternando","El público decide quién gana","Opcional: reconciliación cantada"],objetivo:"Ritmo, argumento, presión creativa",variantes:["Todo el grupo rapeando"]},
-  {id:24,nombre:"Musical: Género musical",tipo:"musical",duracion:18,participantes:"grupo",descripcion:"Una escena normal se convierte en un género musical específico.",pasos:["El público propone escena Y género musical","Actuar la escena con canciones del género","El facilitador puede cambiar el género","Mantener coherencia narrativa"],objetivo:"Versatilidad musical, humor",variantes:["Mezcla de géneros simultáneos"]},
-  {id:25,nombre:"Cierre: Tres palabras",tipo:"cierre",duracion:6,participantes:"grupo",descripcion:"Cada persona elige tres palabras que resuman la sesión o el show.",pasos:["Círculo de pie","Cada persona dice sus tres palabras sin explicación","El facilitador puede hilar un poema final","Aplauso colectivo de cierre"],objetivo:"Integración, reflexión, cierre colectivo",variantes:["Solo una imagen corporal"]},
-  {id:26,nombre:"Cierre: Agradecimiento",tipo:"cierre",duracion:8,participantes:"grupo",descripcion:"Ronda de agradecimientos específicos entre compañeros.",pasos:["Círculo","Cada persona agradece algo concreto a alguien","Sin obligación de respuesta","El facilitador cierra con agradecimiento general"],objetivo:"Vínculo grupal, reconocimiento",variantes:["Escrito en papel y leído en voz alta"]},
-  {id:27,nombre:"Punto de vista",tipo:"entrenamiento",duracion:20,participantes:"grupo",descripcion:"La misma escena desde el punto de vista de personajes distintos.",pasos:["Escena base acordada","Representarla desde el PDV del protagonista","Repetir desde el antagonista","Repetir desde un testigo secundario"],objetivo:"Empatía, narrativa múltiple",variantes:["Con objetos o animales como narradores"]},
-  {id:28,nombre:"Movimiento y texto",tipo:"entrenamiento",duracion:15,participantes:"parejas",descripcion:"El movimiento dicta el texto, no al revés.",pasos:["A empieza a moverse por el espacio","El movimiento sugiere quién es y qué quiere","Hablar solo cuando el cuerpo lo pida","B reacciona de la misma manera"],objetivo:"Fisicalidad, organicidad",variantes:["Con música sin letra"]},
-  {id:29,nombre:"Escenas paralelas",tipo:"formato",duracion:25,participantes:"grupo",descripcion:"Dos escenas simultáneas que se van interfiriendo.",pasos:["Dos grupos inician escenas independientes","El facilitador corta y alterna","Las escenas se mezclan gradualmente","Un cierre unificado"],objetivo:"Edición, ritmo, conexiones temáticas",variantes:["Tres escenas paralelas"]},
-  {id:30,nombre:"Personaje animal",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"Habitar un animal con todo el cuerpo antes de construir un personaje humano.",pasos:["Moverse por el espacio como un animal","Ir incorporando rasgos humanos manteniendo el animal","Encontrarse con otros animales-personajes","Presentaciones cruzadas"],objetivo:"Fisicalidad, desinhibición, personaje",variantes:["Con música que sugiere el ritmo del animal"]},
-  {id:31,nombre:"Escucha activa",tipo:"calentamiento",duracion:8,participantes:"parejas",descripcion:"Parar. Escuchar de verdad. Sin preparar la respuesta.",pasos:["Parejas frente a frente","A habla 2 minutos de cualquier cosa real","B escucha sin preparar respuesta","B resume lo que escuchó","Cambiar"],objetivo:"Presencia, escucha real",variantes:["Solo con contacto visual, sin hablar"]},
-  {id:32,nombre:"Justificación física",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Cada posición accidental del cuerpo debe justificarse narrativamente.",pasos:["Dos en escena","Cuando el facilitador grita '¡Congela!'","La siguiente persona ocupa una posición aleatoria","Justifica inmediatamente por qué está así"],objetivo:"Justificación, reactividad, humor",variantes:["Solo con poses de revista"]},
-  {id:33,nombre:"El regalo",tipo:"entrenamiento",duracion:12,participantes:"parejas",descripcion:"Dar y recibir regalos imaginarios con total convicción.",pasos:["A entrega un regalo imaginario (sin decir qué es)","B lo recibe y reacciona genuinamente","B describe lo que recibió","Alternar y aumentar la emotividad"],objetivo:"Especificidad física, emocionalidad",variantes:["Regalos terribles, regalos perfectos"]},
-  {id:34,nombre:"Status",tipo:"entrenamiento",duracion:20,participantes:"grupo",descripcion:"Jugar con el status alto y bajo en escena. Quién tiene el poder cambia.",pasos:["Asignar status del 1 al 10 a cada actor (secreto)","Escena libre donde cada uno juega su status","El público adivina el orden","Reflexionar sobre cómo se manifiesta"],objetivo:"Presencia escénica, jerarquía, poder",variantes:["Status que cambia durante la escena"]},
-  {id:35,nombre:"Narrador y actores",tipo:"formato",duracion:20,participantes:"grupo",descripcion:"Un narrador omnisciente cuenta, los actores representan.",pasos:["Elegir narrador","El narrador cuenta una historia en tiempo real","Los actores representan lo que se narra","El narrador puede modificar la realidad de los actores"],objetivo:"Escucha, reactividad, narrativa",variantes:["Narradores múltiples que se contradicen"]},
-];
-];
+function AppInner(){
+  const {dark,toggle,T}=useTheme();
+  const [tab,setTab]=useState("generar");
+  const [animating,setAnimating]=useState(false);
+  const [pubStimulus,setPubStimulus]=useState(null);
+  const [pubOpen,setPubOpen]=useState(false);
+  const [pubTimerDisplay,setPubTimerDisplay]=useState(0);
+  const [pubTimerRunning,setPubTimerRunning]=useState(false);
+  const [pubRundown,setPubRundown]=useState([]);
+  const [lang,setLangState]=useState(()=>ls.get("impro_lang","es"));
+  const setLang=l=>{setLangState(l);ls.set("impro_lang",l);};
+  const [grupoActivo,setGrupoActivo]=useState(()=>ls.get("impro_grupo_activo",null));
+  const setGrupo=g=>{setGrupoActivo(g);ls.set("impro_grupo_activo",g);};
+  const timerLaunchRef=useRef(null);
+  const launchTimer=useCallback((mins)=>{if(timerLaunchRef.current)timerLaunchRef.current(mins*60);},[]);
+  const audio=useAudio();
+  useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("sala"))setTab("qr");},[]);
+  const changeTab=newTab=>{if(newTab===tab||animating)return;setAnimating(true);setTab(newTab);setTimeout(()=>setAnimating(false),280);};
+  return(<LangCtx.Provider value={{lang,setLang}}><div style={{minHeight:"100vh",background:T.bg,color:T.text,fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",transition:"background 0.3s,color 0.3s"}}>
+    <style>{`
+      @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+      @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes spotlightIn{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+      @keyframes pubIn{from{transform:scale(0.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+      @keyframes urgentPulse{from{opacity:1}to{opacity:0.4}}
+      .tab-content{animation:slideUp 0.28s ease}
+      *{box-sizing:border-box}
+      ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
+      button:hover{opacity:0.84}
+      select{font-family:inherit;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;border-radius:8px;padding:0.42rem 0.6rem}
+      select option{background:#1a1a1a}
+      input[type=range]{height:4px}
+      textarea{resize:vertical}
+      nav::-webkit-scrollbar{display:none}
+    `}</style>
+    {pubOpen&&<PantallaPublica stimulus={pubStimulus} timerDisplay={pubTimerDisplay} timerRunning={pubTimerRunning} rundown={pubRundown} onClose={()=>setPubOpen(false)}/>}
+    <header style={{borderBottom:`1px solid ${T.navBorder}`,padding:"0.8rem 1rem 0",background:T.nav,position:"sticky",top:0,zIndex:100,transition:"background 0.3s,border-color 0.3s"}}>
+      <div style={{maxWidth:960,margin:"0 auto"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"0.45rem"}}>
+            <span style={{fontSize:"1.15rem"}}>🎭</span>
+            <span style={{fontWeight:900,fontSize:"1.05rem",letterSpacing:"-0.02em"}}>impro<span style={{color:T.accent}}>App</span></span>
+            <span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700}}>v8</span>
+          </div>
+          <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
+            <div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
+              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.22rem 0.5rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
+            </div>
+            <button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>
+            <button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>
+          </div>
+        </div>
+        <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
+          {TABS.map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:"0.45rem 0.75rem",fontSize:"0.8rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
+            <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
+          </button>))}
+        </nav>
+      </div>
+    </header>
+    <main style={{maxWidth:960,margin:"0 auto",padding:"1.25rem 1rem 6rem"}}>
+      <div className="tab-content" key={tab}>
+        {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
+        {tab==="reto"&&<TabReto/>}
+        {tab==="sesiones"&&<TabSesiones onLaunchTimer={launchTimer}/>}
+        {tab==="guia"&&<TabGuia/>}
+        {tab==="show"&&<TabShow audio={audio} onRundownChange={setPubRundown}/>}
+        {tab==="grupos"&&<TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/>}
+        {tab==="qr"&&<TabQR/>}
+        {tab==="admin"&&<TabAdmin/>}
+        {tab==="ajustes"&&<TabAjustes/>}
+        {tab==="manual"&&<TabManual/>}
+        {tab==="universo"&&<TabUniverso/>}
+      </div>
+    </main>
+    <TimerBar audio={audio} launchRef={timerLaunchRef} onTimerChange={(d,r,p)=>{setPubTimerDisplay(d);setPubTimerRunning(r);}} />
+  </div></LangCtx.Provider>);
+}
+
+export default function ImproApp(){
+  const theme=useThemeProvider();
+  return <ThemeCtx.Provider value={theme}><AppInner/></ThemeCtx.Provider>;
+}
