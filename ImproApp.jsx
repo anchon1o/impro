@@ -17,9 +17,9 @@ const LangCtx = createContext(null);
 const useLang = () => useContext(LangCtx);
 
 const UI_STRINGS = {
-  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",show:"Show",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin"},
-  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",show:"Show",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin"},
-  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",show:"Show",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin"},
+  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",show:"Show",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo"},
+  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",show:"Show",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo"},
+  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",show:"Show",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe"},
 };
 
 const t = (lang, key) => UI_STRINGS[lang]?.[key] || UI_STRINGS.es[key] || key;
@@ -1385,6 +1385,49 @@ function TabAdmin(){
   const [authed,setAuthed]=useState(()=>sessionStorage.getItem("impro_admin")==="1");
   const [pin,setPin]=useState("");
   const [pinErr,setPinErr]=useState(false);
+  const [adminTab,setAdminTab]=useState("estimulos");
+
+  const tryPin=()=>{if(pin==="1234"){sessionStorage.setItem("impro_admin","1");setAuthed(true);}else{setPinErr(true);setTimeout(()=>setPinErr(false),1000);}};
+
+  if(!authed)return(<div style={{maxWidth:320,margin:"0 auto",paddingTop:"3rem",textAlign:"center"}}>
+    <p style={{fontSize:"2rem",margin:"0 0 0.5rem"}}>🔐</p>
+    <p style={S.ptitle(T.accent)}>Panel de administración</p>
+    <p style={{color:T.text3,fontSize:"0.85rem",marginBottom:"1.5rem"}}>Introduce o PIN para acceder</p>
+    <input type="password" value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryPin()} placeholder="PIN..." style={{...S.input,fontSize:"1.5rem",textAlign:"center",letterSpacing:"0.3em",border:`1.5px solid ${pinErr?"#ff6e40":T.inputBorder}`,marginBottom:"0.75rem"}}/>
+    {pinErr&&<p style={{color:"#ff6e40",fontSize:"0.82rem",marginBottom:"0.5rem"}}>PIN incorrecto</p>}
+    <button onClick={tryPin} style={{...S.btn(T.accent),width:"100%"}}>Entrar</button>
+    <p style={{color:T.text4,fontSize:"0.72rem",marginTop:"1rem"}}>PIN por defecto: 1234</p>
+  </div>);
+
+  const ADMIN_TABS=[
+    {id:"estimulos",emoji:"✦",label:"Estímulos"},
+    {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
+    {id:"stats",emoji:"📊",label:"Estatísticas"},
+    {id:"config",emoji:"⚙️",label:"Config"},
+  ];
+
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:"0.5rem"}}>
+      <p style={S.ptitle("#ffd740")}>Admin Panel</p>
+      <button onClick={()=>{sessionStorage.removeItem("impro_admin");setAuthed(false);}} style={{...S.btn(T.bg3,T.text3),fontSize:"0.75rem"}}>Salir</button>
+    </div>
+
+    {/* Menú interno */}
+    <div style={{display:"flex",gap:3,marginBottom:"1.25rem",background:T.bg3,borderRadius:12,padding:3}}>
+      {ADMIN_TABS.map(tab=><button key={tab.id} onClick={()=>setAdminTab(tab.id)} style={{...S.btn(adminTab===tab.id?T.bg2:"transparent",adminTab===tab.id?T.text:T.text3),flex:1,borderRadius:9,padding:"0.4rem 0.3rem",fontSize:"0.75rem",fontWeight:adminTab===tab.id?700:400,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.15rem",boxShadow:adminTab===tab.id?"0 1px 4px rgba(0,0,0,0.2)":"none"}}>
+        <span style={{fontSize:"1rem"}}>{tab.emoji}</span>
+        <span>{tab.label}</span>
+      </button>)}
+    </div>
+
+    {adminTab==="estimulos"&&<AdminEstimulos T={T} S={S}/>}
+    {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
+    {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
+    {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
+  </div>);
+}
+
+function AdminEstimulos({T,S}){
   const [cat,setCat]=useState(Object.keys(ESTIMULOS_BASE)[0]);
   const [nivel,setNivel]=useState("simple");
   const [editIdx,setEditIdx]=useState(null);
@@ -1392,306 +1435,159 @@ function TabAdmin(){
   const [newText,setNewText]=useState("");
   const [userStimuli,setUserStimuli]=useState(()=>ls.get("impro_user_stimuli",{}));
 
-  const tryPin=()=>{if(pin===ADMIN_PIN){sessionStorage.setItem("impro_admin","1");setAuthed(true);}else{setPinErr(true);setTimeout(()=>setPinErr(false),1000);}};
-
   const getBase=()=>ESTIMULOS_BASE[cat]?.[nivel]||[];
   const getUserAdds=()=>(userStimuli[cat]?.[nivel])||[];
   const getEdits=()=>(userStimuli[`${cat}_edits`]?.[nivel])||{};
   const getDeleted=()=>(userStimuli[`${cat}_deleted`]?.[nivel])||[];
-
   const allItems=()=>{
     const base=getBase().filter((_,i)=>!getDeleted().includes(i)).map((text,origIdx)=>{
-      const actualIdx=getBase().indexOf(text);
-      const edited=getEdits()[actualIdx];
+      const actualIdx=getBase().indexOf(text);const edited=getEdits()[actualIdx];
       return{text:edited||text,orig:text,idx:actualIdx,isBase:true,isEdited:!!edited};
     });
     const user=getUserAdds().map((text,i)=>({text,orig:text,idx:i,isBase:false}));
     return[...base,...user];
   };
-
   const saveUserStimuli=u=>{setUserStimuli(u);ls.set("impro_user_stimuli",u);};
-
-  const addItem=()=>{
-    if(!newText.trim())return;
-    const u={...userStimuli};
-    u[cat]=u[cat]||{simple:[],plus:[]};
-    u[cat][nivel]=[...(u[cat][nivel]||[]),newText.trim()];
-    saveUserStimuli(u);setNewText("");
-  };
-
+  const addItem=()=>{if(!newText.trim())return;const u={...userStimuli};u[cat]=u[cat]||{simple:[],plus:[]};u[cat][nivel]=[...(u[cat][nivel]||[]),newText.trim()];saveUserStimuli(u);setNewText("");};
   const editItem=(item)=>{setEditIdx(`${item.isBase?"b":"u"}_${item.idx}`);setEditText(item.text);};
-
-  const saveEdit=(item)=>{
-    const u={...userStimuli};
-    if(item.isBase){
-      const key=`${cat}_edits`;u[key]=u[key]||{};u[key][nivel]=u[key][nivel]||{};
-      u[key][nivel][item.idx]=editText.trim();
-    }else{
-      u[cat][nivel][item.idx]=editText.trim();
-    }
-    saveUserStimuli(u);setEditIdx(null);setEditText("");
-  };
-
-  const deleteItem=(item)=>{
-    if(!confirm("¿Eliminar este estímulo?"))return;
-    const u={...userStimuli};
-    if(item.isBase){
-      const key=`${cat}_deleted`;u[key]=u[key]||{};u[key][nivel]=[...(u[key][nivel]||[]),item.idx];
-    }else{
-      u[cat][nivel]=(u[cat][nivel]||[]).filter((_,i)=>i!==item.idx);
-    }
-    saveUserStimuli(u);
-  };
-
-  const resetCat=()=>{
-    if(!confirm(`¿Restaurar ${cat} ${nivel} a los valores originales?`))return;
-    const u={...userStimuli};
-    delete u[cat];delete u[`${cat}_edits`];delete u[`${cat}_deleted`];
-    saveUserStimuli(u);
-  };
-
-  if(!authed)return(<div style={{maxWidth:320,margin:"0 auto",paddingTop:"3rem",textAlign:"center"}}>
-    <p style={{fontSize:"2rem",margin:"0 0 0.5rem"}}>🔐</p>
-    <p style={S.ptitle(T.accent)}>Panel de administración</p>
-    <p style={{color:T.text3,fontSize:"0.85rem",marginBottom:"1.5rem"}}>Introduce el PIN para acceder</p>
-    <input type="password" value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryPin()} placeholder="PIN..." style={{...S.input,fontSize:"1.5rem",textAlign:"center",letterSpacing:"0.3em",border:`1.5px solid ${pinErr?"#ff6e40":T.inputBorder}`,marginBottom:"0.75rem"}}/>
-    {pinErr&&<p style={{color:"#ff6e40",fontSize:"0.82rem",marginBottom:"0.5rem"}}>PIN incorrecto</p>}
-    <button onClick={tryPin} style={{...S.btn(T.accent),width:"100%"}}>Entrar</button>
-    <p style={{color:T.text4,fontSize:"0.72rem",marginTop:"1rem"}}>PIN por defecto: 1234</p>
-  </div>);
-
+  const saveEdit=(item)=>{const u={...userStimuli};if(item.isBase){const key=`${cat}_edits`;u[key]=u[key]||{};u[key][nivel]=u[key][nivel]||{};u[key][nivel][item.idx]=editText.trim();}else{u[cat][nivel][item.idx]=editText.trim();}saveUserStimuli(u);setEditIdx(null);setEditText("");};
+  const deleteItem=(item)=>{if(!confirm("¿Eliminar?"))return;const u={...userStimuli};if(item.isBase){const key=`${cat}_deleted`;u[key]=u[key]||{};u[key][nivel]=[...(u[key][nivel]||[]),item.idx];}else{u[cat][nivel]=(u[cat][nivel]||[]).filter((_,i)=>i!==item.idx);}saveUserStimuli(u);};
+  const resetCat=()=>{if(!confirm(`¿Restaurar ${cat} ${nivel}?`))return;const u={...userStimuli};delete u[cat];delete u[`${cat}_edits`];delete u[`${cat}_deleted`];saveUserStimuli(u);};
   const items=allItems();
   return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:"0.5rem"}}>
-      <p style={S.ptitle("#ffd740")}>Admin · Estímulos</p>
-      <div style={{display:"flex",gap:"0.4rem"}}>
-        <button onClick={resetCat} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem",border:"1px solid #ff6e4033"}}>↺ Restaurar categoría</button>
-        <button onClick={()=>{sessionStorage.removeItem("impro_admin");setAuthed(false);}} style={{...S.btn(T.bg3,T.text3),fontSize:"0.75rem"}}>Salir</button>
-      </div>
-    </div>
-
-    {}
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap"}}>
       <select value={cat} onChange={e=>setCat(e.target.value)} style={{...S.input,flex:1,minWidth:130}}>
         {Object.keys(ESTIMULOS_BASE).map(c=><option key={c} value={c}>{CAT_ICONS[c]||"◆"} {c}</option>)}
       </select>
       <div style={{display:"flex",background:T.bg3,borderRadius:10,padding:3,gap:2}}>
-        {[["simple","◆ Simple"],["plus","⭐ Plus"]].map(([v,l])=>(
-          <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(nivel===v?(v==="plus"?T.accent:T.bg2):"transparent",nivel===v?(v==="plus"?"#fff":T.text):T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>
-        ))}
+        {[["simple","◆"],["plus","⭐"]].map(([v,l])=><button key={v} onClick={()=>setNivel(v)} style={{...S.btn(nivel===v?T.accent:"transparent",nivel===v?"#fff":T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>)}
       </div>
+      <button onClick={resetCat} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem"}}>↺</button>
     </div>
-
-    {}
-    <div style={{...S.panel,marginBottom:"0.85rem",padding:"0.6rem 1rem",display:"flex",gap:"1rem"}}>
+    <div style={{...S.panel,marginBottom:"0.85rem",padding:"0.5rem 1rem",display:"flex",gap:"1rem"}}>
       <span style={{color:T.text3,fontSize:"0.8rem"}}>Base: <strong style={{color:T.text}}>{getBase().length}</strong></span>
-      <span style={{color:"#69f0ae",fontSize:"0.8rem"}}>Añadidos: <strong>{getUserAdds().length}</strong></span>
-      <span style={{color:"#ff6e40",fontSize:"0.8rem"}}>Eliminados: <strong>{getDeleted().length}</strong></span>
+      <span style={{color:"#69f0ae",fontSize:"0.8rem"}}>+: <strong>{getUserAdds().length}</strong></span>
+      <span style={{color:"#ff6e40",fontSize:"0.8rem"}}>-: <strong>{getDeleted().length}</strong></span>
       <span style={{color:T.accent,fontSize:"0.8rem"}}>Total: <strong>{items.length}</strong></span>
     </div>
-
-    {}
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem"}}>
-      <input value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addItem()} placeholder={`Nuevo elemento de ${cat} (${nivel})...`} style={{...S.input,flex:1}}/>
-      <button onClick={addItem} style={{...S.btn(T.accent),flexShrink:0}}>+ Añadir</button>
+      <input value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addItem()} placeholder={`Novo estímulo de ${cat}...`} style={{...S.input,flex:1}}/>
+      <button onClick={addItem} style={S.btn(T.accent)}>+ Engadir</button>
     </div>
-
-    {}
     <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
       {items.map((item,i)=>{
         const eKey=`${item.isBase?"b":"u"}_${item.idx}`;
         const isEditing=editIdx===eKey;
         return(<div key={i} style={{...S.panel,padding:"0.6rem 0.85rem",display:"flex",gap:"0.6rem",alignItems:"center",border:`1.5px solid ${item.isEdited?"#ffd74033":item.isBase?T.border:"#69f0ae33"}`}}>
-          {isEditing?(
-            <><input value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(item)} style={{...S.input,flex:1,fontSize:"0.88rem"}} autoFocus/><button onClick={()=>saveEdit(item)} style={S.btn(T.accent)}>✓</button><button onClick={()=>setEditIdx(null)} style={S.btn(T.bg3,T.text3)}>✕</button></>
-          ):(
-            <><div style={{flex:1}}>
-              <span style={{color:T.text,fontSize:"0.88rem"}}>{item.text}</span>
-              {!item.isBase&&<span style={{...S.tag("#69f0ae"),marginLeft:"0.4rem"}}>nuevo</span>}
-              {item.isEdited&&<span style={{...S.tag("#ffd740"),marginLeft:"0.4rem"}}>editado</span>}
-            </div>
-            <button onClick={()=>editItem(item)} style={{...S.btn(T.bg3,T.text3),padding:"0.3rem 0.5rem",fontSize:"0.78rem"}}>✏️</button>
-            <button onClick={()=>deleteItem(item)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem",padding:"0.2rem"}}>×</button></>
-          )}
+          {isEditing?(<><input value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(item)} style={{...S.input,flex:1,fontSize:"0.88rem"}} autoFocus/><button onClick={()=>saveEdit(item)} style={S.btn(T.accent)}>✓</button><button onClick={()=>setEditIdx(null)} style={S.btn(T.bg3,T.text3)}>✕</button></>
+          ):(<><div style={{flex:1}}><span style={{color:T.text,fontSize:"0.88rem"}}>{item.text}</span>{!item.isBase&&<span style={{...S.tag("#69f0ae"),marginLeft:"0.4rem"}}>novo</span>}{item.isEdited&&<span style={{...S.tag("#ffd740"),marginLeft:"0.4rem"}}>editado</span>}</div>
+          <button onClick={()=>editItem(item)} style={{...S.btn(T.bg3,T.text3),padding:"0.3rem 0.5rem",fontSize:"0.78rem"}}>✏️</button>
+          <button onClick={()=>deleteItem(item)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button></>)}
         </div>);
       })}
     </div>
   </div>);
 }
 
-function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onClose}){
-  const [td,setTd]=useState(timerDisplay||0);
-  const [notif,setNotif]=useState(null);
-  const [prevActive,setPrevActive]=useState(null);
-  const ref=useRef(null);
-  useEffect(()=>setTd(timerDisplay||0),[timerDisplay]);
-  useEffect(()=>{if(timerRunning){ref.current=setInterval(()=>setTd(p=>Math.max(0,p-1)),1000);}else clearInterval(ref.current);return()=>clearInterval(ref.current);},[timerRunning]);
-
-  useEffect(()=>{
-    if(!timerRunning)return;
-    if(td===30)showNotif("⏱ 30 segundos","#ffd740");
-    else if(td===10)showNotif("⚠️ 10 segundos","#ff6e40");
-    else if(td===0&&timerDisplay>0)showNotif("⏹ Tiempo agotado","#ff6e40");
-  },[td,timerRunning]);
-
-  const activeAct=rundown?.find(a=>a.activa);
-  useEffect(()=>{
-    if(activeAct?.id!==prevActive){
-      if(activeAct)showNotif(`▶ ${activeAct.nombre}`,"#e040fb");
-      setPrevActive(activeAct?.id||null);
-    }
-  },[activeAct?.id]);
-
-  useEffect(()=>{if(notification)showNotif(notification,"#40c4ff");},[notification]);
-
-  const showNotif=(msg,col)=>{
-    setNotif({msg,col,id:Date.now()});
-    setTimeout(()=>setNotif(null),3500);
-  };
-
-  const urgent=td>0&&td<10,warning=td>0&&td<30;
-  return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:"'Inter',system-ui,sans-serif"}}>
-    <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Cerrar</button>
-
-    {}
-    {notif&&(<div key={notif.id} style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",background:notif.col+"22",border:`1.5px solid ${notif.col}`,borderRadius:12,padding:"0.65rem 1.5rem",zIndex:20,animation:"notifIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",backdropFilter:"blur(12px)"}}>
-      <p style={{color:notif.col,fontWeight:700,fontSize:"clamp(0.85rem,2.5vw,1.1rem)",margin:0,textAlign:"center"}}>{notif.msg}</p>
-    </div>)}
-
-    <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1.5rem",padding:"2rem"}}>
-      {td>0&&<div style={{fontSize:"clamp(5rem,20vw,13rem)",fontWeight:900,fontFamily:"monospace",color:urgent?"#ff6e40":warning?"#ffd740":"#fff",textShadow:urgent?"0 0 60px #ff6e4088":warning?"0 0 40px #ffd74055":"none",letterSpacing:"0.05em",lineHeight:1,animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",transition:"color 0.3s"}}>{FMT(td)}</div>}
-      {stimulus&&<div style={{textAlign:"center"}}>
-        <p style={{color:"#e040fb",fontFamily:"monospace",fontSize:"clamp(0.65rem,1.6vw,1rem)",letterSpacing:"0.4em",marginBottom:"0.75rem",opacity:0.85,textTransform:"uppercase"}}>{stimulus.category}</p>
-        <h1 style={{fontSize:"clamp(2.5rem,9vw,7rem)",fontWeight:900,color:"#fff",textShadow:"0 0 80px rgba(224,64,251,0.45)",maxWidth:"90vw",lineHeight:1.05,margin:0,textAlign:"center"}}>{stimulus.word}</h1>
-      </div>}
-      {!stimulus&&td===0&&<div style={{textAlign:"center"}}><p style={{fontSize:"clamp(1.5rem,5vw,3.5rem)",color:"#222",fontWeight:900}}>ImproApp</p><p style={{color:"#333",fontSize:"0.9rem"}}>Proyector · toca para cerrar</p></div>}
-      {activeAct&&<div style={{textAlign:"center",borderTop:"1px solid #1a1a1a",paddingTop:"1.5rem"}}>
-        <p style={{color:"#ffd740",fontFamily:"monospace",fontSize:"clamp(0.55rem,1.3vw,0.85rem)",letterSpacing:"0.25em",marginBottom:"0.5rem",textTransform:"uppercase"}}>En escena</p>
-        <p style={{color:"#fff",fontSize:"clamp(1.4rem,4.5vw,3.2rem)",fontWeight:700,margin:0}}>{activeAct.nombre}</p>
-        {activeAct.formato&&<p style={{color:"#666",fontSize:"clamp(0.75rem,1.8vw,1.1rem)",margin:"0.3rem 0 0"}}>{activeAct.formato}</p>}
-      </div>}
+function AdminDinamicas({T,S}){
+  const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
+  const [search,setSearch]=useState("");
+  const [filtro,setFiltro]=useState("todos");
+  useEffect(()=>{getDinamicas(DINAMICAS_BASE).then(setDinamicas);},[]);
+  const tipos=["todos",...new Set(dinamicas.map(d=>d.tipo))];
+  const lista=dinamicas.filter(d=>(filtro==="todos"||d.tipo===filtro)&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())));
+  const deleteDin=async id=>{if(!confirm("¿Eliminar?"))return;const u=dinamicas.filter(d=>d.id!==id);setDinamicas(u);await deleteDinamica(id);};
+  const restoreAll=()=>{if(!confirm("¿Restaurar todas as dinámicas base?"))return;setDinamicas(DINAMICAS_BASE);ls.set("impro_dinamicas_v2",DINAMICAS_BASE);};
+  return(<div>
+    <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap",alignItems:"center"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1}}/>
+      <span style={{color:T.text4,fontSize:"0.78rem"}}>{lista.length}/{dinamicas.length}</span>
+      <button onClick={restoreAll} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem"}}>↺ Restaurar</button>
     </div>
-    {rundown&&rundown.length>0&&<div style={{borderTop:"1px solid #0d0d0d",padding:"0.65rem 1.25rem",display:"flex",gap:"0.45rem",overflowX:"auto",background:"#030303",flexShrink:0}}>
-      {rundown.map((act,i)=>(<div key={act.id} style={{flexShrink:0,padding:"0.3rem 0.65rem",border:`1px solid ${act.activa?"#e040fb":act.hecho?"#111":"#0d0d0d"}`,borderRadius:6,opacity:act.hecho?0.2:1,background:act.activa?"rgba(224,64,251,0.08)":"transparent",transition:"all 0.2s"}}><span style={{color:act.activa?"#e040fb":act.hecho?"#222":"#444",fontSize:"0.68rem",fontWeight:act.activa?700:400}}>{i+1}. {act.nombre}</span></div>))}
-    </div>}
+    <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.85rem",flexWrap:"wrap"}}>
+      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(TIPO_COLOR[t]||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.25rem 0.7rem",fontSize:"0.72rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+      {lista.map(d=>(<div key={d.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COLOR[d.tipo]||T.accent}`}}>
+        <div style={{flex:1}}>
+          <span style={{fontWeight:700,color:T.text,fontSize:"0.88rem"}}>{d.nombre}</span>
+          <span style={{...S.tag(TIPO_COLOR[d.tipo]||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
+          <span style={{color:T.text4,fontSize:"0.75rem",marginLeft:"0.4rem"}}>⏱{d.duracion}min</span>
+        </div>
+        <button onClick={()=>deleteDin(d.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>
+      </div>))}
+    </div>
   </div>);
 }
 
-const loadTranslations=()=>ls.get("impro_translations",null);
-const saveTranslations=data=>ls.set("impro_translations",data);
-
-const buildTranslationExport=()=>({meta:{version:"v7",idiomas:["es","gl","en"],instrucciones:"Traduce campos gl y en vacíos. No toques es ni id."},estimulos:Object.fromEntries(Object.entries(ESTIMULOS_BASE).map(([cat,d])=>[cat,{simple:(d.simple||[]).map((t,i)=>({id:`${cat}_s_${i}`,es:t,gl:"",en:""})),plus:(d.plus||[]).map((t,i)=>({id:`${cat}_p_${i}`,es:t,gl:"",en:""}))}]))});
-
-const importTranslations=data=>{const cur=loadTranslations()||{};if(data.estimulos){cur.estimulos=cur.estimulos||{};for(const[cat,d]of Object.entries(data.estimulos)){cur.estimulos[cat]=cur.estimulos[cat]||{};for(const n of["simple","plus"]){cur.estimulos[cat][n]=cur.estimulos[cat][n]||{};(d[n]||[]).forEach(item=>{if(item.id&&!cur.estimulos[cat][n][item.id]){cur.estimulos[cat][n][item.id]={gl:item.gl,en:item.en};}});}}}saveTranslations(cur);return cur;};
-
-const tC=(fieldObj,lang)=>{if(!fieldObj)return"";if(typeof fieldObj==="string")return fieldObj;return fieldObj[lang]||fieldObj.es||"";};
-
-function TabAjustes(){
-  const {T}=useTheme();const S=mkS(T);
-  const [msg,setMsg]=useState("");
-  const [stats,setStats]=useState(()=>ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
-  const [view,setView]=useState("stats");
-  const exportAll=()=>{
-    const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo","impro_theme"];
-    const data={version:"v7",fecha:new Date().toISOString()};
-    keys.forEach(k=>{const v=ls.get(k,null);if(v!==null)data[k]=v;});
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;
-    a.download=`improapp_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;a.click();URL.revokeObjectURL(url);
-    setMsg("✓ Exportado");setTimeout(()=>setMsg(""),3000);
-  };
-  const importAll=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{try{
-      const data=JSON.parse(ev.target.result);if(!data.version){setMsg("❌ Archivo no válido");return;}
-      const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo"];
-      let count=0;keys.forEach(k=>{if(data[k]!==undefined){ls.set(k,data[k]);count++;}});
-      setMsg(`✓ Importado: ${count} secciones. Recarga para aplicar.`);
-      setStats(ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
-    }catch{setMsg("❌ Error al leer el archivo");}};
-    reader.readAsText(file);e.target.value="";
-  };
-  const resetStats=()=>{if(!confirm("¿Borrar todas las estadísticas?"))return;ls.set("impro_stats",{cats:{},dins:{},total:0,mins:0});setStats({cats:{},dins:{},total:0,mins:0});};
-  const topCats=Object.entries(stats.cats||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const topDins=Object.entries(stats.dins||{}).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxCat=topCats[0]?.[1]||1;const maxDin=topDins[0]?.[1]||1;
+function AdminStats({T,S}){
+  const stats=ls.get("impro_stats",{cats:{},total:0,mins:0});
+  const cats=Object.entries(stats.cats||{}).sort((a,b)=>b[1]-a[1]);
+  const maxVal=cats[0]?.[1]||1;
   return(<div>
-    <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem"}}>
-      {[["stats","📊 Estadísticas"],["backup","💾 Backup"],["idioma","🌐 Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.6rem",marginBottom:"1.25rem"}}>
+      {[["✦",stats.total||0,"Estímulos xerados"],["⏱",stats.mins||0,"Minutos de ensaio"],["📋",ls.get("impro_sesiones",[]).length,"Sesións gardadas"]].map(([emoji,val,label])=>(
+        <div key={label} style={{...S.panel,textAlign:"center",padding:"0.85rem 0.5rem"}}>
+          <div style={{fontSize:"1.3rem"}}>{emoji}</div>
+          <div style={{fontSize:"1.6rem",fontWeight:900,color:T.accent}}>{val}</div>
+          <div style={{color:T.text3,fontSize:"0.7rem"}}>{label}</div>
+        </div>
+      ))}
     </div>
-    {view==="stats"&&<div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1.25rem"}}>
-        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:"#40c4ff"},{label:"En Guía",val:ls.get("impro_dinamicas_v2",DINAMICAS_BASE).length,col:"#69f0ae"}].map((s,i)=>(
-          <div key={i} style={{...S.panel,textAlign:"center",border:`1.5px solid ${s.col}44`}}><div style={{color:s.col,fontWeight:900,fontSize:"1.6rem",lineHeight:1}}>{s.val}</div><div style={{color:T.text3,fontSize:"0.7rem",marginTop:"0.25rem"}}>{s.label}</div></div>
+    {cats.length>0&&<div style={S.panel}>
+      <p style={S.ptitle(T.accent)}>Categorías máis usadas</p>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+        {cats.map(([cat,count])=>(
+          <div key={cat} style={{display:"flex",gap:"0.6rem",alignItems:"center"}}>
+            <span style={{color:T.text3,fontSize:"0.78rem",width:90,flexShrink:0}}>{CAT_ICONS[cat]||"◆"} {cat}</span>
+            <div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${(count/maxVal)*100}%`,background:T.accent,borderRadius:4,transition:"width 0.5s"}}/>
+            </div>
+            <span style={{color:T.text,fontSize:"0.82rem",fontWeight:700,width:28,textAlign:"right"}}>{count}</span>
+          </div>
         ))}
       </div>
-      {(stats.total||0)===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem",color:T.text4}}><p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📊</p><p style={{margin:0}}>Genera estímulos y usa dinámicas para ver estadísticas aquí.</p></div>}
-      {topCats.length>0&&<><p style={S.ptitle(T.accent)}>Categorías más generadas</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1.25rem"}}>
-        {topCats.map(([cat,n])=>(<div key={cat} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",width:90,flexShrink:0}}>{CAT_ICONS[cat]||"◆"} {cat}</span><div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${(n/maxCat)*100}%`,background:T.accent,borderRadius:4,transition:"width 0.5s"}}/></div><span style={{color:T.accent,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
-      </div></>}
-      {topDins.length>0&&<><p style={S.ptitle("#ffd740")}>Dinámicas más usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
-        {topDins.map(([din,n])=>(<div key={din} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{din}</span><div style={{width:80,height:8,background:T.bg3,borderRadius:4,overflow:"hidden",flexShrink:0}}><div style={{height:"100%",width:`${(n/maxDin)*100}%`,background:"#ffd740",borderRadius:4}}/></div><span style={{color:"#ffd740",fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
-      </div></>}
-      {(stats.total||0)>0&&<button onClick={resetStats} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem"}}>↺ Borrar estadísticas</button>}
     </div>}
-    {view==="idioma"&&<TabIdioma/>}
-    {view==="backup"&&<div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #69f0ae33"}}><p style={S.ptitle("#69f0ae")}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos tus datos: sesiones, grupos, dinámicas, ideas, favoritos, playlists y estadísticas.</p><button onClick={exportAll} style={{...S.btn("#69f0ae","#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #40c4ff33"}}><p style={S.ptitle("#40c4ff")}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un archivo exportado anteriormente. Recarga la página tras importar.</p><label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
-      {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.85rem",marginBottom:"0.75rem"}}>{msg}</div>}
-
+    {cats.length===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem"}}>
+      <p style={{fontSize:"2rem",margin:"0 0 0.5rem"}}>📊</p>
+      <p style={{color:T.text4}}>Sen datos aínda. Usa o xerador de estímulos para acumular estatísticas.</p>
     </div>}
   </div>);
 }
 
-function TabIdioma(){
-  const {T}=useTheme();const S=mkS(T);
-  const {lang,setLang}=useLang();
+function AdminConfig({T,S}){
+  const [adminPin,setAdminPin]=useState("1234");
   const [msg,setMsg]=useState("");
-  const LANGS=[["es","🇪🇸 Español"],["gl","🏴 Galego"],["en","🇬🇧 English"]];
-
-  const exportForTranslation=()=>{
-    const data=buildTranslationExport();
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob);const a=document.createElement("a");
-    a.href=url;a.download=`improapp_traduccion_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;
-    a.click();URL.revokeObjectURL(url);
-    setMsg("✓ Exportado. Pásalo a Claude para traducir los campos vacíos.");
-    setTimeout(()=>setMsg(""),5000);
-  };
-
-  const importTranslation=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(!data.meta){setMsg("❌ Archivo no válido");return;}importTranslations(data);setMsg("✓ Traducciones importadas correctamente.");}catch{setMsg("❌ Error al leer el archivo");}};
-    reader.readAsText(file);e.target.value="";
-  };
-
-  return(<div>
-    <div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}33`}}>
-      <p style={S.ptitle(T.accent)}>Idioma da interface</p>
+  const savePin=()=>{ls.set("impro_admin_pin",adminPin);setMsg("✓ PIN actualizado (reinicia sesión)");setTimeout(()=>setMsg(""),3000);};
+  const clearAll=()=>{if(!confirm("¿Borrar TODOS os datos locais? Esta acción non se pode desfacer."))return;localStorage.clear();sessionStorage.clear();window.location.reload();};
+  return(<div style={{display:"flex",flexDirection:"column",gap:"0.85rem"}}>
+    <div style={S.panel}>
+      <p style={S.ptitle("#ffd740")}>Cambiar PIN de Admin</p>
       <div style={{display:"flex",gap:"0.5rem"}}>
-        {LANGS.map(([code,label])=>(
-          <button key={code} onClick={()=>setLang(code)} style={{...S.btn(lang===code?T.accent:T.bg3,lang===code?"#fff":T.text2),flex:1}}>{label}</button>
+        <input type="password" value={adminPin} onChange={e=>setAdminPin(e.target.value)} style={{...S.input,flex:1,letterSpacing:"0.2em"}} placeholder="Novo PIN..."/>
+        <button onClick={savePin} style={S.btn(T.accent)}>Gardar</button>
+      </div>
+      {msg&&<p style={{color:"#69f0ae",fontSize:"0.82rem",marginTop:"0.5rem"}}>{msg}</p>}
+    </div>
+    <div style={{...S.panel,border:"1.5px solid #ff6e4033"}}>
+      <p style={S.ptitle("#ff6e40")}>Zona de perigo</p>
+      <p style={{color:T.text3,fontSize:"0.83rem",marginBottom:"0.85rem"}}>Borra todos os datos gardados localmente (favoritos, historial, configuracións). Os datos en Supabase non se borran.</p>
+      <button onClick={clearAll} style={{...S.btn("#ff6e40"),width:"100%"}}>🗑 Borrar datos locais</button>
+    </div>
+    <div style={S.panel}>
+      <p style={S.ptitle(T.text3)}>Información</p>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>
+        {[["Versión","v8"],["Repo","anchon1o/impro"],["Deploy","improapp.vercel.app"],["Backend","Supabase"]].map(([k,v])=>(
+          <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:"0.82rem"}}>
+            <span style={{color:T.text3}}>{k}</span>
+            <span style={{color:T.text,fontFamily:"monospace"}}>{v}</span>
+          </div>
         ))}
       </div>
-      <p style={{color:T.text4,fontSize:"0.75rem",marginTop:"0.6rem"}}>O galego e o inglés amósanse segundo as traducións importadas. Os campos sen traducir aparecen en español.</p>
     </div>
-    <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #e040fb33"}}>
-      <p style={S.ptitle(T.accent)}>1. Exportar para traducir</p>
-      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Xera un JSON con todo o contido traducible. Pásallo a Claude con: <em style={{color:T.text3}}>"Traduce ao galego e inglés os campos gl e en baleiros."</em></p>
-      <button onClick={exportForTranslation} style={{...S.btn(T.accent),width:"100%"}}>⬇ Exportar para traducir</button>
-    </div>
-    <div style={{...S.panel,border:"1.5px solid #40c4ff33"}}>
-      <p style={S.ptitle("#40c4ff")}>2. Importar tradución</p>
-      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga o JSON devolto. Só enche os campos baleiros, nunca sobreescribe.</p>
-      <label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
-    </div>
-    {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
-    {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducciones borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducciones</button>}
   </div>);
 }
+
 
 const MANUAL_SECCIONES=[
   {id:"generar",emoji:"✦",titulo:"Xerador de estímulos",intro:"Xera palabras e escenas para os exercicios de impro.",items:[
@@ -1786,6 +1682,105 @@ function TabManual(){
   </div>);
 }
 
+
+const UNIVERSO_DATA = [
+  {id:"u1",tipo:"compañía",nome:"Loose Moose Theatre",pais:"🇨🇦",cidade:"Calgary, Canadá",desc:"Fundada por Keith Johnstone, creador do Theatresports e do Maestro. Un dos centros de impro máis influentes do mundo.",web:"loosemoose.com",tags:["theatresports","johnstone","formato"],logo:"🫎"},
+  {id:"u2",tipo:"compañía",nome:"The Second City",pais:"🇺🇸",cidade:"Chicago, EUA",desc:"A compañía de impro e sketch máis famosa do mundo. Alumni: Tina Fey, Steve Carell, Bill Murray, Amy Poehler.",web:"secondcity.com",tags:["sketch","longform","comedy"],logo:"🎭"},
+  {id:"u3",tipo:"compañía",nome:"Upright Citizens Brigade",pais:"🇺🇸",cidade:"Nueva York/LA, EUA",desc:"Escola e teatro fundado por Amy Poehler. Referente do formato Harold e o longform en NY.",web:"ucbtheatre.com",tags:["harold","longform","UCB"],logo:"🎪"},
+  {id:"u4",tipo:"compañía",nome:"Theatresports International",pais:"🌍",cidade:"Internacional",desc:"Rede global de impro competitiva creada por Keith Johnstone. Presente en máis de 30 países.",web:"theatresports.com",tags:["theatresports","competición","formato"],logo:"🏆"},
+  {id:"u5",tipo:"compañía",nome:"iO Theater",pais:"🇺🇸",cidade:"Chicago, EUA",desc:"Fundado por Del Close e Charna Halpern. Creadores do Harold. A escola máis influente do longform.",web:"ioimprov.com",tags:["harold","Del Close","longform"],logo:"🎬"},
+  {id:"u6",tipo:"compañía",nome:"Impro Neox",pais:"🇪🇸",cidade:"Madrid, España",desc:"Compañía de referencia en España. Formato de show televisivo e torneos de improvisación.",web:"improneox.com",tags:["España","formato","televisión"],logo:"⚡"},
+  {id:"u7",tipo:"compañía",nome:"La Rueda",pais:"🇪🇸",cidade:"Barcelona, España",desc:"Escola e compañía con longa traxectoria en Catalunya. Referente do impro en español.",web:"larueda.cat",tags:["España","escola","formato"],logo:"🎡"},
+  {id:"u8",tipo:"compañía",nome:"Improkompaniet",pais:"🇸🇪",cidade:"Estocolmo, Suecia",desc:"Compañía sueca referente en Europa. Moi activa en festivais internacionais.",web:"improkompaniet.se",tags:["Europa","festival","formato"],logo:"🦌"},
+  {id:"u9",tipo:"festival",nome:"Improvaganza",pais:"🇨🇦",cidade:"Edmonton, Canadá",desc:"Un dos festivais de impro máis grandes do mundo. Máis de 50 compañías de todo o planeta cada ano.",web:"improvaganza.ca",tags:["festival","internacional","grande"],logo:"🎉"},
+  {id:"u10",tipo:"festival",nome:"Festival Internacional de Impro de Madrid",pais:"🇪🇸",cidade:"Madrid, España",desc:"O principal festival de impro en España. Compañías nacionais e internacionais.",web:"festivalimpromadrid.com",tags:["festival","España","internacional"],logo:"🇪🇸"},
+  {id:"u11",tipo:"festival",nome:"ComedySportz World Championship",pais:"🌍",cidade:"Itinerante",desc:"Campionato mundial de Theatresports. Equipos de todo o mundo competindo en formato Theatresports.",web:"comedysportz.com",tags:["campionato","theatresports","competición"],logo:"🏅"},
+  {id:"u12",tipo:"festival",nome:"Improvision",pais:"🇬🇧",cidade:"Birmingham, UK",desc:"Festival internacional no Reino Unido cunha gran escena de impro europea.",web:"improvision.org.uk",tags:["festival","UK","Europa"],logo:"🎪"},
+  {id:"u13",tipo:"escola",nome:"Loose Moose School",pais:"🇨🇦",cidade:"Calgary, Canadá",desc:"A escola orixinal de Keith Johnstone. Forma a facilitadores e actores en todo o mundo.",web:"loosemoose.com",tags:["escola","johnstone","formación"],logo:"📚"},
+  {id:"u14",tipo:"escola",nome:"Second City Training Centre",pais:"🇺🇸",cidade:"Chicago/Toronto",desc:"Programa de formación do Second City. Un dos máis reputados do mundo para actores de comedia.",web:"secondcity.com/training",tags:["escola","formación","sketch"],logo:"🎓"},
+  {id:"u15",tipo:"escola",nome:"Escuela de Impro Madrid",pais:"🇪🇸",cidade:"Madrid, España",desc:"Escola de referencia en España con formación continua e shows propios.",web:"escueladeimpromadrid.com",tags:["escola","España","formación"],logo:"🏫"},
+  {id:"u16",tipo:"persoa",nome:"Keith Johnstone",pais:"🇬🇧",cidade:"Calgary (orixe: UK)",desc:"O pai do impro moderno. Creou o Theatresports, o Maestro e os conceptos de status e oferta/bloqueo. Autor de 'Impro' e 'Impro for Storytellers'.",web:"keithjohnstone.com",tags:["fundador","teórico","Theatresports"],logo:"👴"},
+  {id:"u17",tipo:"persoa",nome:"Del Close",pais:"🇺🇸",cidade:"Chicago, EUA",desc:"Co-creador do Harold con Charna Halpern. Influencia central en toda a tradición do longform americano. Figura mítica e controvertida.",web:"",tags:["Harold","longform","iO"],logo:"🎭"},
+  {id:"u18",tipo:"persoa",nome:"Viola Spolin",pais:"🇺🇸",cidade:"Chicago, EUA",desc:"Pioneira do impro teatral. Creou os 'Theater Games', base de todo o impro moderno. Nai de Paul Sills, fundador do Second City.",web:"violaspolin.org",tags:["pioneira","theater games","orixe"],logo:"👩"},
+  {id:"u19",tipo:"persoa",nome:"Charna Halpern",pais:"🇺🇸",cidade:"Chicago, EUA",desc:"Co-fundadora do iO Theater con Del Close. Impulsora do longform e do Harold. Autora de 'Truth in Comedy'.",web:"iochicago.com",tags:["Harold","iO","longform"],logo:"👩‍🎭"},
+  {id:"u20",tipo:"proxecto",nome:"Impro Galicia",pais:"🇪🇸",cidade:"Galicia, España",desc:"Comunidade e proxecto de impro en Galicia. Conexión entre grupos e facilitadores galegos.",web:"",tags:["Galicia","comunidade","España"],logo:"🐚"},
+];
+
+const UNIVERSO_TIPOS=[
+  {id:"todos",label:"Todo",emoji:"🌍"},
+  {id:"compañía",label:"Compañías",emoji:"🎭"},
+  {id:"festival",label:"Festivais",emoji:"🎉"},
+  {id:"escola",label:"Escolas",emoji:"📚"},
+  {id:"persoa",label:"Persoas",emoji:"👤"},
+  {id:"proxecto",label:"Proxectos",emoji:"🚀"},
+];
+
+function TabUniverso(){
+  const {T}=useTheme();const S=mkS(T);
+  const [filtro,setFiltro]=useState("todos");
+  const [search,setSearch]=useState("");
+  const [sel,setSel]=useState(null);
+
+  const lista=UNIVERSO_DATA.filter(x=>(filtro==="todos"||x.tipo===filtro)&&(!search||x.nome.toLowerCase().includes(search.toLowerCase())||x.desc.toLowerCase().includes(search.toLowerCase())||x.tags.some(t=>t.toLowerCase().includes(search.toLowerCase()))));
+
+  const TIPO_COL={compañía:"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
+
+  if(sel)return(<div>
+    <button onClick={()=>setSel(null)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Universo Impro</button>
+    <div style={{...S.panel,border:`1.5px solid ${TIPO_COL[sel.tipo]||T.accent}33`,borderTop:`4px solid ${TIPO_COL[sel.tipo]||T.accent}`}}>
+      <div style={{display:"flex",gap:"1rem",alignItems:"flex-start",marginBottom:"1rem",flexWrap:"wrap"}}>
+        <div style={{fontSize:"3rem",lineHeight:1,flexShrink:0}}>{sel.logo}</div>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",gap:"0.5rem",alignItems:"center",flexWrap:"wrap",marginBottom:"0.3rem"}}>
+            <span style={S.tag(TIPO_COL[sel.tipo]||T.accent)}>{sel.tipo}</span>
+            <span style={{color:T.text3,fontSize:"0.82rem"}}>{sel.pais} {sel.cidade}</span>
+          </div>
+          <h2 style={{color:T.text,fontWeight:900,fontSize:"1.3rem",margin:"0 0 0.5rem"}}>{sel.nome}</h2>
+          <p style={{color:T.text2,fontSize:"0.88rem",lineHeight:1.6,margin:0}}>{sel.desc}</p>
+        </div>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"0.3rem",marginBottom:"1rem"}}>
+        {sel.tags.map(tag=><span key={tag} style={{...S.tag(T.text4),background:T.bg3}}>#{tag}</span>)}
+      </div>
+      {sel.web&&<a href={`https://${sel.web}`} target="_blank" rel="noopener noreferrer" style={{...S.btn(TIPO_COL[sel.tipo]||T.accent),display:"inline-block",textDecoration:"none",color:"#000"}}>🌐 Visitar web</a>}
+    </div>
+  </div>);
+
+  return(<div>
+    <div style={{...S.panel,marginBottom:"1rem",background:T.accent+"08",border:`1.5px solid ${T.accent}22`}}>
+      <p style={{color:T.text,fontWeight:700,margin:"0 0 0.2rem",fontSize:"0.95rem"}}>🌍 Universo Impro</p>
+      <p style={{color:T.text3,fontSize:"0.82rem",margin:0}}>Compañías, festivais, escolas e persoas que fan o impro mundial. Toca calquera para saber máis.</p>
+    </div>
+    <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.85rem",flexWrap:"wrap"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1}}/>
+      <span style={{color:T.text4,fontSize:"0.78rem",alignSelf:"center"}}>{lista.length}</span>
+    </div>
+    <div style={{display:"flex",gap:"0.3rem",marginBottom:"1rem",flexWrap:"wrap"}}>
+      {UNIVERSO_TIPOS.map(t=><button key={t.id} onClick={()=>setFiltro(t.id)} style={{background:filtro===t.id?(TIPO_COL[t.id]||T.accent):T.bg3,color:filtro===t.id?"#000":T.text3,border:"none",borderRadius:20,padding:"0.28rem 0.75rem",fontSize:"0.74rem",fontWeight:filtro===t.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t.emoji} {t.label}</button>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"0.6rem"}}>
+      {lista.map(item=>(<button key={item.id} onClick={()=>setSel(item)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",border:`1.5px solid ${T.border}`,borderTop:`3px solid ${TIPO_COL[item.tipo]||T.accent}`,transition:"all 0.15s"}}>
+        <div style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+          <span style={{fontSize:"1.6rem",lineHeight:1,flexShrink:0}}>{item.logo}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",gap:"0.4rem",alignItems:"center",marginBottom:"0.2rem",flexWrap:"wrap"}}>
+              <span style={S.tag(TIPO_COL[item.tipo]||T.accent)}>{item.tipo}</span>
+              <span style={{color:T.text3,fontSize:"0.72rem"}}>{item.pais}</span>
+            </div>
+            <p style={{color:T.text,fontWeight:700,margin:"0 0 0.2rem",fontSize:"0.9rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.nome}</p>
+            <p style={{color:T.text3,fontSize:"0.78rem",margin:0,lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{item.desc}</p>
+          </div>
+        </div>
+      </button>))}
+    </div>
+    {lista.length===0&&<div style={{...S.panel,textAlign:"center",padding:"2.5rem 1rem"}}>
+      <p style={{fontSize:"2rem",margin:"0 0 0.5rem"}}>🔍</p>
+      <p style={{color:T.text4}}>Sen resultados para "{search}"</p>
+    </div>}
+  </div>);
+}
+
+
 const TABS=[
   {id:"generar",label:"Generar",emoji:"✦"},
   {id:"reto",label:"Reto",emoji:"⚡"},
@@ -1797,90 +1792,32 @@ const TABS=[
   {id:"admin",label:"Admin",emoji:"🔐"},
   {id:"ajustes",label:"Ajustes",emoji:"⚙️"},
   {id:"manual",label:"Manual",emoji:"📘"},
+
+  {id:10,nombre:"Asociación libre",tipo:"calentamiento",duracion:8,participantes:"grupo",descripcion:"Círculo de palabras asociadas sin pensar. La velocidad es clave.",pasos:["Círculo de pie","Una persona dice una palabra","La siguiente dice la primera que le venga","Sin pausas, sin censura"],objetivo:"Desbloqueo mental, conexión grupal",variantes:["Solo con categorías (animales, colores...)","En parejas"]},
+  {id:11,nombre:"Tableau vivant",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"Crear imágenes congeladas con el cuerpo. Sin palabras.",pasos:["Facilitador dice un concepto o situación","Grupo tiene 5 segundos para crear la imagen","Congelar y mantener","Observar y comentar"],objetivo:"Expresión corporal, composición grupal",variantes:["Con luz y sombra","El público adivina"]},
+  {id:12,nombre:"Máquina",tipo:"calentamiento",duracion:12,participantes:"grupo",descripcion:"Construir una máquina humana con sonido y movimiento repetitivo.",pasos:["Una persona empieza con un movimiento y sonido repetitivo","Cada persona se engancha con su propio movimiento","Hasta formar una máquina completa","El facilitador puede pedir acelerar/frenar"],objetivo:"Sincronización, escucha física",variantes:["Máquina con tema (lavadora, cohete...)"]},
+  {id:13,nombre:"Experto absurdo",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Hablar con total autoridad sobre un tema inventado.",pasos:["Sortear tema absurdo","5 minutos de conferencia/entrevista","El grupo hace preguntas serias","El experto responde con lógica interna"],objetivo:"Compromiso, coherencia interna, humor",variantes:["Panel de expertos","Con PowerPoint imaginario"]},
+  {id:14,nombre:"Historia en ronda",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Contar una historia colectiva. Cada persona añade una frase.",pasos:["Sentados en círculo","La primera persona empieza la historia","Cada una añade exactamente una frase","Sin veto, aceptar todo"],objetivo:"Narrativa colectiva, aceptación",variantes:["Una palabra por persona","Con géneros forzados"]},
+  {id:15,nombre:"Cambio de emoción",tipo:"entrenamiento",duracion:18,participantes:"parejas",descripcion:"Sostener una escena cambiando de emoción sin cambiar el texto.",pasos:["Pareja elige una escena cotidiana con texto fijo","Facilitador dice emoción","Actúan la escena con esa emoción","Cambio cada 30 segundos"],objetivo:"Versatilidad emocional, disociación texto/emoción",variantes:["Solo con el cuerpo, sin texto"]},
+  {id:16,nombre:"Propuesta y aceptación",tipo:"entrenamiento",duracion:20,participantes:"parejas",descripcion:"Una persona propone realidades, la otra las acepta sin excepción.",pasos:["A propone una realidad ('Tu eres mi madre'...)","B acepta completamente y añade","Alternar roles cada 3 minutos","Reflexionar sobre el bloqueo habitual"],objetivo:"Aceptación radical, construcción",variantes:["Con 3 personas en rueda"]},
+  {id:17,nombre:"Emoción prestada",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Entrar a una escena con la emoción del actor que se sale.",pasos:["Escena en curso con 2 actores","Uno sale, el nuevo entra con su misma emoción exacta","La historia puede cambiar pero la emoción no","Rotación continua"],objetivo:"Escucha emocional, coherencia",variantes:["Con estados físicos en lugar de emociones"]},
+  {id:18,nombre:"Subtext",tipo:"entrenamiento",duracion:20,participantes:"parejas",descripcion:"La escena tiene un subtexto oculto que el público conoce pero los personajes no.",pasos:["Facilitador susurra al público el subtexto real","Los actores juegan la escena normal","El humor surge de la brecha","Desvelar al final"],objetivo:"Subtexto, doble sentido, presencia",variantes:["El subtexto lo decide el público"]},
+  {id:19,nombre:"Formato corto: Harold",tipo:"formato",duracion:50,participantes:"grupo",descripcion:"El formato largo por excelencia. Tres actos con reincorporaciones.",pasos:["Sugerencia del público","3 monólogos de 45s","Acto 1: 3 escenas en tríos temáticos","Juego de grupo","Acto 2: continuación de las escenas","Juego de grupo","Acto 3: reincorporaciones y cierre"],objetivo:"Narrativa larga, temática, conexiones",variantes:["Harold de 30 min","Harold musical"]},
+  {id:20,nombre:"Formato: Armando",tipo:"formato",duracion:40,participantes:"grupo",descripcion:"Escenas cortas conectadas por un personaje recurrente (Armando).",pasos:["Establecer quién es Armando","Escenas de 3-4 min donde Armando aparece","Cada escena en un contexto diferente","Cierre con todas las líneas unidas"],objetivo:"Personaje recurrente, coherencia narrativa",variantes:["Con 2 personajes recurrentes"]},
+  {id:21,nombre:"Formato: Montaje",tipo:"formato",duracion:35,participantes:"grupo",descripcion:"Escenas temáticas sin continuidad narrativa. Poético y coral.",pasos:["Sugerencia abstracta del público","Escenas cortas de 1-3 min","Sin continuidad obligatoria","Ritmo y contraste entre escenas"],objetivo:"Poesía escénica, variedad tonal",variantes:["Con narrador en off"]},
+  {id:22,nombre:"Musical: Canción del personaje",tipo:"musical",duracion:15,participantes:"grupo",descripcion:"Cada personaje en escena tiene derecho a una canción que exprese su estado interior.",pasos:["Escena normal en curso","Cuando el personaje lo necesita, canta","El grupo hace de coro/acompañamiento","La escena continúa después"],objetivo:"Exteriorización emocional, comicidad",variantes:["Solo en momentos de crisis"]},
+  {id:23,nombre:"Musical: Rap battle",tipo:"musical",duracion:12,participantes:"parejas",descripcion:"Dos personajes resuelven un conflicto a través del rap.",pasos:["Establecer el conflicto entre dos personajes","Rap de 30 segundos cada uno, alternando","El público decide quién gana","Opcional: reconciliación cantada"],objetivo:"Ritmo, argumento, presión creativa",variantes:["Todo el grupo rapeando"]},
+  {id:24,nombre:"Musical: Género musical",tipo:"musical",duracion:18,participantes:"grupo",descripcion:"Una escena normal se convierte en un género musical específico.",pasos:["El público propone escena Y género musical","Actuar la escena con canciones del género","El facilitador puede cambiar el género","Mantener coherencia narrativa"],objetivo:"Versatilidad musical, humor",variantes:["Mezcla de géneros simultáneos"]},
+  {id:25,nombre:"Cierre: Tres palabras",tipo:"cierre",duracion:6,participantes:"grupo",descripcion:"Cada persona elige tres palabras que resuman la sesión o el show.",pasos:["Círculo de pie","Cada persona dice sus tres palabras sin explicación","El facilitador puede hilar un poema final","Aplauso colectivo de cierre"],objetivo:"Integración, reflexión, cierre colectivo",variantes:["Solo una imagen corporal"]},
+  {id:26,nombre:"Cierre: Agradecimiento",tipo:"cierre",duracion:8,participantes:"grupo",descripcion:"Ronda de agradecimientos específicos entre compañeros.",pasos:["Círculo","Cada persona agradece algo concreto a alguien","Sin obligación de respuesta","El facilitador cierra con agradecimiento general"],objetivo:"Vínculo grupal, reconocimiento",variantes:["Escrito en papel y leído en voz alta"]},
+  {id:27,nombre:"Punto de vista",tipo:"entrenamiento",duracion:20,participantes:"grupo",descripcion:"La misma escena desde el punto de vista de personajes distintos.",pasos:["Escena base acordada","Representarla desde el PDV del protagonista","Repetir desde el antagonista","Repetir desde un testigo secundario"],objetivo:"Empatía, narrativa múltiple",variantes:["Con objetos o animales como narradores"]},
+  {id:28,nombre:"Movimiento y texto",tipo:"entrenamiento",duracion:15,participantes:"parejas",descripcion:"El movimiento dicta el texto, no al revés.",pasos:["A empieza a moverse por el espacio","El movimiento sugiere quién es y qué quiere","Hablar solo cuando el cuerpo lo pida","B reacciona de la misma manera"],objetivo:"Fisicalidad, organicidad",variantes:["Con música sin letra"]},
+  {id:29,nombre:"Escenas paralelas",tipo:"formato",duracion:25,participantes:"grupo",descripcion:"Dos escenas simultáneas que se van interfiriendo.",pasos:["Dos grupos inician escenas independientes","El facilitador corta y alterna","Las escenas se mezclan gradualmente","Un cierre unificado"],objetivo:"Edición, ritmo, conexiones temáticas",variantes:["Tres escenas paralelas"]},
+  {id:30,nombre:"Personaje animal",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"Habitar un animal con todo el cuerpo antes de construir un personaje humano.",pasos:["Moverse por el espacio como un animal","Ir incorporando rasgos humanos manteniendo el animal","Encontrarse con otros animales-personajes","Presentaciones cruzadas"],objetivo:"Fisicalidad, desinhibición, personaje",variantes:["Con música que sugiere el ritmo del animal"]},
+  {id:31,nombre:"Escucha activa",tipo:"calentamiento",duracion:8,participantes:"parejas",descripcion:"Parar. Escuchar de verdad. Sin preparar la respuesta.",pasos:["Parejas frente a frente","A habla 2 minutos de cualquier cosa real","B escucha sin preparar respuesta","B resume lo que escuchó","Cambiar"],objetivo:"Presencia, escucha real",variantes:["Solo con contacto visual, sin hablar"]},
+  {id:32,nombre:"Justificación física",tipo:"entrenamiento",duracion:15,participantes:"grupo",descripcion:"Cada posición accidental del cuerpo debe justificarse narrativamente.",pasos:["Dos en escena","Cuando el facilitador grita '¡Congela!'","La siguiente persona ocupa una posición aleatoria","Justifica inmediatamente por qué está así"],objetivo:"Justificación, reactividad, humor",variantes:["Solo con poses de revista"]},
+  {id:33,nombre:"El regalo",tipo:"entrenamiento",duracion:12,participantes:"parejas",descripcion:"Dar y recibir regalos imaginarios con total convicción.",pasos:["A entrega un regalo imaginario (sin decir qué es)","B lo recibe y reacciona genuinamente","B describe lo que recibió","Alternar y aumentar la emotividad"],objetivo:"Especificidad física, emocionalidad",variantes:["Regalos terribles, regalos perfectos"]},
+  {id:34,nombre:"Status",tipo:"entrenamiento",duracion:20,participantes:"grupo",descripcion:"Jugar con el status alto y bajo en escena. Quién tiene el poder cambia.",pasos:["Asignar status del 1 al 10 a cada actor (secreto)","Escena libre donde cada uno juega su status","El público adivina el orden","Reflexionar sobre cómo se manifiesta"],objetivo:"Presencia escénica, jerarquía, poder",variantes:["Status que cambia durante la escena"]},
+  {id:35,nombre:"Narrador y actores",tipo:"formato",duracion:20,participantes:"grupo",descripcion:"Un narrador omnisciente cuenta, los actores representan.",pasos:["Elegir narrador","El narrador cuenta una historia en tiempo real","Los actores representan lo que se narra","El narrador puede modificar la realidad de los actores"],objetivo:"Escucha, reactividad, narrativa",variantes:["Narradores múltiples que se contradicen"]},
 ];
-
-function AppInner(){
-  const {dark,toggle,T}=useTheme();
-  const [tab,setTab]=useState("generar");
-  const [animating,setAnimating]=useState(false);
-  const [pubStimulus,setPubStimulus]=useState(null);
-  const [pubOpen,setPubOpen]=useState(false);
-  const [pubTimerDisplay,setPubTimerDisplay]=useState(0);
-  const [pubTimerRunning,setPubTimerRunning]=useState(false);
-  const [pubRundown,setPubRundown]=useState([]);
-  // M9: Idioma
-  const [lang,setLangState]=useState(()=>ls.get("impro_lang","es"));
-  const setLang=l=>{setLangState(l);ls.set("impro_lang",l);};
-  // M4: Grupo como contexto global
-  const [grupoActivo,setGrupoActivo]=useState(()=>ls.get("impro_grupo_activo",null));
-  const setGrupo=g=>{setGrupoActivo(g);ls.set("impro_grupo_activo",g);};
-  // M10: timer launcher desde sesiones → TimerBar
-  const timerLaunchRef=useRef(null);
-  const launchTimer=useCallback((mins)=>{if(timerLaunchRef.current)timerLaunchRef.current(mins*60);},[]);
-  const audio=useAudio();
-  useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("sala"))setTab("qr");},[]);
-  const changeTab=newTab=>{if(newTab===tab||animating)return;setAnimating(true);setTab(newTab);setTimeout(()=>setAnimating(false),280);};
-  return(<LangCtx.Provider value={{lang,setLang}}><div style={{minHeight:"100vh",background:T.bg,color:T.text,fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",transition:"background 0.3s,color 0.3s"}}>
-    <style>{`
-      @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-      @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-      @keyframes spotlightIn{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
-      @keyframes pubIn{from{transform:scale(0.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
-      @keyframes urgentPulse{from{opacity:1}to{opacity:0.4}}
-      .tab-content{animation:slideUp 0.28s ease}
-      *{box-sizing:border-box}
-      ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
-      button:hover{opacity:0.84}
-      select{font-family:inherit;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;border-radius:8px;padding:0.42rem 0.6rem}
-      select option{background:#1a1a1a}
-      input[type=range]{height:4px}
-      textarea{resize:vertical}
-      nav::-webkit-scrollbar{display:none}
-    `}</style>
-    {pubOpen&&<PantallaPublica stimulus={pubStimulus} timerDisplay={pubTimerDisplay} timerRunning={pubTimerRunning} rundown={pubRundown} onClose={()=>setPubOpen(false)}/>}
-    <header style={{borderBottom:`1px solid ${T.navBorder}`,padding:"0.8rem 1rem 0",background:T.nav,position:"sticky",top:0,zIndex:100,transition:"background 0.3s,border-color 0.3s"}}>
-      <div style={{maxWidth:960,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.45rem"}}>
-            <span style={{fontSize:"1.15rem"}}>🎭</span>
-            <span style={{fontWeight:900,fontSize:"1.05rem",letterSpacing:"-0.02em"}}>impro<span style={{color:T.accent}}>App</span></span>
-            <span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700}}>v7</span>
-          </div>
-          <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
-            <div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
-              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.22rem 0.5rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
-            </div>
-            <button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>
-            <button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>
-          </div>
-        </div>
-        <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
-          {TABS.map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:"0.45rem 0.75rem",fontSize:"0.8rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
-            <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
-          </button>))}
-        </nav>
-      </div>
-    </header>
-    <main style={{maxWidth:960,margin:"0 auto",padding:"1.25rem 1rem 6rem"}}>
-      <div className="tab-content" key={tab}>
-        {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
-        {tab==="reto"&&<TabReto/>}
-        {tab==="sesiones"&&<TabSesiones onLaunchTimer={launchTimer}/>}
-        {tab==="guia"&&<TabGuia/>}
-        {tab==="show"&&<TabShow audio={audio} onRundownChange={setPubRundown}/>}
-        {tab==="grupos"&&<TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/>}
-        {tab==="qr"&&<TabQR/>}
-        {tab==="admin"&&<TabAdmin/>}
-        {tab==="ajustes"&&<TabAjustes/>}
-        {tab==="manual"&&<TabManual/>}
-      </div>
-    </main>
-    <TimerBar audio={audio} launchRef={timerLaunchRef} onTimerChange={(d,r,p)=>{setPubTimerDisplay(d);setPubTimerRunning(r);}} />
-  </div></LangCtx.Provider>);
-}
-
-export default function ImproApp(){
-  const theme=useThemeProvider();
-  return <ThemeCtx.Provider value={theme}><AppInner/></ThemeCtx.Provider>;
-}
-
+];
