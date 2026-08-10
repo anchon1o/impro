@@ -164,6 +164,22 @@ export async function getGrupos() {
   }
 }
 
+// Admin: todos os grupos de todos os usuarios, con datos do dono.
+// Require a política grupos_select con "or public.is_admin()" (supabase_universo_patch.sql)
+export async function listarTodosGrupos() {
+  try {
+    const { data, error } = await supabase
+      .from('grupos')
+      .select('*, perfis(nome,email)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.warn('[db] listarTodosGrupos:', e?.message);
+    return [];
+  }
+}
+
 export async function saveGrupo(g) {
   ls.set('impro_grupos', (() => {
     const all = ls.get('impro_grupos', []);

@@ -138,6 +138,12 @@ export async function editarEstimulo(id, campos) {
   return !error;
 }
 
+export async function cambiarNivelEstimulo(id, novoNivel) {
+  const { error } = await supabase.from('estimulos').update({ nivel: novoNivel }).eq('id', id);
+  invalidarCache();
+  return !error;
+}
+
 export async function borrarEstimulo(id) {
   const { error } = await supabase.from('estimulos').delete().eq('id', id);
   invalidarCache();

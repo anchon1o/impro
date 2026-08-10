@@ -1,7 +1,7 @@
 // ============================================================
 // universo.js — Universo Impro respaldado por Supabase
-// Permite que calquera usuario logueado engada entradas reais.
-// Quedan marcadas "sen verificar" ata que un admin as revisa.
+// A sementeira inicial faise via SQL (supabase_universo_seed.sql),
+// non en tempo real, para evitar problemas de RLS na primeira carga.
 // ============================================================
 
 import { supabase } from './supabase.js';
@@ -11,70 +11,67 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
+function mapRow(d) {
+  return {
+    id: d.id, tipo: d.tipo, nome: d.nome, pais: d.pais, cidade: d.cidade,
+    desc: d.descricion, web: d.web, tags: d.tags || [], logo: d.logo,
+    verificado: d.verificado, userId: d.user_id,
+  };
+}
+
 // ─────────────────────────────────────────────
-// CARGA (verificadas para todos + as propias sen verificar)
+// CARGA — só lectura, sen efectos secundarios
 // ─────────────────────────────────────────────
-export async function cargarUniverso(seed) {
+export async function cargarUniverso(fallback) {
   try {
     const { data, error } = await supabase
       .from('universo')
       .select('*')
       .order('created_at', { ascending: true });
     if (error) throw error;
-
-    if (!data || data.length === 0) {
-      // Primeira vez: sementar coas entradas verificadas base
-      if (seed?.length) {
-        await supabase.from('universo').insert(
-          seed.map(s => ({
-            tipo: s.tipo, nome: s.nome, pais: s.pais, cidade: s.cidade,
-            descricion: s.desc, web: s.web, tags: s.tags, logo: s.logo,
-            verificado: true, user_id: null,
-          }))
-        );
-        return cargarUniverso(null); // recargar xa sementado
-      }
-      return seed || [];
+    if (data && data.length > 0) {
+      const mapped = data.map(mapRow);
+      ls.set('impro_universo_cache', mapped);
+      return mapped;
     }
-
-    const mapped = data.map(d => ({
-      id: d.id, tipo: d.tipo, nome: d.nome, pais: d.pais, cidade: d.cidade,
-      desc: d.descricion, web: d.web, tags: d.tags || [], logo: d.logo,
-      verificado: d.verificado, propio: false, userId: d.user_id,
-    }));
-    ls.set('impro_universo_cache', mapped);
-    return mapped;
+    // Táboa aínda baleira (sementeira SQL non executada): usar fallback estático
+    return fallback || [];
   } catch (e) {
-    console.warn('[universo] fallo na carga, uso caché/seed:', e?.message);
-    return ls.get('impro_universo_cache', seed || []);
+    console.warn('[universo] fallo na carga, uso caché/fallback:', e?.message);
+    return ls.get('impro_universo_cache', fallback || []);
   }
 }
 
 // ─────────────────────────────────────────────
-// ENGADIR
+// ENGADIR (usuario propón / admin engade xa verificado)
 // ─────────────────────────────────────────────
-export async function engadirUniverso(entry, userId) {
-  try {
-    const { data, error } = await supabase
-      .from('universo')
-      .insert({
-        tipo: entry.tipo, nome: entry.nome, pais: entry.pais || '🌍',
-        cidade: entry.cidade || '', descricion: entry.desc, web: entry.web || '',
-        tags: entry.tags || [], logo: entry.logo || '🎭',
-        verificado: false, user_id: userId,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return {
-      id: data.id, tipo: data.tipo, nome: data.nome, pais: data.pais, cidade: data.cidade,
-      desc: data.descricion, web: data.web, tags: data.tags || [], logo: data.logo,
-      verificado: false, propio: true,
-    };
-  } catch (e) {
-    console.error('[universo] erro ao engadir:', e?.message);
-    return null;
-  }
+export async function engadirUniverso(entry, userId, verificadoDirecto = false) {
+  const { data, error } = await supabase
+    .from('universo')
+    .insert({
+      tipo: entry.tipo, nome: entry.nome, pais: entry.pais || '🌍',
+      cidade: entry.cidade || '', descricion: entry.desc, web: entry.web || '',
+      tags: entry.tags || [], logo: entry.logo || '🎭',
+      verificado: verificadoDirecto, user_id: verificadoDirecto ? null : userId,
+    })
+    .select()
+    .single();
+  if (error) { console.error('[universo] erro ao engadir:', error.message); return null; }
+  return mapRow(data);
+}
+
+export async function editarUniverso(id, campos) {
+  const patch = {};
+  if (campos.tipo!==undefined) patch.tipo = campos.tipo;
+  if (campos.nome!==undefined) patch.nome = campos.nome;
+  if (campos.pais!==undefined) patch.pais = campos.pais;
+  if (campos.cidade!==undefined) patch.cidade = campos.cidade;
+  if (campos.desc!==undefined) patch.descricion = campos.desc;
+  if (campos.web!==undefined) patch.web = campos.web;
+  if (campos.tags!==undefined) patch.tags = campos.tags;
+  if (campos.logo!==undefined) patch.logo = campos.logo;
+  const { error } = await supabase.from('universo').update(patch).eq('id', id);
+  return !error;
 }
 
 export async function borrarUniverso(id) {
@@ -83,8 +80,16 @@ export async function borrarUniverso(id) {
 }
 
 // ─────────────────────────────────────────────
-// ADMIN: moderación
+// ADMIN: moderación e xestión completa
 // ─────────────────────────────────────────────
+export async function listarTodoUniverso() {
+  const { data, error } = await supabase
+    .from('universo')
+    .select('*, perfis(nome,email)')
+    .order('created_at', { ascending: false });
+  return error ? [] : (data || []).map(d => ({ ...mapRow(d), achegadoPor: d.perfis?.nome || d.perfis?.email || null }));
+}
+
 export async function listarPendentesUniverso() {
   const { data, error } = await supabase
     .from('universo')

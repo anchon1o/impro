@@ -6,10 +6,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, TIPO_COLOR } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
-import { listarUsuarios, aprobarUsuario, cambiarRol, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
-import { getDinamicas, deleteDinamica } from '../db.js';
-import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
-import { listarPendentesUniverso, verificarUniverso } from '../universo.js';
+import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
+import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
+import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
+import { listarPendentesUniverso, listarTodoUniverso, verificarUniverso, engadirUniverso, editarUniverso, borrarUniverso } from '../universo.js';
 
 export const ADMIN_PIN = "1234";
 
@@ -30,6 +30,7 @@ export function TabAdmin(){
     {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"universo",emoji:"🌍",label:"Universo"},
+    {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
     {id:"config",emoji:"⚙️",label:"Config"},
   ];
@@ -53,6 +54,7 @@ export function TabAdmin(){
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
+    {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
   </div>);
@@ -95,6 +97,11 @@ export function AdminEstimulos({T,S}){
   const delItem=async(it)=>{
     if(!confirm(`Eliminar "${it.texto_es}"?`))return;
     const ok=await borrarEstimulo(it.id);
+    if(ok){setItems(p=>p.filter(x=>x.id!==it.id));recargar(true);}
+  };
+  const moveNivel=async(it)=>{
+    const novo=nivel==="simple"?"plus":"simple";
+    const ok=await cambiarNivelEstimulo(it.id,novo);
     if(ok){setItems(p=>p.filter(x=>x.id!==it.id));recargar(true);}
   };
 
@@ -150,6 +157,7 @@ export function AdminEstimulos({T,S}){
                 {langCol!=="es"&&<p style={{color:T.text4,fontSize:"0.74rem",margin:"0.1rem 0 0"}}>{it.texto_es}</p>}
               </div>
               <button onClick={()=>{setEditId(it.id);setEditText(val);}} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
+              {langCol==="es"&&<button onClick={()=>moveNivel(it)} title={nivel==="simple"?"Mover a Plus":"Mover a Simple"} style={{...S.btn(T.bg3,nivel==="simple"?"#e040fb":"#40c4ff"),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>{nivel==="simple"?"⭐→":"◆→"}</button>}
               {langCol==="es"&&<button onClick={()=>delItem(it)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>}
             </>)}
           </div>);
@@ -267,47 +275,133 @@ export function AdminDinamicas({T,S}){
   const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
   const [search,setSearch]=useState("");
   const [filtro,setFiltro]=useState("todos");
+  const [orde,setOrde]=useState("nombre");
+  const [editId,setEditId]=useState(null);
+  const [showForm,setShowForm]=useState(false);
+  const FORM0={nombre:"",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"",pasos:"",objetivo:"",variantes:""};
+  const [form,setForm]=useState(FORM0);
+
   useEffect(()=>{getDinamicas(DINAMICAS_BASE).then(setDinamicas);},[]);
+
   const tipos=["todos",...new Set(dinamicas.map(d=>d.tipo))];
-  const lista=dinamicas.filter(d=>(filtro==="todos"||d.tipo===filtro)&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())));
+  let lista=dinamicas.filter(d=>(filtro==="todos"||d.tipo===filtro)&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())));
+  lista=[...lista].sort((a,b)=>{
+    if(orde==="nombre")return a.nombre.localeCompare(b.nombre);
+    if(orde==="duracion")return a.duracion-b.duracion;
+    if(orde==="tipo")return a.tipo.localeCompare(b.tipo);
+    return 0;
+  });
+
   const deleteDin=async id=>{if(!confirm("¿Eliminar?"))return;const u=dinamicas.filter(d=>d.id!==id);setDinamicas(u);await deleteDinamica(id);};
   const restoreAll=()=>{if(!confirm("¿Restaurar todas as dinámicas base?"))return;setDinamicas(DINAMICAS_BASE);ls.set("impro_dinamicas_v2",DINAMICAS_BASE);};
+
+  const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);};
+  const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);};
+  const saveForm=async()=>{
+    if(!form.nombre.trim())return;
+    const d={...form,id:editId||String(Date.now()),duracion:Number(form.duracion),
+      pasos:form.pasos.split("\n").map(s=>s.trim()).filter(Boolean),
+      variantes:form.variantes.split("\n").map(s=>s.trim()).filter(Boolean)};
+    const updated=editId?dinamicas.map(x=>x.id===editId?d:x):[...dinamicas,d];
+    setDinamicas(updated);ls.set("impro_dinamicas_v2",updated);
+    await saveDinamica(d);
+    setShowForm(false);
+  };
+
   return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.75rem"}}>
+      <p style={{...S.ptitle(T.accent),margin:0}}>Dinámicas ({dinamicas.length})</p>
+      <button onClick={openNew} style={S.btn(T.accent)}>+ Nova dinámica</button>
+    </div>
+
+    {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
+      <p style={S.ptitle(T.accent)}>{editId?"Editar dinámica":"Nova dinámica"}</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
+        <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Nome" style={S.input}/>
+        <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
+          {["calentamiento","entrenamiento","juego","formato","musical","pausa","cierre"].map(t=><option key={t} value={t}>{t}</option>)}
+        </select>
+        <input type="number" value={form.duracion} onChange={e=>setForm(f=>({...f,duracion:e.target.value}))} placeholder="Duración (min)" style={S.input}/>
+        <select value={form.participantes} onChange={e=>setForm(f=>({...f,participantes:e.target.value}))} style={S.input}>
+          <option value="grupo">grupo</option><option value="parejas">parejas</option>
+        </select>
+      </div>
+      <textarea value={form.descripcion} onChange={e=>setForm(f=>({...f,descripcion:e.target.value}))} placeholder="Descrición" style={{...S.input,minHeight:55,marginBottom:"0.5rem",resize:"vertical"}}/>
+      <textarea value={form.pasos} onChange={e=>setForm(f=>({...f,pasos:e.target.value}))} placeholder="Pasos (unha liña cada un)" style={{...S.input,minHeight:70,marginBottom:"0.5rem",resize:"vertical"}}/>
+      <input value={form.objetivo} onChange={e=>setForm(f=>({...f,objetivo:e.target.value}))} placeholder="Obxectivo" style={{...S.input,marginBottom:"0.5rem"}}/>
+      <textarea value={form.variantes} onChange={e=>setForm(f=>({...f,variantes:e.target.value}))} placeholder="Variantes (unha liña cada unha)" style={{...S.input,minHeight:50,marginBottom:"0.75rem",resize:"vertical"}}/>
+      <div style={{display:"flex",gap:"0.5rem"}}>
+        <button onClick={saveForm} disabled={!form.nombre.trim()} style={{...S.btn(T.accent),opacity:form.nombre.trim()?1:0.4}}>Gardar</button>
+        <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text3)}>Cancelar</button>
+      </div>
+    </div>}
+
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap",alignItems:"center"}}>
-      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1}}/>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1,minWidth:140}}/>
+      <select value={orde} onChange={e=>setOrde(e.target.value)} style={{...S.input,width:"auto"}}>
+        <option value="nombre">Ordenar: Nome</option>
+        <option value="duracion">Ordenar: Duración</option>
+        <option value="tipo">Ordenar: Tipo</option>
+      </select>
       <span style={{color:T.text4,fontSize:"0.78rem"}}>{lista.length}/{dinamicas.length}</span>
       <button onClick={restoreAll} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem"}}>↺ Restaurar</button>
     </div>
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.85rem",flexWrap:"wrap"}}>
       {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(TIPO_COLOR[t]||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.25rem 0.7rem",fontSize:"0.72rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
     </div>
-    <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+    <div style={{display:"flex",flexDirection:"column",gap:"0.4rem",maxHeight:520,overflowY:"auto"}}>
       {lista.map(d=>(<div key={d.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COLOR[d.tipo]||T.accent}`}}>
-        <div style={{flex:1}}>
+        <div style={{flex:1,minWidth:0}}>
           <span style={{fontWeight:700,color:T.text,fontSize:"0.88rem"}}>{d.nombre}</span>
           <span style={{...S.tag(TIPO_COLOR[d.tipo]||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
           <span style={{color:T.text4,fontSize:"0.75rem",marginLeft:"0.4rem"}}>⏱{d.duracion}min</span>
         </div>
+        <button onClick={()=>openEdit(d)} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
         <button onClick={()=>deleteDin(d.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>
       </div>))}
+      {lista.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen resultados.</p>}
     </div>
   </div>);
 }
-
 export function AdminUniverso({T,S}){
+  const {user}=useAuth();
   const [pendentes,setPendentes]=useState([]);
+  const [todos,setTodos]=useState([]);
   const [loading,setLoading]=useState(true);
+  const [vista,setVista]=useState("pendentes");
+  const [showForm,setShowForm]=useState(false);
+  const [editId,setEditId]=useState(null);
+  const FORM0={tipo:"compañía",nome:"",pais:"🇪🇸",cidade:"",desc:"",web:"",tags:"",logo:"🎭"};
+  const [form,setForm]=useState(FORM0);
 
   const cargar=useCallback(async()=>{
     setLoading(true);
-    const p=await listarPendentesUniverso();
-    setPendentes(p);setLoading(false);
+    const [p,t]=await Promise.all([listarPendentesUniverso(),listarTodoUniverso()]);
+    setPendentes(p);setTodos(t);setLoading(false);
   },[]);
   useEffect(()=>{cargar();},[cargar]);
 
   const decidir=async(id,aprobar)=>{
     await verificarUniverso(id,aprobar);
-    setPendentes(prev=>prev.filter(x=>x.id!==id));
+    cargar();
+  };
+  const borrar=async(id)=>{
+    if(!confirm("Eliminar esta entrada de Universo Impro?"))return;
+    await borrarUniverso(id);cargar();
+  };
+
+  const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);};
+  const openEdit=item=>{
+    setEditId(item.id);
+    setForm({tipo:item.tipo,nome:item.nome,pais:item.pais,cidade:item.cidade,desc:item.desc,web:item.web,tags:(item.tags||[]).join(", "),logo:item.logo});
+    setShowForm(true);
+  };
+  const gardar=async()=>{
+    if(!form.nome.trim()||!form.desc.trim())return;
+    const entry={tipo:form.tipo,nome:form.nome.trim(),pais:form.pais.trim(),cidade:form.cidade.trim(),desc:form.desc.trim(),web:form.web.trim(),tags:form.tags.split(",").map(t=>t.trim()).filter(Boolean),logo:form.logo};
+    if(editId){await editarUniverso(editId,entry);}
+    else{await engadirUniverso(entry,user?.id,true);} // admin engade xa verificado
+    setShowForm(false);cargar();
   };
 
   const TIPO_COL={"compañía":"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
@@ -315,12 +409,36 @@ export function AdminUniverso({T,S}){
   if(loading)return<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>;
 
   return(<div>
-    <div style={S.panel}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem"}}>
-        <p style={{...S.ptitle(T.accent),margin:0}}>Entradas pendentes de verificar ({pendentes.length})</p>
-        <button onClick={cargar} style={{...S.btn(T.bg3,T.text3),fontSize:"0.75rem"}}>↻</button>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
+      <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3}}>
+        {[["pendentes",`Pendentes (${pendentes.length})`],["todos",`Todos (${todos.length})`]].map(([id,label])=>
+          <button key={id} onClick={()=>setVista(id)} style={{...S.btn(vista===id?T.bg2:"transparent",vista===id?T.text:T.text3),borderRadius:8,padding:"0.35rem 0.7rem",fontSize:"0.78rem"}}>{label}</button>)}
       </div>
-      {pendentes.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen entradas pendentes. Todo o Universo Impro está revisado.</p>}
+      <button onClick={openNew} style={S.btn(T.accent)}>+ Engadir verificada</button>
+    </div>
+
+    {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
+      <p style={S.ptitle(T.accent)}>{editId?"Editar entrada":"Nova entrada (xa verificada)"}</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
+        <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
+          {["compañía","festival","escola","persoa","proxecto"].map(t=><option key={t} value={t}>{t}</option>)}
+        </select>
+        <input value={form.pais} onChange={e=>setForm(f=>({...f,pais:e.target.value}))} placeholder="🇪🇸 País" style={S.input}/>
+        <input value={form.cidade} onChange={e=>setForm(f=>({...f,cidade:e.target.value}))} placeholder="Cidade" style={S.input}/>
+        <input value={form.logo} onChange={e=>setForm(f=>({...f,logo:e.target.value}))} placeholder="Emoji" style={S.input}/>
+      </div>
+      <input value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Nome" style={{...S.input,marginBottom:"0.5rem"}}/>
+      <textarea value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Descrición real e verificable" style={{...S.input,minHeight:65,marginBottom:"0.5rem",resize:"vertical"}}/>
+      <input value={form.web} onChange={e=>setForm(f=>({...f,web:e.target.value}))} placeholder="Web (opcional)" style={{...S.input,marginBottom:"0.5rem"}}/>
+      <input value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="Etiquetas separadas por coma" style={{...S.input,marginBottom:"0.75rem"}}/>
+      <div style={{display:"flex",gap:"0.5rem"}}>
+        <button onClick={gardar} disabled={!form.nome.trim()||!form.desc.trim()} style={{...S.btn(T.accent),opacity:(!form.nome.trim()||!form.desc.trim())?0.4:1}}>Gardar</button>
+        <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text3)}>Cancelar</button>
+      </div>
+    </div>}
+
+    {vista==="pendentes"&&<div style={S.panel}>
+      {pendentes.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen entradas pendentes.</p>}
       <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
         {pendentes.map(p=>(<div key={p.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",borderLeft:`3px solid ${TIPO_COL[p.tipo]||T.accent}`}}>
           <div style={{marginBottom:"0.5rem"}}>
@@ -335,6 +453,57 @@ export function AdminUniverso({T,S}){
           </div>
         </div>))}
       </div>
+    </div>}
+
+    {vista==="todos"&&<div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+      {todos.map(item=>(<div key={item.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COL[item.tipo]||T.accent}`}}>
+        <div style={{flex:1,minWidth:0}}>
+          <span style={{fontWeight:700,color:T.text,fontSize:"0.88rem"}}>{item.pais} {item.nome}</span>
+          <span style={{...S.tag(TIPO_COL[item.tipo]||T.accent),marginLeft:"0.4rem"}}>{item.tipo}</span>
+          {!item.verificado&&<span style={{...S.tag("#ffd740"),marginLeft:"0.4rem"}}>sen verificar</span>}
+          {item.achegadoPor&&<p style={{color:T.text4,fontSize:"0.72rem",margin:"0.2rem 0 0"}}>por {item.achegadoPor}</p>}
+        </div>
+        <button onClick={()=>openEdit(item)} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
+        <button onClick={()=>borrar(item.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>
+      </div>))}
+    </div>}
+  </div>);
+}
+
+export function AdminGrupos({T,S}){
+  const [grupos,setGrupos]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [search,setSearch]=useState("");
+
+  const cargar=useCallback(async()=>{
+    setLoading(true);
+    const g=await listarTodosGrupos();
+    setGrupos(g);setLoading(false);
+  },[]);
+  useEffect(()=>{cargar();},[cargar]);
+
+  const lista=grupos.filter(g=>!search||g.nombre?.toLowerCase().includes(search.toLowerCase())||g.perfis?.nome?.toLowerCase().includes(search.toLowerCase()));
+
+  if(loading)return<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>;
+
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
+      <p style={{...S.ptitle(T.accent),margin:0}}>Todos os grupos ({grupos.length})</p>
+      <button onClick={cargar} style={{...S.btn(T.bg3,T.text3),fontSize:"0.75rem"}}>↻</button>
+    </div>
+    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar por grupo ou propietario..." style={{...S.input,marginBottom:"0.85rem"}}/>
+    {lista.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen grupos que amosar.</p>}
+    <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+      {lista.map(g=>(<div key={g.id} style={{...S.panel,padding:"0.7rem 0.9rem",borderLeft:`3px solid ${g.color||T.accent}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:"0.4rem",marginBottom:"0.4rem"}}>
+          <span style={{color:T.text,fontWeight:700,fontSize:"0.9rem"}}>{g.nombre}</span>
+          <span style={{color:T.text4,fontSize:"0.75rem"}}>propietario: {g.perfis?.nome||g.perfis?.email||"descoñecido"}</span>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:"0.3rem"}}>
+          {(g.miembros||[]).length===0&&<span style={{color:T.text4,fontSize:"0.78rem"}}>Sen membros</span>}
+          {(g.miembros||[]).map((m,i)=><span key={i} style={{background:T.bg3,borderRadius:7,padding:"0.18rem 0.55rem",fontSize:"0.78rem",color:T.text2}}>{m}</span>)}
+        </div>
+      </div>))}
     </div>
   </div>);
 }
@@ -412,6 +581,8 @@ export function AdminUsuarios({T,S}){
   const [propostas,setPropostas]=useState([]);
   const [loading,setLoading]=useState(true);
   const [filtro,setFiltro]=useState("todos");
+  const [editId,setEditId]=useState(null);
+  const [editNome,setEditNome]=useState("");
 
   const cargar=async()=>{
     setLoading(true);
@@ -428,6 +599,12 @@ export function AdminUsuarios({T,S}){
     const novo=u.rol==="admin"?"user":"admin";
     await cambiarRol(u.id,novo);
     setUsuarios(prev=>prev.map(x=>x.id===u.id?{...x,rol:novo}:x));
+  };
+  const saveNome=async(u)=>{
+    if(!editNome.trim())return;
+    const ok=await editarNomeUsuario(u.id,editNome.trim());
+    if(ok)setUsuarios(prev=>prev.map(x=>x.id===u.id?{...x,nome:editNome.trim()}:x));
+    setEditId(null);setEditNome("");
   };
   const decidirCompartir=async(d,aprobar)=>{
     await aprobarCompartir(d.id,aprobar);
@@ -461,6 +638,10 @@ export function AdminUsuarios({T,S}){
       </div>
     </div>}
 
+    <div style={{...S.panel,border:"1.5px solid #40c4ff33",background:"#40c4ff08"}}>
+      <p style={{color:"#40c4ff",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>ℹ️ Por seguridade, as contas créanse por auto-rexistro (Entrar → Crear conta) e ti apróbaas aquí. Non é posible crear contas con contrasinal directamente dende este panel sen un servidor propio.</p>
+    </div>
+
     <div style={S.panel}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
         <p style={{...S.ptitle(T.accent),margin:0}}>Usuarios ({usuarios.length})</p>
@@ -474,12 +655,21 @@ export function AdminUsuarios({T,S}){
       <div style={{display:"flex",flexDirection:"column",gap:"0.45rem"}}>
         {lista.map(u=>(<div key={u.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",flexWrap:"wrap",borderLeft:`3px solid ${u.aprobado?"#69f0ae":"#ffd740"}`}}>
           <div style={{flex:1,minWidth:150}}>
-            <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexWrap:"wrap"}}>
-              <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{u.nome||u.email.split("@")[0]}</span>
-              {u.rol==="admin"&&<span style={S.tag("#e040fb")}>admin</span>}
-              {!u.aprobado&&<span style={S.tag("#ffd740")}>pendente</span>}
-            </div>
-            <p style={{color:T.text4,fontSize:"0.75rem",margin:"0.15rem 0 0"}}>{u.email}</p>
+            {editId===u.id?(
+              <div style={{display:"flex",gap:"0.35rem"}}>
+                <input value={editNome} onChange={e=>setEditNome(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveNome(u)} style={{...S.input,fontSize:"0.85rem",padding:"0.3rem 0.5rem"}} autoFocus/>
+                <button onClick={()=>saveNome(u)} style={{...S.btn(T.accent),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>✓</button>
+                <button onClick={()=>setEditId(null)} style={{...S.btn(T.bg4,T.text3),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>✕</button>
+              </div>
+            ):(<>
+              <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexWrap:"wrap"}}>
+                <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{u.nome||u.email.split("@")[0]}</span>
+                {u.rol==="admin"&&<span style={S.tag("#e040fb")}>admin</span>}
+                {!u.aprobado&&<span style={S.tag("#ffd740")}>pendente</span>}
+                <button onClick={()=>{setEditId(u.id);setEditNome(u.nome||"");}} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.75rem"}}>✏️</button>
+              </div>
+              <p style={{color:T.text4,fontSize:"0.75rem",margin:"0.15rem 0 0"}}>{u.email}</p>
+            </>)}
           </div>
           <div style={{display:"flex",gap:"0.35rem"}}>
             <button onClick={()=>toggleAprobado(u)} style={{...S.btn(u.aprobado?T.bg4:"#69f0ae",u.aprobado?T.text3:"#000"),fontSize:"0.75rem",padding:"0.3rem 0.6rem"}}>{u.aprobado?"Desactivar":"✓ Aprobar"}</button>

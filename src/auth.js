@@ -82,6 +82,11 @@ export async function cambiarRol(userId, rol) {
   return !error;
 }
 
+export async function editarNomeUsuario(userId, nome) {
+  const { error } = await supabase.from('perfis').update({ nome }).eq('id', userId);
+  return !error;
+}
+
 // ── DINÁMICAS COMPARTIDAS ──
 export async function proporCompartir(dinamicaId) {
   const { error } = await supabase
