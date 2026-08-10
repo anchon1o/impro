@@ -9,6 +9,7 @@ import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
 import { getDinamicas, deleteDinamica } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
+import { listarPendentesUniverso, verificarUniverso } from '../universo.js';
 
 export const ADMIN_PIN = "1234";
 
@@ -28,6 +29,7 @@ export function TabAdmin(){
     {id:"estimulos",emoji:"✦",label:"Estímulos"},
     {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
+    {id:"universo",emoji:"🌍",label:"Universo"},
     {id:"stats",emoji:"📊",label:"Stats"},
     {id:"config",emoji:"⚙️",label:"Config"},
   ];
@@ -50,6 +52,7 @@ export function TabAdmin(){
     {adminTab==="estimulos"&&<AdminEstimulos T={T} S={S}/>}
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
+    {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
   </div>);
@@ -287,6 +290,51 @@ export function AdminDinamicas({T,S}){
         </div>
         <button onClick={()=>deleteDin(d.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>
       </div>))}
+    </div>
+  </div>);
+}
+
+export function AdminUniverso({T,S}){
+  const [pendentes,setPendentes]=useState([]);
+  const [loading,setLoading]=useState(true);
+
+  const cargar=useCallback(async()=>{
+    setLoading(true);
+    const p=await listarPendentesUniverso();
+    setPendentes(p);setLoading(false);
+  },[]);
+  useEffect(()=>{cargar();},[cargar]);
+
+  const decidir=async(id,aprobar)=>{
+    await verificarUniverso(id,aprobar);
+    setPendentes(prev=>prev.filter(x=>x.id!==id));
+  };
+
+  const TIPO_COL={"compañía":"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
+
+  if(loading)return<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>;
+
+  return(<div>
+    <div style={S.panel}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem"}}>
+        <p style={{...S.ptitle(T.accent),margin:0}}>Entradas pendentes de verificar ({pendentes.length})</p>
+        <button onClick={cargar} style={{...S.btn(T.bg3,T.text3),fontSize:"0.75rem"}}>↻</button>
+      </div>
+      {pendentes.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen entradas pendentes. Todo o Universo Impro está revisado.</p>}
+      <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+        {pendentes.map(p=>(<div key={p.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",borderLeft:`3px solid ${TIPO_COL[p.tipo]||T.accent}`}}>
+          <div style={{marginBottom:"0.5rem"}}>
+            <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{p.pais} {p.nome}</span>
+            <span style={{...S.tag(TIPO_COL[p.tipo]||T.accent),marginLeft:"0.4rem"}}>{p.tipo}</span>
+            <p style={{color:T.text3,fontSize:"0.78rem",margin:"0.35rem 0 0",lineHeight:1.5}}>{p.descricion}</p>
+            <p style={{color:T.text4,fontSize:"0.72rem",margin:"0.3rem 0 0"}}>{p.cidade} · achegado por {p.perfis?.nome||p.perfis?.email||"?"}{p.web&&` · ${p.web}`}</p>
+          </div>
+          <div style={{display:"flex",gap:"0.4rem"}}>
+            <button onClick={()=>decidir(p.id,true)} style={{...S.btn("#69f0ae","#000"),fontSize:"0.78rem"}}>✓ Verificar e publicar</button>
+            <button onClick={()=>decidir(p.id,false)} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>✕ Rexeitar e borrar</button>
+          </div>
+        </div>))}
+      </div>
     </div>
   </div>);
 }

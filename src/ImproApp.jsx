@@ -14,6 +14,7 @@ import {
 } from './auth.js';
 import { saveDinamica, saveGrupo, saveSesion } from './db.js';
 import { invalidarCache } from './estimulos.js';
+import { supabaseConfigured } from './supabase.js';
 
 import { TabGenerar } from './tabs/TabGenerar.jsx';
 import { TabReto } from './tabs/TabReto.jsx';
@@ -117,6 +118,9 @@ function AppInner({perfil,publico}={}){
         </nav>
       </div>
     </header>
+    {!supabaseConfigured&&<div style={{background:"#ff6e4022",borderBottom:"1px solid #ff6e4055",padding:"0.55rem 1rem",textAlign:"center"}}>
+      <span style={{color:"#ff6e40",fontSize:"0.82rem",fontWeight:700}}>⚠️ Sen conexión a Supabase — faltan as credenciais (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Login e datos en tempo real non funcionarán.</span>
+    </div>}
     {migrando&&<div style={{background:"#69f0ae15",borderBottom:"1px solid #69f0ae33",padding:"0.5rem 1rem",textAlign:"center"}}>
       <span style={{color:"#69f0ae",fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
     </div>}
