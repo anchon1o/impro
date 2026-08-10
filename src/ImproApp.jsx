@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import {
+  cargarEstimulos, cargarCategorias, IDIOMAS,
+  listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo,
+  exportarTraducion, importarTraducion, progresoTraducion, invalidarCache,
+} from './estimulos.js';
+import {
   getSession, onAuthChange, signUp, signIn, signOut, resetPassword,
   getPerfil, listarUsuarios, aprobarUsuario, cambiarRol,
   proporCompartir, listarPropostasCompartir, aprobarCompartir,
@@ -58,22 +63,53 @@ function useThemeProvider() {
   return { dark, toggle, T };
 }
 
-const ESTIMULOS_BASE = {
-  PROFESIÓN:{ simple:["Domador de urracas","Odontólogo de hipopotamos","Sexador de pollos","Biódromo","Jardinero de planetas","Domador de cometas","Reparador de sueños","Constructor de castillos de arena","Cazador de arcoíris","Traductor de pensamientos","Vendedor de burbujas","Bibliotecario de secretos","Guardián de puertas mágicas","Recolector de estrellas","Músico de tormentas","Mecánico de globos aerostáticos","Inventor de olores","Payaso de la realeza","Director de nubes","Chef de volcanes","Maestro de marionetas gigantes","Arqueólogo de mundos perdidos","Capitán de barcos invisibles","Criador de dragones","Pintor de cielos","Piloto de submarinos voladores","Entrenador de gatos ninja","Profesor de magia básica","Cerrajero de cofres misteriosos","Limpiador de fantasmas","Estilista de momias","Investigador de dimensiones paralelas","Panadero de pan que canta","Botánico de jardines flotantes","Inventora de caramelos invisibles","Guardián de puentes colgantes","Jardinera de cactus parlantes","Mecánico de cohetes reciclados","Navegante de mapas incompletos","Pastora de unicornios","Fotógrafo de fantasmas","Cazadora de auroras boreales","Bibliotecario de secretos olvidados","Tejedora de telarañas doradas","Panadero de volcanes","Restauradora de sueños rotos","Conductor de trenes subterráneos","Poeta de calles perdidas","Criadora de dragones domésticos","Experta en cerraduras mágicas","Entrenador de tortugas ninja","Chef de sopas imposibles","Inspectora de puentes invisibles","Pintor de nubes pasajeras","Maestra de pociones para principiantes","Carpintero de casas flotantes","Compositora de canciones para plantas","Capitán de barcos de papel","Vendedora de suspiros embotellados","Guía de laberintos misteriosos","Payaso de funerales","Arquitecta de castillos en el aire","Organizador de carreras de caracoles","Cazador de errores de la realidad","Costurera de abrigos invisibles","Alquimista de emociones","Barista de cafeterías interdimensionales","Ingeniera de paraguas voladores","Director de orquesta de grillos","Domadora de gatos salvajes","Fabricante de relojes que retroceden","Escultora de humo","Guardiana de fuentes mágicas","Creador de ilusiones ópticas","Repartidora de cartas del futuro","Constructor de toboganes infinitos","Agricultor de frutas cuadradas","Ilusionista de cumpleaños olvidados","Cazador de truenos","Entrenadora de caballos de fuego","Tasador de objetos imposibles","Mecánica de bicicletas acuáticas","Programadora de sueños lúcidos","Juglar de aldeas sin nombre","Inventor de lenguajes nuevos","Panadera de pasteles flotantes","Arquitecto de iglús tropicales","Cuidadora de niños invisibles","Animador de reuniones aburridas","Decoradora de cuevas subterráneas","Confeccionista de sombreros imposibles","Bióloga de especies inventadas","Conductora de globos aerostáticos","Vigilante de planetas olvidados","Escritora de mensajes secretos","Recolectora de hojas susurrantes","Directora de coros de robots","Pastora de ovejas eléctricas","Maestro de duendes revoltosos","Diseñadora de laberintos vivientes","Traductora de murmullos marinos","Músico de tormentas lejanas","Restaurador de estatuas vivientes","Reparadora de paraguas rotos","Astronauta","Carpintero","Pastelero","Detective","Bibliotecario","Piloto de globos","Cerrajero","Maestro de esgrima","Escultor","Bailarín de breakdance","Florista","Maquinista de tren","Domador de serpientes","Científico nuclear","Sommelier","Fotógrafo de naturaleza","Chef vegano","Alfarero","Revisor de tren","Pintor de murales","Locutor de radio","Guía de montaña","Botánico","Instructor de yoga","Payaso de circo","Herrerón","Médico forense","Apicultor","Escenógrafo","Mecánico de bicicletas","Desarrollador de videojuegos","Orfebre","Actor de doblaje","Director de cine","Salvavidas","Enfermero pediátrico","Inventor de juguetes","Meteorólogo","Vigilante de museo","Magó profesional","Ingeniero de sonido","Instructor de paracaidismo","Criador de caballos","Repostero de bodas","Artista de tatuajes","Operador de drones","Diseñador de parques","Entrenador de perros","Terapeuta ocupacional","Fabricante de instrumentos"], plus:["Domador de urracas","Odontólogo de hipopotamos","Sexador de pollos","Biódromo","Jardinero de planetas","Domador de cometas","Reparador de sueños","Constructor de castillos de arena","Cazador de arcoíris","Traductor de pensamientos","Vendedor de burbujas","Bibliotecario de secretos","Guardián de puertas mágicas","Recolector de estrellas","Músico de tormentas","Mecánico de globos aerostáticos","Inventor de olores","Payaso de la realeza","Director de nubes","Chef de volcanes","Maestro de marionetas gigantes","Arqueólogo de mundos perdidos","Capitán de barcos invisibles","Criador de dragones","Pintor de cielos","Piloto de submarinos voladores","Entrenador de gatos ninja","Profesor de magia básica","Cerrajero de cofres misteriosos","Limpiador de fantasmas","Estilista de momias","Investigador de dimensiones paralelas","Panadero de pan que canta","Botánico de jardines flotantes","Inventora de caramelos invisibles","Guardián de puentes colgantes","Jardinera de cactus parlantes","Mecánico de cohetes reciclados","Navegante de mapas incompletos","Pastora de unicornios","Fotógrafo de fantasmas","Cazadora de auroras boreales","Bibliotecario de secretos olvidados","Tejedora de telarañas doradas","Panadero de volcanes","Restauradora de sueños rotos","Conductor de trenes subterráneos","Poeta de calles perdidas","Criadora de dragones domésticos","Experta en cerraduras mágicas","Entrenador de tortugas ninja","Chef de sopas imposibles","Inspectora de puentes invisibles","Pintor de nubes pasajeras","Maestra de pociones para principiantes","Carpintero de casas flotantes","Compositora de canciones para plantas","Capitán de barcos de papel","Vendedora de suspiros embotellados","Guía de laberintos misteriosos","Payaso de funerales","Arquitecta de castillos en el aire","Organizador de carreras de caracoles","Cazador de errores de la realidad","Costurera de abrigos invisibles","Alquimista de emociones","Barista de cafeterías interdimensionales","Ingeniera de paraguas voladores","Director de orquesta de grillos","Domadora de gatos salvajes","Fabricante de relojes que retroceden","Escultora de humo","Guardiana de fuentes mágicas","Creador de ilusiones ópticas","Repartidora de cartas del futuro","Constructor de toboganes infinitos","Agricultor de frutas cuadradas","Ilusionista de cumpleaños olvidados","Cazador de truenos","Entrenadora de caballos de fuego","Tasador de objetos imposibles","Mecánica de bicicletas acuáticas","Programadora de sueños lúcidos","Juglar de aldeas sin nombre","Inventor de lenguajes nuevos","Panadera de pasteles flotantes","Arquitecto de iglús tropicales","Cuidadora de niños invisibles","Animador de reuniones aburridas","Decoradora de cuevas subterráneas","Confeccionista de sombreros imposibles","Bióloga de especies inventadas","Conductora de globos aerostáticos","Vigilante de planetas olvidados","Escritora de mensajes secretos","Recolectora de hojas susurrantes","Directora de coros de robots","Pastora de ovejas eléctricas","Maestro de duendes revoltosos","Diseñadora de laberintos vivientes","Traductora de murmullos marinos","Músico de tormentas lejanas","Restaurador de estatuas vivientes","Reparadora de paraguas rotos","Astronauta","Carpintero","Pastelero","Detective","Bibliotecario","Piloto de globos","Cerrajero","Maestro de esgrima","Escultor","Bailarín de breakdance","Florista","Maquinista de tren","Domador de serpientes","Científico nuclear","Sommelier","Fotógrafo de naturaleza","Chef vegano","Alfarero","Revisor de tren","Pintor de murales","Locutor de radio","Guía de montaña","Botánico","Instructor de yoga","Payaso de circo","Herrerón","Médico forense","Apicultor","Escenógrafo","Mecánico de bicicletas","Desarrollador de videojuegos","Orfebre","Actor de doblaje","Director de cine","Salvavidas","Enfermero pediátrico","Inventor de juguetes","Meteorólogo","Vigilante de museo","Magó profesional","Ingeniero de sonido","Instructor de paracaidismo","Criador de caballos","Repostero de bodas","Artista de tatuajes","Operador de drones","Diseñador de parques","Entrenador de perros","Terapeuta ocupacional","Fabricante de instrumentos"] },
-  OBJETO:{ simple:["Termómetro anal","Caleidoscopio estelar","Ladrillo colocado en vertical","Cucáchara","Paraguas de fuego","Botella que susurra secretos","Alfombra que flota","Cuchara de invisibilidad","Lupa gigante","Reloj que corre hacia atrás","Maleta sin fondo","Sombrero que cambia de color","Guitarra de hielo","Caja de música voladora","Lámpara que atrapa sonidos","Taza de café interminable","Silla que baila","Cohete de papel","Zapatos que se ríen","Espejo que dice la verdad","Teléfono que llama al pasado","Bufanda que vuela sola","Pincel que pinta solo","Globo que nunca explota","Rueda de bicicleta cuadrada","Pistola de burbujas gigantes","Camiseta que cambia de forma","Cinturón que cuenta historias","Ladrillo de gelatina","Libro que canta","Bumerán que se esconde","Cama con patas","Caja fuerte que habla","Anillo que hace cosquillas","Llave de casa","Bote de mermelada","Gafas de lectura","Zapatilla de deporte","Mochila escolar","Batería de cocina","Almohada","Ventilador de escritorio","Botella de agua","Paraguas cerrado","Calendario de pared","Martillo de carpintero","Estuche de lápices","Cartera vacía","Regadera de jardín","Caja de herramientas","Mando a distancia","Agenda vieja","Auriculares enredados","Portátil medio roto","Espejo que responde preguntas","Varita que cambia sabores","Sombrero que canta","Capa de invisibilidad (desgastada)","Cuaderno que predice el futuro","Piedra que susurra consejos","Botella que atrapa tormentas","Reloj que detiene segundos","Anillo que traduce pensamientos","Pluma que escribe sola","Globo que no deja de flotar","Bastón que encuentra caminos","Caja de suspiros","Cuerda que se alarga infinita","Vela que muestra recuerdos","Abanico que crea ilusiones","Sandalias de velocidad","Aro de teletransportación","Gafas que ven otras dimensiones","Cucharón de sopas encantadas","Manómetro de alta presión","Matraz Erlenmeyer","Sismógrafo portátil","Termociclador de ADN","Autoclave de esterilización","Bureta graduada","Osciloscopio digital","Calibrador piezoeléctrico","Centrífuga de laboratorio","Multímetro eléctrico","Espectrómetro de masas","Incubadora bacteriológica","Pluviómetro de campo","Balanza analítica","Viscosímetro rotacional","Electrocardiógrafo portátil","Tensiómetro manual","Nivela óptica de precisión","Detector de gases tóxicos","Termómetro de infrarrojos","Torquímetro hidráulico","Agitador magnético de laboratorio","Medidor de humedad del suelo","Barómetro aneroide","Cronógrafo astronómico","Anemómetro de copa","Piranómetro solar","Goniómetro de precisión","Alícuota automática","Cápsula de Petri gigante","Martillo","Mapa antiguo","Bolígrafo luminoso","Telescopio de bolsillo","Capa de invisibilidad","Paraguas roto","Vela aromática","Caja de música","Sombrero de copa","Bastón plegable","Antorcha electrónica","Linterna solar","Cuerda elástica","Balón de playa","Carcaj de flechas","Guantes térmicos","Reloj de arena","Almohada de viaje","Gafas de realidad virtual","Piedra de obsidiana","Botas de escalar","Micrófono antiguo","Cascabel","Mochila a prueba de agua","Pizarra mágica","Tintero de pluma","Brújula dorada","Caja fuerte miniatura","Llave maestra","Trineo plegable","Pipa de burbujas","Prensa de flores","Tornillo gigante","Sombrilla japonesa","Péndulo de Newton","Bumerán","Lanza de competición","Termómetro de mercurio","Cámara instantánea","Altavoz portátil","Set de alquimia","Arco de madera","Muñeca de trapo","Escalera telescópica","Lámpara flotante","Casco de realidad aumentada","Rastreador GPS de pulsera","Cetro de cristal","Terrón de azúcar"], plus:["Termómetro anal","Caleidoscopio estelar","Ladrillo colocado en vertical","Cucáchara","Paraguas de fuego","Botella que susurra secretos","Alfombra que flota","Cuchara de invisibilidad","Lupa gigante","Reloj que corre hacia atrás","Maleta sin fondo","Sombrero que cambia de color","Guitarra de hielo","Caja de música voladora","Lámpara que atrapa sonidos","Taza de café interminable","Silla que baila","Cohete de papel","Zapatos que se ríen","Espejo que dice la verdad","Teléfono que llama al pasado","Bufanda que vuela sola","Pincel que pinta solo","Globo que nunca explota","Rueda de bicicleta cuadrada","Pistola de burbujas gigantes","Camiseta que cambia de forma","Cinturón que cuenta historias","Ladrillo de gelatina","Libro que canta","Bumerán que se esconde","Cama con patas","Caja fuerte que habla","Anillo que hace cosquillas","Llave de casa","Bote de mermelada","Gafas de lectura","Zapatilla de deporte","Mochila escolar","Batería de cocina","Almohada","Ventilador de escritorio","Botella de agua","Paraguas cerrado","Calendario de pared","Martillo de carpintero","Estuche de lápices","Cartera vacía","Regadera de jardín","Caja de herramientas","Mando a distancia","Agenda vieja","Auriculares enredados","Portátil medio roto","Espejo que responde preguntas","Varita que cambia sabores","Sombrero que canta","Capa de invisibilidad (desgastada)","Cuaderno que predice el futuro","Piedra que susurra consejos","Botella que atrapa tormentas","Reloj que detiene segundos","Anillo que traduce pensamientos","Pluma que escribe sola","Globo que no deja de flotar","Bastón que encuentra caminos","Caja de suspiros","Cuerda que se alarga infinita","Vela que muestra recuerdos","Abanico que crea ilusiones","Sandalias de velocidad","Aro de teletransportación","Gafas que ven otras dimensiones","Cucharón de sopas encantadas","Manómetro de alta presión","Matraz Erlenmeyer","Sismógrafo portátil","Termociclador de ADN","Autoclave de esterilización","Bureta graduada","Osciloscopio digital","Calibrador piezoeléctrico","Centrífuga de laboratorio","Multímetro eléctrico","Espectrómetro de masas","Incubadora bacteriológica","Pluviómetro de campo","Balanza analítica","Viscosímetro rotacional","Electrocardiógrafo portátil","Tensiómetro manual","Nivela óptica de precisión","Detector de gases tóxicos","Termómetro de infrarrojos","Torquímetro hidráulico","Agitador magnético de laboratorio","Medidor de humedad del suelo","Barómetro aneroide","Cronógrafo astronómico","Anemómetro de copa","Piranómetro solar","Goniómetro de precisión","Alícuota automática","Cápsula de Petri gigante","Martillo","Mapa antiguo","Bolígrafo luminoso","Telescopio de bolsillo","Capa de invisibilidad","Paraguas roto","Vela aromática","Caja de música","Sombrero de copa","Bastón plegable","Antorcha electrónica","Linterna solar","Cuerda elástica","Balón de playa","Carcaj de flechas","Guantes térmicos","Reloj de arena","Almohada de viaje","Gafas de realidad virtual","Piedra de obsidiana","Botas de escalar","Micrófono antiguo","Cascabel","Mochila a prueba de agua","Pizarra mágica","Tintero de pluma","Brújula dorada","Caja fuerte miniatura","Llave maestra","Trineo plegable","Pipa de burbujas","Prensa de flores","Tornillo gigante","Sombrilla japonesa","Péndulo de Newton","Bumerán","Lanza de competición","Termómetro de mercurio","Cámara instantánea","Altavoz portátil","Set de alquimia","Arco de madera","Muñeca de trapo","Escalera telescópica","Lámpara flotante","Casco de realidad aumentada","Rastreador GPS de pulsera","Cetro de cristal","Terrón de azúcar"] },
-  LUGAR:{ simple:["Ventrículo derecho","La parte de atrás de mi WC","El espacio finito","Madricia","Biblioteca submarina","Isla flotante","Cueva de cristales","Parque de diversiones abandonado","Granja espacial","Montaña que canta","Desierto de espejos","Palacio de hielo eterno","Túnel del tiempo","Mercado de objetos mágicos","Volcán dormido","Estación de tren fantasma","Castillo en una nube","Bosque de árboles fluorescentes","Barco pirata volador","Laboratorio de inventos fallidos","Submarino oxidado","Puente que no lleva a ningún lado","Torre torcida del futuro","Circo en el desierto","Playa donde nieva","Pueblo sin sombras","Jardín de piedras flotantes","Carretera infinita","Plaza de estatuas vivas","Cúpula de burbujas gigantes","Antiguo teatro encantado","Lago de leche","Ascensor al centro de la Tierra","Tienda de recuerdos imposibles","Paseo entre hórreos olvidados","Playa donde rompen las olas de piedra","Faros que parpadean en la niebla","Torre custodiada por mil leyendas","Mercado de pescado en la madrugada","Callejón empedrado tras la plaza mayor","Bosque donde hablan los carballos","Pazo de puertas siempre abiertas","Camino de vieiras enterradas","Rúa de los músicos silenciosos","Costa batida por los vientos eternos","Plaza donde bailan las meigas","Sendero oculto bajo la lluvia perpetua","Lonja abandonada por las mareas","Acantilado donde susurran los antiguos","Biblioteca del tamaño de una nuez","Estadio dentro de una botella","Isla flotante sobre una taza de café","Pueblo escondido en una caja de cerillas","Castillo levantado en una cucharita","Sala de conciertos dentro de un dedal","Ciudad entera bajo una hoja caída","Jardín en la cabeza de un alfiler","Tren que recorre una barra de pan","Escuela diminuta entre raíces de árbol","Biblioteca debajo de un tapón de corcho","Ciudad minera en el asteroide 7759","Playa helada en una luna de Saturno","Mercado de oxígeno en Marte","Refugio subterráneo en la Luna","Puerto estelar en el anillo de Saturno","Aldea de dragones dormidos","Bosque que cambia de estación cada hora","Isla suspendida por cadenas invisibles","Torre de relojes sin agujas","Jardín de estatuas vivientes","Mercado de trueques imposibles","Lago de tinta líquida","Desierto donde llueve hacia arriba","Pueblo donde nunca se pone el sol","Biblioteca que olvida lo que guarda","Mansión habitada solo por sombras","Puente que nunca lleva a ningún lugar","Cementerio de barcos voladores","Arena de gladiadores romanos","Templo perdido en las selvas mayas","Teatro donde debutó una tragedia griega","Torre de un alquimista medieval","Caravana cruzando la Ruta de la Seda","Fortaleza vikinga cubierta de niebla","Anfiteatro de luchas olvidadas","Oasis escondido entre caravanas nómadas","Puerto pesquero","Bosque encantado","Pueblo sumergido","Mercado medieval","Fábrica abandonada","Teatro de marionetas","Faro en ruinas","Tren fantasma","Jardín botánico","Bodega subterránea","Mirador secreto","Playa de arena negra","Laboratorio submarino","Castillo en la montaña","Césped de estadio vacío","Parque de diversiones olvidado","Biblioteca mágica","Desierto de sal","Aldea en el ártico","Templo oculto","Barrio antiguo","Aeropuerto fantasma","Puente colgante","Refugio de montaña","Noria abandonada","Monasterio oculto","Zoológico de criaturas extrañas","Cúpula de observatorio","Terminal de autobuses vacía","Cárcel desierta","Torre del reloj","Canal subterráneo","Galería de arte moderno","Granja de orugas","Cascada secreta","Plataforma petrolera abandonada","Centro de comando espacial","Isla volcánica","Antiguo salón de baile","Cementerio de barcos","Pantano iluminado","Cúverna submarina","Mercado flotante","Trinchera olvidada","Helipuerto derrumbado","Pueblo de hielo","Mina de esmeraldas"], plus:["Ventrículo derecho","La parte de atrás de mi WC","El espacio finito","Madricia","Biblioteca submarina","Isla flotante","Cueva de cristales","Parque de diversiones abandonado","Granja espacial","Montaña que canta","Desierto de espejos","Palacio de hielo eterno","Túnel del tiempo","Mercado de objetos mágicos","Volcán dormido","Estación de tren fantasma","Castillo en una nube","Bosque de árboles fluorescentes","Barco pirata volador","Laboratorio de inventos fallidos","Submarino oxidado","Puente que no lleva a ningún lado","Torre torcida del futuro","Circo en el desierto","Playa donde nieva","Pueblo sin sombras","Jardín de piedras flotantes","Carretera infinita","Plaza de estatuas vivas","Cúpula de burbujas gigantes","Antiguo teatro encantado","Lago de leche","Ascensor al centro de la Tierra","Tienda de recuerdos imposibles","Paseo entre hórreos olvidados","Playa donde rompen las olas de piedra","Faros que parpadean en la niebla","Torre custodiada por mil leyendas","Mercado de pescado en la madrugada","Callejón empedrado tras la plaza mayor","Bosque donde hablan los carballos","Pazo de puertas siempre abiertas","Camino de vieiras enterradas","Rúa de los músicos silenciosos","Costa batida por los vientos eternos","Plaza donde bailan las meigas","Sendero oculto bajo la lluvia perpetua","Lonja abandonada por las mareas","Acantilado donde susurran los antiguos","Biblioteca del tamaño de una nuez","Estadio dentro de una botella","Isla flotante sobre una taza de café","Pueblo escondido en una caja de cerillas","Castillo levantado en una cucharita","Sala de conciertos dentro de un dedal","Ciudad entera bajo una hoja caída","Jardín en la cabeza de un alfiler","Tren que recorre una barra de pan","Escuela diminuta entre raíces de árbol","Torre de vigilancia en la grieta de una piedra","Puerto construido en la cáscara de un huevo","Biblioteca debajo de un tapón de corcho","Palacio oculto en el bolsillo de un abrigo","Zoológico sobre la superficie de una moneda","Ciudad minera en el asteroide 7759","Mercadillo flotante en la atmósfera de Júpiter","Playa helada en una luna de Saturno","Bosque de hielo bajo la superficie de Europa","Estación espacial abandonada en órbita baja","Mercado de oxígeno en Marte","Refugio subterráneo en la Luna","Cafetería interestelar entre dos nebulosas","Puerto estelar en el anillo de Saturno","Biblioteca perdida en el cinturón de asteroides","Aldea de dragones dormidos","Bosque que cambia de estación cada hora","Isla suspendida por cadenas invisibles","Ciudad construida sobre el lomo de un gigante","Cueva que contiene todos los ecos del mundo","Torre de relojes sin agujas","Jardín de estatuas vivientes","Mercado de trueques imposibles","Lago de tinta líquida","Desierto donde llueve hacia arriba","Pueblo donde nunca se pone el sol","Biblioteca que olvida lo que guarda","Mansión habitada solo por sombras","Puente que nunca lleva a ningún lugar","Cementerio de barcos voladores","Arena de gladiadores romanos","Templo perdido en las selvas mayas","Biblioteca real de Alejandría reconstruida","Foro de discusiones filosóficas en Atenas","Teatro donde debutó una tragedia griega","Torre de un alquimista medieval","Caravana cruzando la Ruta de la Seda","Puerto fenicio al borde del mundo conocido","Fortaleza vikinga cubierta de niebla","Anfiteatro de luchas olvidadas","Villa imperial en el corazón de Roma antigua","Pirámide custodiada por guardianes invisibles","Callejón del bazar de Bagdad en el siglo X","Oasis escondido entre caravanas nómadas","Academia de sabios en el Al-Ándalus perdido","Puerto pesquero","Bosque encantado","Pueblo sumergido","Mercado medieval","Fábrica abandonada","Teatro de marionetas","Faro en ruinas","Tren fantasma","Jardín botánico","Bodega subterránea","Mirador secreto","Playa de arena negra","Laboratorio submarino","Castillo en la montaña","Césped de estadio vacío","Parque de diversiones olvidado","Biblioteca mágica","Desierto de sal","Aldea en el ártico","Templo oculto","Barrio antiguo","Aeropuerto fantasma","Puente colgante","Refugio de montaña","Noria abandonada","Monasterio oculto","Zoológico de criaturas extrañas","Cúpula de observatorio","Terminal de autobuses vacía","Cárcel desierta","Torre del reloj","Canal subterráneo","Galería de arte moderno","Granja de orugas","Cascada secreta","Plataforma petrolera abandonada","Centro de comando espacial","Isla volcánica","Antiguo salón de baile","Cementerio de barcos","Pantano iluminado","Cúverna submarina","Mercado flotante","Trinchera olvidada","Helipuerto derrumbado","Pueblo de hielo","Mina de esmeraldas"] },
-  ACCIÓN:{ simple:["Apagar/encender las luces con palmadas","Despiojar al Yeti","Mover la cabeza de chorlito","Volar con las zapatillas de running","Cantar bajo la lluvia","Saltar a la pata coja","Esconder un objeto secreto","Cocinar sin usar fuego","Pintar un mural invisible","Atrapar mariposas","Volar en una escoba","Escribir una carta de amor","Bucear en el aire","Escalar una montaña de libros","Leer en voz alta un hechizo","Atravesar una pared imaginaria","Bailar como un robot","Construir un castillo de arena","Desenterrar un tesoro","Domar un animal salvaje","Enseñar a hablar a un pez","Correr sin tocar el suelo","Lanzar un desafío de rap","Hacer malabares con frutas","Huir de una estampida de ovejas","Disfrazarse en menos de un minuto","Escribir un poema absurdo","Dormir en un sitio extraño","Hablar en otro idioma inventado","Comer algo imposible","Limpiar un desastre mágico","Romper una maldición","Hacer una reverencia exagerada","Imitar el sonido de un animal","Cepillarse los dientes","Atarse los zapatos","Preparar un café","Mandar un mensaje","Cerrar una ventana","Regar las plantas","Cruzar la calle","Llamar a un amigo","Poner una alarma","Tender la ropa","Limpiar unas gafas","Comprar el pan","Leer un periódico","Abrir una botella","Hacer la cama","Casarse bajo la lluvia","Bautizar un barco","Graduarse en la universidad","Tener un hijo","Comprar una casa","Correr una maratón","Viajar a otro continente","Escalar una montaña","Escribir un testamento","Ganar un premio importante","Saltar en paracaídas","Nadar en mar abierto","Plantar un árbol","Cantar en un gran escenario","Cambiar radicalmente de vida","Bailar en pareja","Jugar un partido de fútbol","Cocinar una paella entre amigos","Actuar en una obra de teatro","Hacer un viaje en grupo","Participar en un karaoke","Hacer un brindis","Firmar un contrato juntos","Subir una montaña en expedición","Entrar en una casa abandonada","Falsificar un documento","Robar un banco","Vender objetos robados","Huir de la policía","Hackear un sistema","Escapar de prisión","Contrabandear antigüedades","Espiar a una persona","Agredir a un político","Hacer una pintada ilegal","Sobornar a un funcionario","Organizar una pelea clandestina","Apostar en carreras ilegales","Cruzar una frontera sin papeles","Escarbar un agujero en la tierra","Trepar a un árbol sin motivo","Correr en círculos durante horas","Lamerse el brazo","Saltar en un charco de barro","Revolcarse en el césped","Marcar territorio con señales","Emitir sonidos extraños para comunicarse","Rascarse la oreja con el pie","Cazar pequeños insectos","Dormir colgado de una rama","Empujar a otros jugando","Cambiar de pelaje según la estación","Hacer la fotosíntesis","Tallar madera","Subir un faro","Atravesar una selva","Construir un refugio","Cantar en un concurso","Dibujar un mural","Inventar un idioma","Cruzar una cuerda floja","Descifrar un código","Pintar una pared gigante","Organizar un festival","Navegar sin mapa","Conducir una caravana","Buscar un tesoro","Actuar en una obra","Coser un disfraz","Bailar sobre hielo","Armar una tienda de campaña","Cultivar un huerto","Sumergirse en cuevas","Contar historias","Moldear arcilla","Recoger hongos","Realizar un truco de magia","Programar un robot","Domar un caballo salvaje","Soplar vidrio","Trepar un árbol gigantesco","Coser una vela de barco","Volar un globo aerostático","Restaurar una bicicleta antigua","Tocar un instrumento desconocido","Recitar un poema propio","Trazar un mapa a mano","Improvisar una canción","Pescar en hielo","Confeccionar una armadura","Hacer malabares con antorchas","Enseñar a bucear","Crear un perfume","Componer una melodía","Encender un fuego sin cerillas","Participar en una subasta","Grabar un cortometraje","Inventar un juego de mesa","Esculpir en hielo","Dominar un arte marcial"], plus:["Apagar/encender las luces con palmadas","Despiojar al Yeti","Mover la cabeza de chorlito","Volar con las zapatillas de running","Cantar bajo la lluvia","Saltar a la pata coja","Esconder un objeto secreto","Cocinar sin usar fuego","Pintar un mural invisible","Atrapar mariposas","Volar en una escoba","Escribir una carta de amor","Bucear en el aire","Escalar una montaña de libros","Leer en voz alta un hechizo","Atravesar una pared imaginaria","Bailar como un robot","Construir un castillo de arena","Desenterrar un tesoro","Domar un animal salvaje","Enseñar a hablar a un pez","Correr sin tocar el suelo","Lanzar un desafío de rap","Hacer malabares con frutas","Huir de una estampida de ovejas","Disfrazarse en menos de un minuto","Escribir un poema absurdo","Dormir en un sitio extraño","Hablar en otro idioma inventado","Comer algo imposible","Limpiar un desastre mágico","Romper una maldición","Hacer una reverencia exagerada","Imitar el sonido de un animal","Cepillarse los dientes","Atarse los zapatos","Preparar un café","Mandar un mensaje","Cerrar una ventana","Regar las plantas","Cruzar la calle","Llamar a un amigo","Poner una alarma","Tender la ropa","Limpiar unas gafas","Comprar el pan","Leer un periódico","Abrir una botella","Hacer la cama","Casarse bajo la lluvia","Bautizar un barco","Graduarse en la universidad","Tener un hijo","Comprar una casa","Correr una maratón","Viajar a otro continente","Escalar una montaña","Escribir un testamento","Ganar un premio importante","Saltar en paracaídas","Nadar en mar abierto","Plantar un árbol","Cantar en un gran escenario","Cambiar radicalmente de vida","Bailar en pareja","Jugar un partido de fútbol","Cocinar una paella entre amigos","Actuar en una obra de teatro","Hacer un viaje en grupo","Participar en un karaoke","Hacer un brindis","Firmar un contrato juntos","Subir una montaña en expedición","Entrar en una casa abandonada","Falsificar un documento","Robar un banco","Vender objetos robados","Huir de la policía","Hackear un sistema","Escapar de prisión","Contrabandear antigüedades","Espiar a una persona","Agredir a un político","Hacer una pintada ilegal","Sobornar a un funcionario","Organizar una pelea clandestina","Apostar en carreras ilegales","Cruzar una frontera sin papeles","Escarbar un agujero en la tierra","Trepar a un árbol sin motivo","Correr en círculos durante horas","Lamerse el brazo","Escarbar con las manos en busca de comida","Saltar en un charco de barro","Revolcarse en el césped","Marcar territorio con señales","Emitir sonidos extraños para comunicarse","Rascarse la oreja con el pie","Cazar pequeños insectos","Dormir colgado de una rama","Empujar a otros jugando","Cambiar de pelaje según la estación","Hacer la fotosíntesis","Tallar madera","Subir un faro","Atravesar una selva","Construir un refugio","Cantar en un concurso","Dibujar un mural","Inventar un idioma","Cruzar una cuerda floja","Descifrar un código","Pintar una pared gigante","Organizar un festival","Navegar sin mapa","Conducir una caravana","Buscar un tesoro","Actuar en una obra","Coser un disfraz","Bailar sobre hielo","Armar una tienda de campaña","Cultivar un huerto","Sumergirse en cuevas","Contar historias","Moldear arcilla","Recoger hongos","Realizar un truco de magia","Programar un robot","Domar un caballo salvaje","Soplar vidrio","Trepar un árbol gigantesco","Coser una vela de barco","Volar un globo aerostático","Restaurar una bicicleta antigua","Tocar un instrumento desconocido","Recitar un poema propio","Trazar un mapa a mano","Improvisar una canción","Pescar en hielo","Confeccionar una armadura","Hacer malabares con antorchas","Enseñar a bucear","Crear un perfume","Componer una melodía","Encender un fuego sin cerillas","Participar en una subasta","Grabar un cortometraje","Inventar un juego de mesa","Esculpir en hielo","Dominar un arte marcial"] },
-  NOMBRE:{ simple:["Francis Colorinco Lorado","Chorlito","Fridolin","Capitán Torbellino","Martina Relámpago","Don Gaspar del Río","Valentina Bruma","Sebastián Pluma","Clara Nebulosa","El Profesor Tornado","Ismael Viento Norte","Aurora Destello","Max Estrella","Greta Sombramiel","Donato el Persistente","Lola Lunática","Federico Cazatormentas","Olivia la Intrépida","Tomás Sin Rumbo","Selene Tempestad","Jacinto del Abismo","Rita Centella","Hugo Crepúsculo","Paloma Caminante","Dante de la Bruma","Amalia Horizonte","Bruno Sin Sombra","Carmen del Laberinto","León Rugido Leve","Victoria Solitaria","Simón Viajero Eterno","Diana Claroscuro","Nicolás Eco de Mar","Xoán Müller","Antía Johansson","Brais Nakamura","Uxía Dubois","Roi McGregor","Iria Fontaine","Breogán Smith","Lúa Petrova","Lois Andersson","Noa Schmidt","Xurxo Chang","Aldara Ricci","Anxo O'Connor","Sabela Ivanova","Iago Lefèvre","Carmela Suzuki","Teo Novak","Maruxa Kim","Xiana Moretti","Xan Yamamoto","Pascuala García","Baldomero Sánchez","Teodora Martínez","Leocadio Fernández","Eulalia Pérez","Casimiro Gómez","Escolástica Torres","Bartolomé Ruiz","Melitona Moreno","Ruperto Rodríguez","Genoveva López","Laureano González","Sinforosa Díaz","Venancio Alonso","Bernarda Romero","Tito Benito","Clara Vara","Paco Flaco","Lina Marina","Hugo Rugo","Nora Zamora","Suso Luso","Marta Esparta","Dani Maní","Rita Bendita","Pepe Lepe","Lola Enola","Nando Brando","Cuca Puca","Pili Milí","Ana Conda","Salvador Pimiento","Clara Oscura","Tomás Turbado","Dolores Fuertes","Alberto Sardina","Luz Verde","Berto Ló","Rosa Melcacho","Eva Nescente","Paco Merengue","Rita Librada","Fermín Tropezón","Cándida Noche","Laura Naranja","Esteban Dido","Carmen Tornado","Juan Sinmiedo","Alma Lirio","Celia Cruzcampo","Alonso Vega","Clara Montgomery","Damián Suárez","Lucía Fontaine","Pedro Novak","Sara Dupont","Matías Kowalski","Carmen Bennett","Andrés Schmidt","Beatriz McCarthy","Tomás Ferrari","Isabel Green","Santiago Sullivan","Adela Park","Héctor Nash","Marina Weber","Ramón Dorsey","Irene Goldberg","Julián Russo","Paula Henderson","Lucas Beaumont","Eva Moretti","Gonzalo OBrien","Ana Fitzgerald","Cristian Novak","Sofía Wells","Hugo Campbell","Laura Quinn","Daniela Ortega","Fernando Pratt","Rocío Stone","Gabriel Curtis","Nerea OMalley","Victor Duarte","Marta Sanderson","Esteban Miller","Angela Knight","Felipe Clark","Verónica Waters","Diego Coleman","Patricia Avery","Nicolás Lambert","Elena Parker","Leonardo Wilkins","Carla Foster","Francisco Drummond","Susana Monroe","Emilio Gallagher","Raquel Peterson","Ignacio Simmons"], plus:["Francis Colorinco Lorado","Chorlito","Fridolin","Capitán Torbellino","Martina Relámpago","Don Gaspar del Río","Valentina Bruma","Sebastián Pluma","Clara Nebulosa","El Profesor Tornado","Ismael Viento Norte","Aurora Destello","Max Estrella","Greta Sombramiel","Donato el Persistente","Lola Lunática","Federico Cazatormentas","Olivia la Intrépida","Tomás Sin Rumbo","Selene Tempestad","Jacinto del Abismo","Rita Centella","Hugo Crepúsculo","Paloma Caminante","Dante de la Bruma","Amalia Horizonte","Bruno Sin Sombra","Carmen del Laberinto","León Rugido Leve","Victoria Solitaria","Simón Viajero Eterno","Diana Claroscuro","Nicolás Eco de Mar","Xoán Müller","Antía Johansson","Brais Nakamura","Uxía Dubois","Roi McGregor","Iria Fontaine","Breogán Smith","Lúa Petrova","Lois Andersson","Noa Schmidt","Xurxo Chang","Aldara Ricci","Anxo O'Connor","Sabela Ivanova","Iago Lefèvre","Carmela Suzuki","Teo Novak","Maruxa Kim","Xiana Moretti","Xan Yamamoto","Pascuala García","Baldomero Sánchez","Teodora Martínez","Leocadio Fernández","Eulalia Pérez","Casimiro Gómez","Escolástica Torres","Bartolomé Ruiz","Melitona Moreno","Ruperto Rodríguez","Genoveva López","Laureano González","Sinforosa Díaz","Venancio Alonso","Bernarda Romero","Tito Benito","Clara Vara","Paco Flaco","Lina Marina","Hugo Rugo","Nora Zamora","Suso Luso","Marta Esparta","Dani Maní","Rita Bendita","Pepe Lepe","Lola Enola","Nando Brando","Cuca Puca","Pili Milí","Ana Conda","Salvador Pimiento","Clara Oscura","Tomás Turbado","Dolores Fuertes","Alberto Sardina","Luz Verde","Berto Ló","Rosa Melcacho","Eva Nescente","Paco Merengue","Rita Librada","Fermín Tropezón","Cándida Noche","Laura Naranja","Esteban Dido","Carmen Tornado","Juan Sinmiedo","Alma Lirio","Celia Cruzcampo","Alonso Vega","Clara Montgomery","Damián Suárez","Lucía Fontaine","Pedro Novak","Sara Dupont","Matías Kowalski","Carmen Bennett","Andrés Schmidt","Beatriz McCarthy","Tomás Ferrari","Isabel Green","Santiago Sullivan","Adela Park","Héctor Nash","Marina Weber","Ramón Dorsey","Irene Goldberg","Julián Russo","Paula Henderson","Lucas Beaumont","Eva Moretti","Gonzalo OBrien","Ana Fitzgerald","Cristian Novak","Sofía Wells","Hugo Campbell","Laura Quinn","Daniela Ortega","Fernando Pratt","Rocío Stone","Gabriel Curtis","Nerea OMalley","Victor Duarte","Marta Sanderson","Esteban Miller","Angela Knight","Felipe Clark","Verónica Waters","Diego Coleman","Patricia Avery","Nicolás Lambert","Elena Parker","Leonardo Wilkins","Carla Foster","Francisco Drummond","Susana Monroe","Emilio Gallagher","Raquel Peterson","Ignacio Simmons"] },
-  EMOCIÓN:{ simple:["Desesperacion astringente","Los pelos como escarpines","Frío ardiente","Júbilo","Pesadumbre","Cólera","Espanto","Estupefacción","Asco","Sonrojo","Altivez","Apego","Celos","Zozobra","Paz","Añoranza","Anhelo","Impotencia","Reconocimiento","Inquietud","Remordimiento","Misericordia","Frialdad","Coraje","Desazón","Veneración","Desamparo","Confianza","Cariño","Exaltación","Irritación","Desahogo","Codicia","Morriña","Optimismo","Gozo","Cansancio","Estupor","Impaciencia","Envidia","Soledad","Confusión","Desilusión","Aversión","Emoción","Rechazo","Pánico","Furia","Plenitud","Complicidad","Despreocupación","Suspicacia","Temeridad","Abatimiento","Intriga","Rencor","Agradecimiento","Incredulidad","Pasión","Felicidad","Nerviosismo","Empatía","Angustia","Ironía","Desdén","Ilusión","Entusiasmo","Temor","Desconfianza","Vulnerabilidad","Misterio","Fascinación","Humillación","Tranquilidad","Delirio","Culpabilidad","Inseguridad","Satisfacción","Melancolía","Euforia","Admiración","Ternura","Inspiración","Desvelo","Resentimiento","Serenidad","Frustración","Gratitud","Curiosidad","Culpa","Indiferencia","Valentía","Nostalgia","Reproche","Suspiro","Esperanza","Consternación","Compasión","Resignación","Dicha","Alivio","Desconsuelo","Cautela","Heroísmo","Repulsión","Reconciliación","Apego emocional","Estabilidad","Rechazo interno","Perplejidad","Vulnerabilidad emocional","Recelo","Júbilo contenido","Euforia silenciosa","Devoción","Inseguridad latente","Celos mudos","Placer culpable","Confusión afectiva","Hilaridad","Paz interna","Anonadamiento","Repentina tristeza","Irritación leve","Agradecimiento sincero","Risa nerviosa"], plus:["Risa incontrolable en momentos de seriedad","Desesperacion astringente","Los pelos como escarpines","Frío ardiente","Júbilo","Pesadumbre","Cólera","Espanto","Estupefacción","Asco","Sonrojo","Altivez","Apego","Celos","Zozobra","Paz","Añoranza","Anhelo","Impotencia","Reconocimiento","Inquietud","Remordimiento","Misericordia","Frialdad","Coraje","Desazón","Veneración","Desamparo","Confianza","Cariño","Exaltación","Irritación","Desahogo","Codicia","Morriña","Optimismo","Gozo","Cansancio","Estupor","Impaciencia","Envidia","Soledad","Confusión","Desilusión","Aversión","Emoción","Rechazo","Pánico","Furia","Plenitud","Complicidad","Despreocupación","Suspicacia","Temeridad","Abatimiento","Intriga","Rencor","Agradecimiento","Incredulidad","Pasión","Felicidad","Nerviosismo","Empatía","Angustia","Ironía","Desdén","Ilusión","Entusiasmo","Temor","Desconfianza","Vulnerabilidad","Misterio","Fascinación","Humillación","Tranquilidad","Delirio","Culpabilidad","Inseguridad","Satisfacción","Melancolía","Euforia","Admiración","Ternura","Inspiración","Desvelo","Resentimiento","Serenidad","Frustración","Gratitud","Curiosidad","Culpa","Indiferencia","Valentía","Nostalgia","Reproche","Suspiro","Esperanza","Consternación","Compasión","Resignación","Dicha","Alivio","Desconsuelo","Cautela","Heroísmo","Repulsión","Reconciliación","Apego emocional","Estabilidad","Rechazo interno","Perplejidad","Vulnerabilidad emocional","Recelo","Júbilo contenido","Euforia silenciosa","Devoción","Inseguridad latente","Celos mudos","Placer culpable","Confusión afectiva","Hilaridad","Paz interna","Anonadamiento","Repentina tristeza","Irritación leve","Agradecimiento sincero","Risa nerviosa"] },
-  SUPERPODER:{ simple:["Superpereza","Convertir en mierda todo lo que toco","Volar","Leer la mente","Invisibilidad","Controlar el fuego","Respirar bajo el agua","Supervelocidad","Hablar con los animales","Curación instantánea","Ver el futuro","Cambiar de forma","Crear hielo","Teletransportarse","Hablar todos los idiomas","Crear ilusiones","Controlar el tiempo","Superfuerza","Caminar sobre las paredes","Convertirse en sombra","Manipular plantas","Atraer la suerte","Convertirse en gigante","Multiplicarse en varios clones","Volver objetos invisibles","Convertir pensamientos en realidad","Emitir luz propia","Hablar con las máquinas","Dormir sin necesidad de soñar","Transformar lágrimas en diamantes","Atravesar objetos sólidos","Cambiar de ropa al instante","Purificar agua automáticamente","Reparar cosas rotas con las manos","Hacer que las plantas crezcan más rápido","Traducir cualquier jerga o dialecto","Mejorar el sabor de cualquier comida","Ordenar la casa con un chasquido","Reparar emociones rotas de otros","Detectar mentiras sutiles","Crear atajos físicos donde no los hay","Enviar olores agradables a distancia","Compartir conocimiento con solo tocar","Acelerar o ralentizar la digestión","Comunicar emociones sin hablar","Volver transparente solo tu dedo meñique","Hacer que tu sombra te aplauda","Hacer crecer una ceja instantáneamente","Pintar líneas invisibles en el aire","Hablar pero solo en idiomas inventados","Sentir el estado de ánimo de las plantas","Hacer desaparecer pelusas de ombligo","Imitar cualquier alarma de móvil","Controlar el parpadeo de otros","Soplar aire frío por las orejas","Hacer que tu reflejo guiñe antes que tú","Rayos láser por los ojos","Invisibilidad total","Regeneración instantánea","Crear campos de fuerza","Lanzar telarañas como Spider-Man","Superoído capaz de escuchar kilómetros","Invulnerabilidad física","Crear terremotos pequeños","Controlar la electricidad","Dominar el magnetismo","Volver intangible (atravesar paredes)","Control mental sobre otras personas","Resucitar brevemente a los muertos","Convertirse en un ser de fuego","Aumentar el tamaño muscular a voluntad","Generar burbujas irrompibles","Hablar con los espejos","Controlar los semáforos","Convertir el sudor en tinta","Levitar solo los miércoles","Imantar objetos pequeños","Cambiar el sabor del agua","Respirar por las orejas","Volverse invisible al estornudar","Lanzar purpurina explosiva","Crear niebla desde las manos","Controlar los sueños ajenos","Transformar el polvo en pan","Escuchar conversaciones pasadas","Convocar ovejas con la mente","Encender luces con la voz","Cambiar el color de los ojos a voluntad","Crear una burbuja de silencio","Hablar con plantas carnívoras","Duplicar el tamaño de un zapato","Dormir sin cerrar los ojos","Invocar una escalera portátil","Teletransportar objetos blandos","Atraer mariposas","Leer la mente de los relojes","Hacer crecer bigote instantáneo","Emitir olor de flores al correr","Estirar los dedos como chicle","Pintar con la mirada","Derretir queso sin calor","Entender todos los maullidos","Transformar papel en ropa","Ver en cámara lenta","Atraer cucharas","Memorizar libros con solo tocarlos","Convertir globos en piedras","Detener la caída de objetos","Imprimir cosas con los pensamientos","Fundir metal con los pies","Cambiar el sabor de los pensamientos","Convertir las lágrimas en caramelos","Hablar todos los acentos","Invocar una silla en cualquier lugar","Girar el cuello 360 grados sin dolor","Inflar cosas con la mirada","Olvidar cosas voluntariamente","Cambiar tu olor corporal","Sentir terremotos diminutos","Escribir con los pies"], plus:["La suerte es tan benévola contigo que, de una manera u otra, todo te sale gratis","Adivino el pensamiento del mosquito que revolotea en mi habitación","Superpereza","Convertir en mierda todo lo que toco","Volar","Leer la mente","Invisibilidad","Controlar el fuego","Respirar bajo el agua","Supervelocidad","Hablar con los animales","Telequinesis (mover objetos con la mente)","Curación instantánea","Ver el futuro","Cambiar de forma","Crear hielo","Teletransportarse","Hablar todos los idiomas","Crear ilusiones","Controlar el tiempo","Superfuerza","Caminar sobre las paredes","Convertirse en sombra","Manipular plantas","Atraer la suerte","Convertirse en gigante","Multiplicarse en varios clones","Volver objetos invisibles","Convertir pensamientos en realidad","Emitir luz propia","Hablar con las máquinas","Dormir sin necesidad de soñar","Transformar lágrimas en diamantes","Atravesar objetos sólidos","Localizar objetos perdidos instantáneamente","Memorizar cualquier libro con solo tocarlo","Cambiar de ropa al instante","Purificar agua automáticamente","Reparar cosas rotas con las manos","Hacer que las plantas crezcan más rápido","Dormir solo cinco minutos y quedar descansado","Traducir cualquier jerga o dialecto","Recordar cualquier conversación palabra por palabra","Cocinar cualquier plato con solo imaginarlo","Mejorar el sabor de cualquier comida","Ordenar la casa con un chasquido","Arreglar aparatos electrónicos mentalmente","Convertir pensamientos en listas organizadas","Hacer aparecer billetes exactos en la cartera","Cambiar la temperatura corporal a voluntad","Limpiar cualquier superficie solo mirándola","Programar alarmas mentales que suenan en tu cabeza","Reparar emociones rotas de otros","Detectar mentiras sutiles","Crear atajos físicos donde no los hay","Enviar olores agradables a distancia","Compartir conocimiento con solo tocar","Ver la solución de cualquier rompecabezas","Multiplicar el tiempo percibido (sentir que un minuto dura más)","Acelerar o ralentizar la digestión","Visualizar el camino más rápido en cualquier sitio","Mejorar el clima de un pequeño entorno personal","Convertir residuos en compost instantáneo","Comunicar emociones sin hablar","Cambiar el color de las uñas al estornudar","Emitir olor a galletas cada vez que saltas","Volver transparente solo tu dedo meñique","Hacer que tu sombra te aplauda","Hablar con piedras (pero solo con piedras)","Teletransportar una cucharilla a tu bolsillo","Cambiar la dirección del viento en un metro cuadrado","Hacer crecer una ceja instantáneamente","Pintar líneas invisibles en el aire","Hablar pero solo en idiomas inventados","Emitir sonidos de animales aleatorios al bostezar","Cambiar tu voz por la de un pato por 10 segundos","Perder un zapato y encontrarlo siempre en la nevera","Sentir el estado de ánimo de las plantas","Hacer desaparecer pelusas de ombligo","Imitar cualquier alarma de móvil","Que siempre haya una silla disponible cerca","Transformar tu sombra en formas abstractas","Aumentar la velocidad de crecimiento del pelo de la nariz","Controlar el parpadeo de otros","Hacer que los paraguas se cierren si llueve poco","Adivinar el número exacto de caramelos en un bote","Soplar aire frío por las orejas","Hacer que tu reflejo guiñe antes que tú","Crear gotas de agua en las puntas de los dedos","Rayos láser por los ojos","Invisibilidad total","Regeneración instantánea","Crear campos de fuerza","Lanzar telarañas como Spider-Man","Superoído capaz de escuchar kilómetros","Invulnerabilidad física","Crear terremotos pequeños","Controlar la electricidad","Dominar el magnetismo","Volver intangible (atravesar paredes)","Control mental sobre otras personas","Resucitar brevemente a los muertos","Convertirse en un ser de fuego","Aumentar el tamaño muscular a voluntad","Generar burbujas irrompibles","Hablar con los espejos","Controlar los semáforos","Convertir el sudor en tinta","Levitar solo los miércoles","Imantar objetos pequeños","Cambiar el sabor del agua","Respirar por las orejas","Volverse invisible al estornudar","Lanzar purpurina explosiva","Crear niebla desde las manos","Controlar los sueños ajenos","Transformar el polvo en pan","Escuchar conversaciones pasadas","Convocar ovejas con la mente","Encender luces con la voz","Cambiar el color de los ojos a voluntad","Crear una burbuja de silencio","Hablar con plantas carnívoras","Deslizarse como pingüino en cualquier superficie","Duplicar el tamaño de un zapato","Dormir sin cerrar los ojos","Invocar una escalera portátil","Teletransportar objetos blandos","Atraer mariposas","Leer la mente de los relojes","Hacer crecer bigote instantáneo","Emitir olor de flores al correr","Estirar los dedos como chicle","Pintar con la mirada","Derretir queso sin calor","Entender todos los maullidos","Transformar papel en ropa","Ver en cámara lenta","Atraer cucharas","Memorizar libros con solo tocarlos","Convertir globos en piedras","Detener la caída de objetos","Imprimir cosas con los pensamientos","Fundir metal con los pies","Cambiar el sabor de los pensamientos","Convertir las lágrimas en caramelos","Hablar todos los acentos","Invocar una silla en cualquier lugar","Girar el cuello 360 grados sin dolor","Inflar cosas con la mirada","Olvidar cosas voluntariamente","Cambiar tu olor corporal","Sentir terremotos diminutos","Escribir con los pies"] },
-  ESTILO:{ simple:["Drama jurásico","Western interestelar","Película del tumor en Antena 3","Comedia dramática","Comedia romántica","Drama histórico","Ciencia ficción","Thriller psicológico","Película de acción","Comedia absurda","Western clásico","Musical","Terror sobrenatural","Aventura épica","Película de espías","Documental falso","Road movie (viaje en carretera)","Drama familiar","Comedia negra","Fantasía medieval","Superhéroes","Película de zombies","Cine noir (policiaco antiguo)","Animación mágica","Cine experimental","Cine de catástrofes","Película de piratas","Drama deportivo","Ciencia ficción distópica","Película infantil","Aventura en el espacio","Terror cómico","Película de juicios","Reality ficticio","Noticiario antiguo","Teletienda dramática","Anuncio publicitario exagerado","Reality de supervivencia","Docudrama científico","Video musical surrealista","Debate político extremo","Informe escolar","Programa de cocina épico","Concurso televisivo absurdo","Programa de reformas de casas","Serie de detectives infantiles","Cómic de supervillanos","Película de espías adolescentes","Manga romántico","Anime de batallas mágicas","Antología de cuentos de terror","Telenovela exagerada","Cine de propaganda antigua","Biopic ficticio","Película de monstruos gigantes","Cine de samuráis","Cine de mafiosos","Drama existencial","Comedia muda","Film noir futurista","Western espacial","Opera rock","Animación experimental abstracta","Musical de terror","Cine de atracos fallidos","Cine bélico íntimo","Diario personal llevado a la pantalla","Viaje iniciático","Satira política","Cine steampunk","Cine de artes marciales clásicas","Cine de hadas retorcido","Serie procedimental médica","Televisión local de bajo presupuesto","Cine de robots","Teatro grabado en vivo","Cine de exploradores victorianos","Parodia de documentales serios","Serie de abogados cómicos","Película de festivales de música","Cine de boxeo underground","Thriller rural","Documental sobre objetos cotidianos","Cine de mutantes","Película de hackers","Drama carcelario","Simulacro de conferencia TED absurda","Informe meteorológico trágico","Mockumentary paranormal","Cine metafísico","Western contemporáneo","Battle royale escolar","Film de espionaje industrial","Historia oral coral (varios personajes)","Cine de conspiraciones cósmicas","Parodia de concursos televisivos","Informativo de noticias ridículas","Serie documental de \"naturaleza urbana\"","Cine de viajes en el tiempo humorístico","Debate filosófico extremo","Cuento infantil retorcido","Musical postapocalíptico","Telenovela latina","Cine mudo","Ciencia ficción clásica","Falso documental","Musical de Broadway","Terror adolescente","Drama judicial","Western spaghetti","Reality show","Programación infantil","Sitcom noventera","Cine bélico","Cómic de superhéroes","Policíaco de los 70","Juego de rol en vivo","Debate político","Talk show sensacionalista","Terror psicológico","Videojuego retro","Thriller nórdico","Novela de misterio","Telediario en directo","Programa de cocina","Novela romántica juvenil","Cine de acción de los 90","Historieta costumbrista","Espías de la Guerra Fría","Anime de instituto","Película de zombis","Comedia británica","Clásico de Disney","Teatro del absurdo","Supervivencia extrema","Series tipo true crime","Show de magia","Documental de naturaleza","Cine postapocalíptico","Debate de tertulia","Sitcom familiar","Estilo Shakespeare","Película de samuráis","Video musical pop","Telenoticias urgentes","Viaje en el tiempo","Programa de citas","Batalla épica de fantasía"], plus:["Drama jurásico","Western interestelar","Película del tumor en Antena 3","Comedia dramática","Comedia romántica","Drama histórico","Ciencia ficción","Thriller psicológico","Película de acción","Comedia absurda","Western clásico","Musical","Terror sobrenatural","Aventura épica","Película de espías","Documental falso","Road movie (viaje en carretera)","Drama familiar","Comedia negra","Fantasía medieval","Superhéroes","Película de zombies","Cine noir (policiaco antiguo)","Animación mágica","Cine experimental","Cine de catástrofes","Película de piratas","Drama deportivo","Ciencia ficción distópica","Película infantil","Aventura en el espacio","Terror cómico","Película de juicios","Reality ficticio","Noticiario antiguo","Teletienda dramática","Anuncio publicitario exagerado","Reality de supervivencia","Docudrama científico","Video musical surrealista","Debate político extremo","Informe escolar","Programa de cocina épico","Concurso televisivo absurdo","Programa de reformas de casas","Serie de detectives infantiles","Cómic de supervillanos","Película de espías adolescentes","Manga romántico","Anime de batallas mágicas","Antología de cuentos de terror","Telenovela exagerada","Cine de propaganda antigua","Biopic ficticio","Película de monstruos gigantes","Cine de samuráis","Cine de mafiosos","Drama existencial","Comedia muda","Film noir futurista","Western espacial","Opera rock","Animación experimental abstracta","Musical de terror","Cine de atracos fallidos","Cine bélico íntimo","Diario personal llevado a la pantalla","Viaje iniciático","Satira política","Cine steampunk","Cine de artes marciales clásicas","Cine de hadas retorcido","Serie procedimental médica","Televisión local de bajo presupuesto","Cine de robots","Teatro grabado en vivo","Cine de exploradores victorianos","Parodia de documentales serios","Serie de abogados cómicos","Película de festivales de música","Cine de boxeo underground","Cine \"coming of age\" (madurez adolescente)","Thriller rural","Documental sobre objetos cotidianos","Cine de mutantes","Película de hackers","Drama carcelario","Simulacro de conferencia TED absurda","Informe meteorológico trágico","Mockumentary paranormal","Cine metafísico","Western contemporáneo","Battle royale escolar","Film de espionaje industrial","Historia oral coral (varios personajes)","Cine de conspiraciones cósmicas","Parodia de concursos televisivos","Informativo de noticias ridículas","Parodia de películas de desastres naturales","Serie documental de \"naturaleza urbana\"","Cine de viajes en el tiempo humorístico","Debate filosófico extremo","Cuento infantil retorcido","Musical postapocalíptico","Telenovela latina","Cine mudo","Ciencia ficción clásica","Falso documental","Musical de Broadway","Terror adolescente","Drama judicial","Western spaghetti","Reality show","Programación infantil","Sitcom noventera","Cine bélico","Cómic de superhéroes","Policíaco de los 70","Juego de rol en vivo","Debate político","Talk show sensacionalista","Terror psicológico","Videojuego retro","Thriller nórdico","Novela de misterio","Telediario en directo","Programa de cocina","Novela romántica juvenil","Cine de acción de los 90","Historieta costumbrista","Espías de la Guerra Fría","Anime de instituto","Película de zombis","Comedia británica","Clásico de Disney","Teatro del absurdo","Supervivencia extrema","Series tipo true crime","Show de magia","Documental de naturaleza","Cine postapocalíptico","Debate de tertulia","Sitcom familiar","Estilo Shakespeare","Película de samuráis","Video musical pop","Telenoticias urgentes","Viaje en el tiempo","Programa de citas","Batalla épica de fantasía"] },
-  DUDA:{ simple:["¿Los números primos son primos lejanos?","¿Y si todo esto es un sueño?","¿Por qué el cielo es azul y no morado?","¿Qué pasa si un día dejo de soñar?","¿Existe el destino o lo inventamos?","¿Por qué los gatos siempre caen de pie?","¿Dónde van los calcetines perdidos?","¿Somos los personajes de otro cuento?","¿Qué había antes del principio?","¿Pueden las piedras tener sentimientos?","¿Y si el tiempo corre hacia atrás?","¿Quién inventó las despedidas?","¿Qué haría un pez si supiera volar?","¿Somos la imaginación de otro ser?","¿Por qué soñamos cosas imposibles?","¿Se puede recordar algo que nunca pasó?","¿Cómo sería la vida si pudiéramos volar?","¿Por qué el miedo nos paraliza?","¿Cuántos caminos no tomamos cada día?","¿Puede el amor durar para siempre?","¿Y si los árboles pudieran hablarnos?","¿De dónde viene la inspiración?","¿Por qué los recuerdos se distorsionan?","¿Qué significa realmente ser libre?","¿Y si nunca despertamos?","¿Dónde van los calcetines desaparecidos?","¿Puede un pez tener vértigo?","Si sueño que no sueño ¿estoy soñando?","¿A dónde van las ideas que se olvidan?","¿Puede una piedra sentir melancolía?","¿Quién riega los cactus en el desierto?","¿Puede un espejo olvidar su reflejo?","¿Cómo sabe un reloj cuándo tiene hambre?","¿Quién le pone la corbata al viento?","¿Puede una montaña tener vértigo?","¿Puede una nube llorar de felicidad?","¿Cuánto pesa un suspiro?","¿Dónde terminan las ondas de un bostezo?","¿Puede un arco iris olvidar un color?","¿Quién fue el primero en aplaudir?","¿Por qué el eco siempre tiene razón?","¿Quién mide el tamaño de un pensamiento?","¿Puede una lágrima ser feliz?","¿Cuántas millas recorre un bostezo?","¿Puede un secreto tener eco?","¿Cómo sabe un calendario que es lunes?","¿Puede una semilla soñar con el cielo?","¿Cuántos parpadeos dura un instante?","¿Puede un mapa equivocarse de destino?","¿Cuántos segundos caben en un abrazo?","¿Dónde van las risas cuando se pierden?","¿Dónde va el sol por la noche?","¿Por qué los pies no se ríen?","¿Y si los colores sienten cosas?","¿Existe el número más triste?","¿Quién le enseña a volar a los pájaros?","¿Y si el universo tiene cosquillas?","¿El viento está vivo?","¿Se puede guardar un sueño en una caja?","¿Y si el tiempo se aburre?","¿Los peces tienen sed?","¿Qué pasa si me olvido de quién soy?","¿Puede una sombra enamorarse?","¿Dónde estaba yo antes de nacer?","¿Las palabras se gastan?","¿El silencio suena igual para todos?","¿Se puede llorar de risa para siempre?","¿Y si mi reflejo tiene otra vida?","¿Dónde están las cosas que olvido?","¿El cielo tiene fondo?","¿Quién fue el primer ser que rió?","¿Puede una nube tener nombre?","¿Y si la luna es un espejo?","¿Las plantas se aburren?","¿Los sueños pesan?","¿Y si todo esto ya pasó?","¿Por qué a veces todo parece falso?","¿Puede un recuerdo mentir?","¿Existe el lugar donde nacen las ideas?","¿Los números duermen?","¿Quién cuida al tiempo?","¿Los suspiros viajan?","¿Se puede dibujar un pensamiento?","¿Y si somos personajes de un cuento?","¿Puede una silla extrañarte?","¿Quién inventó el miedo?","¿Los relojes se cansan?","¿El universo tiene límites o se estira?","¿Puede un abrazo durar toda la vida?","¿Las sombras se asustan?","¿Dónde empieza el culo?","¿Y si todo esto es un sueño muy largo?","¿Las piedras piensan lento?","¿Quién fue el primero en tener frío?","¿Y si las estrellas nos miran?","¿La duda tiene forma?","¿Puede una pregunta no tener respuesta?"], plus:["¿Los números primos son primos lejanos?","Si las gallinas me hacen y las ranas tuviesen pelo, se cumplirían muchas promesas ?","Si un grillo canta al amanecer, es un... grallo?","Y si mis respuestas no se envían a la app?? 🤨","¿Y si todo esto es un sueño?","¿Por qué el cielo es azul y no morado?","¿Qué pasa si un día dejo de soñar?","¿Existe el destino o lo inventamos?","¿Por qué los gatos siempre caen de pie?","¿Dónde van los calcetines perdidos?","¿Somos los personajes de otro cuento?","¿Qué había antes del principio?","¿Pueden las piedras tener sentimientos?","¿Y si el tiempo corre hacia atrás?","¿Por qué lloramos cuando estamos felices?","¿Quién inventó las despedidas?","¿Qué haría un pez si supiera volar?","¿Somos la imaginación de otro ser?","¿Por qué soñamos cosas imposibles?","¿Qué hay en el fondo del mar más profundo?","¿Se puede recordar algo que nunca pasó?","¿Cómo sería la vida si pudiéramos volar?","¿Por qué el miedo nos paraliza?","¿Cuántos caminos no tomamos cada día?","¿Qué pasa con las palabras que no decimos?","¿Puede el amor durar para siempre?","¿Y si los árboles pudieran hablarnos?","¿Por qué sentimos nostalgia de lugares que no conocemos?","¿De dónde viene la inspiración?","¿Por qué los recuerdos se distorsionan?","¿Qué significa realmente ser libre?","¿Por qué hay silencios que pesan más que gritos?","¿Qué pasa si un día olvidamos quiénes somos?","¿Y si nunca despertamos?","¿Dónde van los calcetines desaparecidos?","¿Por qué las tostadas siempre caen del lado de la mantequilla?","¿Puede un pez tener vértigo?","Si un árbol cae en el bosque y nadie lo escucha ¿sigue pidiendo perdón?","¿Qué pesa más? ¿un kilo de preguntas o un kilo de respuestas?","¿Por qué se llama agua de colonia si no viene de ninguna colonia?","¿Puede una sombra tener miedo de la oscuridad?","Si sueño que no sueño ¿estoy soñando?","¿Por qué los planetas no se salen nunca del carril?","¿A dónde van las ideas que se olvidan?","¿Puede una piedra sentir melancolía?","Si tiro una piedra al futuro ¿cuándo la encontraré?","¿Se puede secar el agua de un océano con paciencia?","¿Quién riega los cactus en el desierto?","¿Puede un espejo olvidar su reflejo?","¿Dónde se esconde el tiempo cuando nadie lo mira?","¿Cómo sabe un reloj cuándo tiene hambre?","¿Y si el universo está contenido en un grano de arroz?","¿Quién le pone la corbata al viento?","¿Por qué los fantasmas no tropiezan con los muebles?","¿Puede una montaña tener vértigo?","¿Qué fue primero: la nostalgia o el recuerdo?","¿Por qué las agujas del reloj corren pero nunca llegan?","¿Puede una nube llorar de felicidad?","¿Por qué los caracoles no tienen casas con jardín?","Si un gato negro cruza frente a otro gato negro ¿qué sucede?","¿Por qué las notas musicales no se escapan del pentagrama?","¿Y si el horizonte es solo una promesa que se aleja?","¿Puede una pregunta contestarse a sí misma?","¿Cuánto pesa un suspiro?","Si uno se pierde en sus pensamientos ¿debería llevar mapa?\"","¿Dónde terminan las ondas de un bostezo?","¿Por qué el tiempo vuela pero nunca aterriza?","¿Puede un bostezo contagiar a una piedra?","¿Por qué las palabras se esconden justo cuando las necesitas?","¿Puede un arco iris olvidar un color?","¿Por qué los refranes siempre tienen la última palabra?","¿Cuántas vueltas da una duda antes de cansarse?","¿Quién fue el primero en aplaudir?","¿Puede una gota de agua tener ambiciones oceánicas?","¿Y si la gravedad fuera solo una costumbre?","¿Por qué el eco siempre tiene razón?","¿Cómo suena un susurro en el espacio exterior?","¿Por qué las estrellas parpadean si no tienen párpados?","¿Puede un rumor viajar más rápido que la luz?","¿Quién mide el tamaño de un pensamiento?","¿Puede una lágrima ser feliz?","¿Cuántas millas recorre un bostezo?","¿Por qué los paraguas solo recuerdan abrirse tarde?","Si me callo en el desierto ¿alguien lo nota?","¿Puede un secreto tener eco?","¿Por qué los zapatos nuevos son más veloces?","¿Cuántos nudos puede hacer un viento travieso?","¿Puede un susurro hacer vibrar una montaña?","¿Quién le enseña el camino a una brújula?","¿Por qué los relojes de arena nunca tienen marea?","¿Cómo sabe un calendario que es lunes?","Si un pez escribe poesía ¿la tinta se disuelve?","¿Puede una semilla soñar con el cielo?","¿Cuántos parpadeos dura un instante?","Si una metáfora se pierde ¿cómo se busca?","¿Por qué las escaleras nunca bajan cansadas?","¿Puede un mapa equivocarse de destino?","¿Cómo se mide la distancia entre dos suspiros?","¿Por qué las campanas siempre son nostálgicas?","¿Puede una frontera desaparecer si todos se olvidan de ella?","¿Cuántos segundos caben en un abrazo?","¿Puede una promesa olvidarse de sí misma?","Si la gravedad se toma un descanso ¿qué sube primero?","¿Dónde van las risas cuando se pierden?","¿Dónde va el sol por la noche?","¿Por qué los pies no se ríen?","¿Y si los colores sienten cosas?","¿Existe el número más triste?","¿Quién le enseña a volar a los pájaros?","¿Y si el universo tiene cosquillas?","¿El viento está vivo?","¿Se puede guardar un sueño en una caja?","¿Por qué tenemos que dormir todos los días?","¿Y si el tiempo se aburre?","¿Los peces tienen sed?","¿Qué pasa si me olvido de quién soy?","¿Las montañas se mueven cuando nadie mira?","¿Puede una sombra enamorarse?","¿Dónde estaba yo antes de nacer?","¿Las palabras se gastan?","¿El silencio suena igual para todos?","¿Se puede llorar de risa para siempre?","¿Y si mi reflejo tiene otra vida?","¿Dónde están las cosas que olvido?","¿El cielo tiene fondo?","¿Quién fue el primer ser que rió?","¿Puede una nube tener nombre?","¿Y si la luna es un espejo?","¿Las plantas se aburren?","¿Los sueños pesan?","¿Y si todo esto ya pasó?","¿Por qué a veces todo parece falso?","¿Puede un recuerdo mentir?","¿Existe el lugar donde nacen las ideas?","¿Los números duermen?","¿Quién cuida al tiempo?","¿Los suspiros viajan?","¿Se puede dibujar un pensamiento?","¿Y si somos personajes de un cuento?","¿Puede una silla extrañarte?","¿Quién inventó el miedo?","¿Los relojes se cansan?","¿El universo tiene límites o se estira?","¿Y si alguien ya escribió lo que voy a decir?","¿Puede un abrazo durar toda la vida?","¿Las sombras se asustan?","¿Dónde empieza el culo?","¿Y si todo esto es un sueño muy largo?","¿Las piedras piensan lento?","¿Quién fue el primero en tener frío?","¿Y si las estrellas nos miran?","¿La duda tiene forma?","¿Puede una pregunta no tener respuesta?"] },
-  CONFESIÓN:{ simple:["Me gusta lamer pasamanos","Protestante","Robé un pastel y nunca lo confesé.","Tengo miedo a los payasos.","Nunca aprendí a nadar.","Siempre quise ser astronauta.","Lloré viendo una película infantil.","Me perdí en mi propio barrio.","No sé montar en bicicleta.","Me inventé un amigo imaginario... ¡ayer!","Tengo una colección secreta de piedras.","Me reí en un momento muy serio.","Escondí un regalo porque no me gustó.","Me gustaría ser superhéroe en secreto.","Nunca he probado el sushi.","Me asustan los globos que explotan.","Una vez olvidé mi propio cumpleaños.","Me emocioné leyendo un cómic.","Me quedé encerrado en un baño público.","He fingido saber bailar en una boda.","Robé un yogur del supermercado.","Nunca aprendí a montar en bici.","Tengo miedo de los globos.","Me comí tu postre sin avisar.","Nunca sé dónde está el norte.","Lloro viendo anuncios de detergente.","Fui yo quien rayó el coche.","A veces hablo solo en voz alta.","Finjo saber de vinos para quedar bien.","Tengo más plantas muertas que vivas.","Dejé caer tu móvil y fingí que no.","Robé un bolígrafo y me sentí poderoso.","No entiendo los chistes de matemáticos.","No soporto el sonido de los lápices.","Me duermo en las reuniones importantes.","Uso el móvil en modo avión para ignorar.","Me comí todas las galletas en secreto.","Quise enseñarle álgebra a mi perro.","Robé una nube imaginaria de un parque.","Creí que podía hacer fotos con los ojos.","Pensé que podía domesticar una roca.","Una vez discutí con una sombra.","Le pedí matrimonio a una estatua.","Creí que los gnomos robaban calcetines.","Quise vender arena en el desierto.","Jugué al escondite conmigo mismo.","Inventé un idioma secreto para hablarme.","Pensaba que las ideas caían del cielo.","Construí una casa para caracoles.","Siempre soñé con ser otro.","Me enamoré de alguien que nunca conocí.","Rompí una promesa y nunca lo conté.","Finjo estar feliz cuando no lo estoy.","Deseo cambiar mi vida por completo.","Me siento culpable por no despedirme.","Siempre supe que mentía y no lo dije.","Me asusta no ser suficiente.","Quise marcharme pero no tuve valor.","Perdí algo que nunca podré recuperar.","Me duele no saber pedir perdón.","Siempre quise pedirte otra oportunidad.","Quise decir la verdad pero mentí.","Me escondí cuando debí enfrentarme.","Lloré cuando nadie me veía.","Me prometí no volver a confiar.","Siempre quise ser alguien diferente.","Nunca aprendí a andar en bici","Como papas fritas en la ducha","Copié en un examen de ética","Me enamoré de mi profesor de historia","Llevo años mintiendo sobre mi edad","Me enamoré de un dibujo animado","Una vez dormí abrazado a una escoba","Me excita el olor de los libros nuevos","Me gusta imitar acentos mientras cocino","Una vez me perdí en mi propio barrio","Bailo solo en el ascensor","Le di un apodo cariñoso a mi nevera","Dibujé bigotes en fotos de mi jefe","Pensaba que “networking” era un deporte","He intentado ligar con una IA","Mi contraseña es el nombre de un peluche"], plus:["Me gusta lamer pasamanos","A base de ensayar mucho mucho mucho a lo largo de toda mi vida, finjo que no tengo orgasmos","Me robaron las cosas que había robado yo en Zara","Protestante","Robé un pastel y nunca lo confesé.","Tengo miedo a los payasos.","Nunca aprendí a nadar.","Siempre quise ser astronauta.","Le hablo a mis plantas como si fueran personas.","Lloré viendo una película infantil.","Me perdí en mi propio barrio.","No sé montar en bicicleta.","Me inventé un amigo imaginario... ¡ayer!","Una vez confundí azúcar con sal en una fiesta.","Tengo una colección secreta de piedras.","Me reí en un momento muy serio.","Escondí un regalo porque no me gustó.","Me gustaría ser superhéroe en secreto.","Rompí un objeto valioso y culpé al perro.","Nunca he probado el sushi.","Bailé solo en la calle pensando que nadie me veía.","Me asustan los globos que explotan.","Inventé una excusa absurda para faltar al trabajo.","De pequeño pensaba que el microondas era mágico.","Me hice pasar por otra persona en un museo.","Canté en la ducha y me aplaudieron desde otra casa.","Una vez olvidé mi propio cumpleaños.","Me emocioné leyendo un cómic.","Me quedé encerrado en un baño público.","Creía que los camaleones podían volverse invisibles.","He fingido saber bailar en una boda.","Tengo una risa contagiosa y me da vergüenza.","Dormí toda una obra de teatro y fingí haberla entendido.","Escondí mi juguete favorito para no compartirlo.","Robé un yogur del supermercado.","Nunca aprendí a montar en bici.","Tengo miedo de los globos.","Siempre leo los finales de los libros antes de empezar.","Me comí tu postre sin avisar.","Nunca sé dónde está el norte.","Lloro viendo anuncios de detergente.","Fui yo quien rayó el coche.","Nunca devolví ese libro de la biblioteca.","A veces hablo solo en voz alta.","Finjo saber de vinos para quedar bien.","Tengo más plantas muertas que vivas.","Me he inventado idiomas para no contestar.","Siempre confundo la izquierda con la derecha.","Dejé caer tu móvil y fingí que no.","Nunca aprendí a multiplicar con las tablas.","Cambié el canal en mitad de tu serie favorita.","Robé un bolígrafo y me sentí poderoso.","No entiendo los chistes de matemáticos.","No soporto el sonido de los lápices.","Me duermo en las reuniones importantes.","Guardé tu regalo en el fondo del armario.","Perdí la entrada del concierto y no lo dije.","Uso el móvil en modo avión para ignorar.","Me comí todas las galletas en secreto.","Creo que los gatos gobiernan el mundo en secreto.","Una vez intenté comunicarme con las plantas.","Siempre creí que las tostadoras eran peligrosas.","Pensaba que las cebras eran caballos disfrazados.","Le hablo a mi espejo como si fuera un amigo.","Creí que las estalactitas eran animales dormidos.","Intenté guardar un arco iris en un frasco.","Fui perseguido por un pato durante una hora.","Quise enseñarle álgebra a mi perro.","Robé una nube imaginaria de un parque.","Cambié mi reflejo en una fuente por otro.","Escondí una carta de amor en un buzón vacío.","Me disfracé de alfombra para espiar una conversación.","Creí que podía hacer fotos con los ojos.","Prometí no volver a hablar con las sillas.","Intenté hipnotizar a mi profesor de historia.","Pensé que podía domesticar una roca.","Una vez discutí con una sombra.","Le pedí matrimonio a una estatua.","Creí que los gnomos robaban calcetines.","Quise vender arena en el desierto.","Jugué al escondite conmigo mismo.","Inventé un idioma secreto para hablarme.","Pensaba que las ideas caían del cielo.","Construí una casa para caracoles.","Siempre soñé con ser otro.","Me arrepiento de haber callado aquella vez.","Me enamoré de alguien que nunca conocí.","Rompí una promesa y nunca lo conté.","Finjo estar feliz cuando no lo estoy.","Deseo cambiar mi vida por completo.","Me siento culpable por no despedirme.","Siempre supe que mentía y no lo dije.","A veces imagino que todo es un escenario.","Me asusta no ser suficiente.","Quise marcharme pero no tuve valor.","Perdí algo que nunca podré recuperar.","Me duele no saber pedir perdón.","Siempre quise pedirte otra oportunidad.","Fingí ser valiente cuando más miedo tenía.","Quise decir la verdad pero mentí.","Me escondí cuando debí enfrentarme.","Lloré cuando nadie me veía.","Me prometí no volver a confiar.","Siempre quise ser alguien diferente.","Nunca aprendí a andar en bici","Le hablo a las plantas como si fueran mis amigas","Una vez fingí saber bailar tango y pisé a cinco personas","Como papas fritas en la ducha","Copié en un examen de ética","Me enamoré de mi profesor de historia","Tengo un cajón lleno de calcetines perdidos que no son míos","Me sé todas las canciones de Frozen de memoria","Llevo años mintiendo sobre mi edad","Le puse nombre a mi cafetera y le doy los buenos días","Una vez me disfracé de plátano para una boda","No soporto las aceitunas pero siempre digo que me encantan","Le puse azúcar a la tortilla pensando que era sal y fingí que era una receta nueva","Leí solo una página del libro del club de lectura","Entré en una clase de yoga por error y me quedé todo el curso","Me enamoré de un dibujo animado","He fingido saber tocar el ukelele en más de una cita","Una vez dormí abrazado a una escoba","Robé una tiza del colegio y aún la guardo","Me reí tanto que me hice pis en una entrevista de trabajo","Creía que \"wifi\" era una bebida energética","Fingí saber francés en una cena y terminé hablando en italiano","He enviado mensajes de amor a números equivocados","Me excita el olor de los libros nuevos","He llorado viendo vídeos de animales abrazándose","Comí pastel de boda sin haber sido invitado","Le hablé a mi reflejo pensando que era otra persona","Me gusta imitar acentos mientras cocino","Llevo un diario secreto donde solo escribo frases de películas","Una vez creí ser parte de una película y saludé a una cámara de seguridad","Tengo una cuenta falsa para seguir a mi ex","He intentado hipnotizarme viendo espirales en YouTube","Dije que tenía alergia a los gatos para no ir a una cita","Creí que podía comunicarme con los insectos","Guardé una carta de amor que nunca entregué","Una vez me perdí en mi propio barrio","Pensaba que el Vaticano era un parque temático","Bailo solo en el ascensor","Le di un apodo cariñoso a mi nevera","Me he inventado un gemelo malvado para explicar cosas raras","Fingí saber hacer magia para impresionar a alguien","Dibujé bigotes en fotos de mi jefe","Fingí un acento ruso para conseguir una cerveza gratis","Me he confesado cosas a mí mismo en voz alta en la ducha","Me declaré a alguien por error en una llamada equivocada","Pensaba que “networking” era un deporte","He traducido canciones inventando las letras","He intentado ligar con una IA","Mi contraseña es el nombre de un peluche","Todavía duermo con la luz encendida por si acaso"] },
-  FRASE:{ simple:["Todo está floreciendo demasiado rápido","Deica logo, baby","Siempre nos quedara Paquirrín","Si saltamos quién nos va a detener","El secreto está en lo que no decimos","Una taza de café puede cambiar el mundo","El último en reír apaga las estrellas","Prometimos no volver y aquí estamos","Todo parecía una buena idea al principio","Nunca es tarde para cambiar de planeta","El viento sabe más secretos que nosotros","La llave siempre estuvo en tu bolsillo","Hay caminos que solo se abren si corres","No es magia: es voluntad disfrazada","Quién necesita alas teniendo imaginación","Cada despedida es una promesa de regreso","La última bala no es para el enemigo","El trueno me sigue pero yo soy el rayo","Si caemos caeremos luchando","No nací para huir","La oscuridad es solo el inicio de mi luz","No temo al fin; temo no haber vivido","El horizonte es solo un obstáculo mental","Hoy no es el día de rendirse","Cada paso que doy es una rebelión","No necesito alas para volar","Si la sopa canta no la contradigas","¿Quién pone puertas al campo de fútbol?","Mi sombra me debe dinero","El café me susurró secretos esta mañana","Si tropiezo dos veces es coreografía","Cuidado; el suelo también tiene sueños","Mis ideas huelen a sandía","Esta puerta habla en varios idiomas","Los peces están conspirando de nuevo","Mi abuela domó dragones en su juventud","He visto patatas más valientes que tú","Mi bigote tiene opiniones políticas","El helado no entiende de fronteras","Las nubes me deben una disculpa","Hay un pingüino que sabe mis secretos","Si bailas mal... culpa a la gravedad","Me enamoré de un semáforo","Hoy el aire sabe a despido","El champú eligió a su nuevo líder","Mis pensamientos tienen wifi propio","Esta nevera susurra promesas rotas","La noche se apaga pero yo sigo encendido","El silencio también grita","Una verdad sin zapatos","Me fui pero no del todo","La sombra también se cansa","El reloj se durmió antes que yo","Bésame antes de que nos olviden","Las estrellas también lloran","Aquí no hay héroes solo testigos","Y sin embargo te soñé","La tormenta no avisa solo llega","Nadie sobrevive al martes","El destino tiene mala letra","Esto no es amor es otra cosa peor","Perdón por llegar temprano al final","El fuego nunca olvida","Todo lo que callamos suena más fuerte","Los fantasmas también tienen frío","Mi casa ya no me reconoce","Hazlo como si tu vida fuera un tráiler","Recuerdo tu nombre pero no tu voz","Las puertas se cierran solas","Los lunes saben a derrota","No todos los villanos ríen","Abre los ojos y quédate dormido","Quise volver pero ya no quedaba mundo","La suerte se cambió de acera","Esto es una despedida en cámara lenta","El mar no tiene memoria","Mi sombra firmó un contrato sin mí","Estaba todo escrito con lápiz","No es locura si lo crees tú también","La risa era un disfraz","Cuidado con los espejos antiguos","Era feliz y no lo sabía pero ahora sí","Tu voz sigue sonando en mis silencios","Ya no tengo miedo solo prisa","Me esperé a mí mismo y no llegué","Todo lo que brilla ciega","El guion lo rompí yo mismo","Nada personal solo eterno","Hoy soy otro pero peor"], plus:["Todo está floreciendo demasiado rápido","Deica logo, baby","Siempre nos quedara Paquirrín","Hijo mío, algún día... todo esto será de tu hermano","Hoy es el primer día del resto de tu locura","Nadie nos advirtió que soñar era peligroso","Si saltamos quién nos va a detener","El secreto está en lo que no decimos","Siempre supe que el universo tenía sentido hasta hoy","Nunca confíes en un mapa dibujado a lápiz","No todos los héroes llevan capa: algunos llevan paraguas","La verdadera magia es no saber cómo termina la historia","Una taza de café puede cambiar el mundo","Aquí empieza la locura y termina la razón","El último en reír apaga las estrellas","Prometimos no volver y aquí estamos","A veces los monstruos son los mejores aliados","Todo parecía una buena idea al principio","Nunca es tarde para cambiar de planeta","El viento sabe más secretos que nosotros","La llave siempre estuvo en tu bolsillo","Un segundo puede durar una eternidad o arruinarla","Este no era el plan pero tampoco está tan mal","Hay caminos que solo se abren si corres","No es magia: es voluntad disfrazada","A veces hay que perderse para encontrarlo todo","No somos quiénes éramos cuando empezó esta historia","Todo gran error comienza con una pequeña decisión","Aquí las reglas no existen y si existen se inventan","Quién necesita alas teniendo imaginación","Cada despedida es una promesa de regreso","El miedo es solo el preludio de algo increíble","La mejor aventura empieza con un sí tonto","No me busques; estoy bailando con los dragones","Solo quien arde en la caída puede renacer","Prefiero morir de pie que vivir de rodillas","La última bala no es para el enemigo","El trueno me sigue pero yo soy el rayo","Si caemos caeremos luchando","No nací para huir","La oscuridad es solo el inicio de mi luz","No temo al fin; temo no haber vivido","Cada cicatriz es un mapa hacia la victoria","Somos polvo de estrellas que aprendió a pelear","El miedo alimenta a los cobardes; no a los héroes","Nadie puede detener a quien ya no tiene cadenas","El horizonte es solo un obstáculo mental","Donde termina el miedo comienza la historia","Hoy no es el día de rendirse","El fuego me forjó; la tempestad me liberó","El silencio antes del rugido es el más peligroso","Cada paso que doy es una rebelión","No necesito alas para volar","No lucho para ganar; lucho porque no sé rendirme","Si la sopa canta no la contradigas","¿Quién pone puertas al campo de fútbol?","Mi sombra me debe dinero","El café me susurró secretos esta mañana","Si tropiezo dos veces es coreografía","Las tostadas saben más si saltas tres veces","Cuidado; el suelo también tiene sueños","Mis ideas huelen a sandía","Nunca subestimes a un zapato con intenciones","Esta puerta habla en varios idiomas","Los peces están conspirando de nuevo","Soy el heredero legítimo de un árbol centenario","Mi abuela domó dragones en su juventud","He visto patatas más valientes que tú","Mi bigote tiene opiniones políticas","El helado no entiende de fronteras","Las nubes me deben una disculpa","Abrazar un cactus es una elección de vida","Solo los calcetines valientes forman parejas","No sé qué hago aquí, pero el sofá me habló","El viento escribió mi biografía en una servilleta","Hay un pingüino que sabe mis secretos","Si bailas mal... culpa a la gravedad","Me enamoré de un semáforo","Hoy el aire sabe a despido","El champú eligió a su nuevo líder","Los semáforos parpadean porque saben algo","Mis pensamientos tienen wifi propio","El lunes no es un día: es un estado mental","Esta nevera susurra promesas rotas","El río olvida quién fue lluvia primero y quién fue lágrima","Busqué un espejo y encontré una ventana hacia mí mismo","El viento escribe nombres en la arena que nadie recuerda","Camina la piedra hacia el olvido sin dejar huella","La luna espera una respuesta muda de los antiguos","El árbol canta cuando no queda nadie para escucharlo","Sube el humo a donde van las dudas y los secretos","¿Cuántos silencios se necesitan para inventar el mar?","El faro ciego guía a los barcos que nunca existieron","Cuando caes no sabes si el suelo es principio o fin","El pez sueña con ríos de estrellas y no despierta","Las piedras saben el peso exacto de los adioses","El horizonte no es más que un suspiro que no alcanzamos","Si olvidas el nombre ¿quién eres cuando sueñas? ¿quién cuando callas?","Donde no hay sombra el miedo se hace polvo y se dispersa","Grita el silencio entre paredes ciegas y nadie escucha","El eco miente y devuelve promesas que nunca hicimos","El puente duda antes de sostener tanto recuerdo","El polvo ríe cuando el tiempo se duerme y nadie lo ve","¿Quién lleva el mapa cuando se pierde el camino?","La noche se apaga pero yo sigo encendido","Cuando no quede nadie yo seguiré bailando","Hay trenes que solo pasan cuando no miras","El silencio también grita","Una verdad sin zapatos","Me fui pero no del todo","La sombra también se cansa","Lo que no se dice se convierte en canción","El reloj se durmió antes que yo","Bésame antes de que nos olviden","Las estrellas también lloran","Aquí no hay héroes solo testigos","Y sin embargo te soñé","La tormenta no avisa solo llega","Nadie sobrevive al martes","El destino tiene mala letra","Esto no es amor es otra cosa peor","Perdón por llegar temprano al final","El fuego nunca olvida","Todo lo que callamos suena más fuerte","Los fantasmas también tienen frío","Mi casa ya no me reconoce","Hazlo como si tu vida fuera un tráiler","Recuerdo tu nombre pero no tu voz","Las puertas se cierran solas","Los lunes saben a derrota","No todos los villanos ríen","Abre los ojos y quédate dormido","Quise volver pero ya no quedaba mundo","La suerte se cambió de acera","Esto es una despedida en cámara lenta","El mar no tiene memoria","Mi sombra firmó un contrato sin mí","Estaba todo escrito con lápiz","No es locura si lo crees tú también","La risa era un disfraz","Dejamos de hablar pero no de gritar por dentro","Cuidado con los espejos antiguos","Era feliz y no lo sabía pero ahora sí","Tu voz sigue sonando en mis silencios","Ya no tengo miedo solo prisa","Me esperé a mí mismo y no llegué","Las películas también se aburren de sí mismas","El monstruo estaba dentro pero saludaba desde fuera","Todo lo que brilla ciega","El guion lo rompí yo mismo","Y si no pasa nada será porque ya pasó todo","Nada personal solo eterno","Hoy soy otro pero peor","Esto podría ser el comienzo si no fuera el final"] },
+// ── ESTÍMULOS ──
+// Os estímulos viven en Supabase (táboa `estimulos`, multilingüe).
+// EstimulosCtx expón o corpus xa resolto no idioma activo.
+// FALLBACK_ESTIMULOS úsase só se non hai rede nin caché no primeiro arranque.
+const FALLBACK_ESTIMULOS = {
+  "PROFESIÓN":{simple:["Domador de urracas","Sexador de pollos","Jardinero de planetas","Reparador de sueños","Cazador de arcoíris"],plus:[]},
+  "OBJETO":{simple:["Caleidoscopio estelar","Paraguas de funeral","Reloj sin agujas","Llave oxidada"],plus:[]},
+  "LUGAR":{simple:["Faro abandonado","Estación de tren nocturna","Invernadero tropical"],plus:[]},
+  "EMOCIÓN":{simple:["Nostalgia","Euforia contenida","Vergüenza ajena"],plus:[]},
+  "ACCIÓN":{simple:["Buscar algo perdido","Despedirse sin decirlo","Confesar a destiempo"],plus:[]},
+  "NOMBRE":{simple:["Remedios","Casimiro","Nicanor"],plus:[]},
+  "SUPERPODER":{simple:["Hablar con las plantas","Detener el tiempo un segundo"],plus:[]},
+  "ESTILO":{simple:["Cine mudo","Telenovela","Documental de naturaleza"],plus:[]},
+  "DUDA":{simple:["¿Y si nadie me escucha?","¿Elegí bien?"],plus:[]},
+  "CONFESIÓN":{simple:["Nunca leí ese libro","Fui yo"],plus:[]},
+  "FRASE":{simple:["No era mi intención","Ya no queda tiempo"],plus:[]},
 };
-const TIPO_COLOR = {calentamiento:"#ffd740",entrenamiento:"#40c4ff",juego:"#69f0ae",formato:"#e040fb",musical:"#ff80ab",pausa:"#78909c",cierre:"#ff6e40"};
+
+const EstimulosCtx = createContext(null);
+const useEstimulos = () => useContext(EstimulosCtx) || { data: FALLBACK_ESTIMULOS, cats: [], cargando: false, recargar: () => {} };
+
+function EstimulosProvider({ lang, children }) {
+  const [data, setData] = useState(() => {
+    try { const v = localStorage.getItem('impro_estimulos_cache'); return v ? JSON.parse(v) : FALLBACK_ESTIMULOS; }
+    catch { return FALLBACK_ESTIMULOS; }
+  });
+  const [cats, setCats] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  const recargar = useCallback(async (forzar = false) => {
+    setCargando(true);
+    const [e, c] = await Promise.all([
+      cargarEstimulos(lang, { forzar }),
+      cargarCategorias(lang),
+    ]);
+    if (e && Object.keys(e).length) setData(e);
+    if (c?.length) setCats(c);
+    setCargando(false);
+  }, [lang]);
+
+  useEffect(() => { recargar(false); }, [recargar]);
+
+  return <EstimulosCtx.Provider value={{ data, cats, cargando, recargar }}>{children}</EstimulosCtx.Provider>;
+}
+
 const CAT_ICONS = {PROFESIÓN:"👤",OBJETO:"✦",LUGAR:"📍",EMOCIÓN:"💜",ACCIÓN:"🎭",NOMBRE:"📛",SUPERPODER:"⚡",ESTILO:"🎬",DUDA:"❓",CONFESIÓN:"🤫",FRASE:"💬"};
-const CATS = Object.keys(ESTIMULOS_BASE);
+const CATS_FALLBACK = Object.keys(FALLBACK_ESTIMULOS);
 const UID = () => Math.random().toString(36).slice(2,10);
 const FMT = s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
@@ -172,6 +208,9 @@ function Spotlight({word,category,onClose}){
 
 function TabGenerar({onStimulus}){
   const {T}=useTheme();const S=mkS(T);
+  const {data:ESTIMULOS,cats:CATS_DB,cargando}=useEstimulos();
+  const CATS=CATS_DB.length?CATS_DB.map(c=>c.id):Object.keys(ESTIMULOS);
+  const iconOf=id=>CATS_DB.find(c=>c.id===id)?.icona||CAT_ICONS[id]||"◆";
   const [nivel,setNivel]=useState("simple");
   const [sel,setSel]=useState(null);
   const [spotlight,setSpotlight]=useState(null);
@@ -184,7 +223,7 @@ function TabGenerar({onStimulus}){
   const [sceneSubview,setSceneSubview]=useState("gen");
 
   const getList=cat=>{
-    const d=ESTIMULOS_BASE[cat];
+    const d=ESTIMULOS[cat]||{simple:[],plus:[]};
     const base=nivel==="plus"&&d.plus.length>0?d.plus:d.simple;
     const userStimuli=ls.get("impro_user_stimuli",{});
     const userAdds=(userStimuli[cat]?.[nivel]||[]);
@@ -336,7 +375,7 @@ function TabGenerar({onStimulus}){
             <span>{CAT_ICONS[cat]||"◆"}</span>
             <span style={{flex:1,fontWeight:600,fontSize:"0.85rem"}}>{cat}</span>
 
-            {ESTIMULOS_BASE[cat].plus.length>0&&nivel==="simple"&&<span style={{color:T.accent,fontSize:"0.6rem"}}>⭐</span>}
+            {(ESTIMULOS[cat]?.plus.length||0)>(ESTIMULOS[cat]?.simple.length||0)&&nivel==="simple"&&<span style={{color:T.accent,fontSize:"0.6rem"}}>⭐</span>}
             <span style={{color:T.text4,fontSize:"0.72rem"}}>{getList(cat).length}</span>
           </button>
         );})}
@@ -358,9 +397,10 @@ function TabGenerar({onStimulus}){
 
 function TabReto(){
   const {T}=useTheme();const S=mkS(T);
+  const {data:ESTIMULOS}=useEstimulos();
   const [reto,setReto]=useState(null);
   const [nivel,setNivel]=useState("simple");
-  const getList=cat=>{const d=ESTIMULOS_BASE[cat];return nivel==="plus"&&d.plus.length>0?d.plus:d.simple;};
+  const getList=cat=>{const d=ESTIMULOS[cat]||{simple:[],plus:[]};return nivel==="plus"&&d.plus.length>0?d.plus:d.simple;};
   const genReto=()=>{
     const todasDinamicas=ls.get("impro_dinamicas_v2",DINAMICAS_BASE);
     const din=pick(todasDinamicas);
@@ -666,6 +706,7 @@ function TeamSorter({T,S}){
 }
 function TabGuia(){
   const {T}=useTheme();const S=mkS(T);
+  const {logueado,pedirLogin}=useAuth();
   const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
   const [filtro,setFiltro]=useState("todos");
   const [search,setSearch]=useState("");
@@ -680,7 +721,7 @@ function TabGuia(){
   const [form,setForm]=useState(FORM0);
   const tipos=["todos","★ Favoritas",...new Set(dinamicas.map(d=>d.tipo))];
   const lista=dinamicas.filter(d=>(filtro==="★ Favoritas"?isFav(d.id):(filtro==="todos"||d.tipo===filtro))&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())||d.descripcion.toLowerCase().includes(search.toLowerCase())));
-  const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);setSel(null);};
+  const openNew=()=>{if(!logueado){pedirLogin();return;}setEditId(null);setForm(FORM0);setShowForm(true);setSel(null);};
   const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);setSel(null);};
   const saveForm=async()=>{
     const d={...form,id:editId||String(Date.now()),duracion:Number(form.duracion),pasos:form.pasos.split("\n").map(s=>s.trim()).filter(Boolean),variantes:form.variantes.split("\n").map(s=>s.trim()).filter(Boolean)};
@@ -1166,6 +1207,7 @@ function QRCode({value,size=180}){
 
 function TabQR(){
   const {T}=useTheme();const S=mkS(T);
+  const {logueado,pedirLogin}=useAuth();
   const [mode,setMode]=useState("idle"); // idle | config | open | send
   const [salaCode,setSalaCode]=useState("");
   const [propuestas,setPropuestas]=useState([]);
@@ -1363,7 +1405,7 @@ function TabQR(){
       <div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
         <p style={S.ptitle(T.accent)}>🎭 Soy el facilitador</p>
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"1rem"}}>Configura as preguntas e abre a sala. O público escanea o QR e responde dende o seu móbil.</p>
-        <button onClick={()=>setMode("config")} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>⚙️ Configurar e abrir sala</button>
+        <button onClick={()=>{if(!logueado){pedirLogin();return;}setMode("config");}} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>⚙️ Configurar e abrir sala</button>
       </div>
       <div style={{...S.panel,border:"1.5px solid #69f0ae33"}}>
         <p style={S.ptitle("#69f0ae")}>👥 Soy del público</p>
@@ -1403,6 +1445,7 @@ function TabAdmin(){
   const ADMIN_TABS=[
     {id:"usuarios",emoji:"👤",label:"Usuarios"},
     {id:"estimulos",emoji:"✦",label:"Estímulos"},
+    {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"stats",emoji:"📊",label:"Stats"},
     {id:"config",emoji:"⚙️",label:"Config"},
@@ -1424,6 +1467,7 @@ function TabAdmin(){
 
     {adminTab==="usuarios"&&<AdminUsuarios T={T} S={S}/>}
     {adminTab==="estimulos"&&<AdminEstimulos T={T} S={S}/>}
+    {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
@@ -1431,63 +1475,206 @@ function TabAdmin(){
 }
 
 function AdminEstimulos({T,S}){
-  const [cat,setCat]=useState(Object.keys(ESTIMULOS_BASE)[0]);
+  const {cats:CATS_DB,recargar}=useEstimulos();
+  const listaCats=CATS_DB.length?CATS_DB:Object.keys(FALLBACK_ESTIMULOS).map(id=>({id,icona:CAT_ICONS[id]||"◆",nome:id}));
+  const [cat,setCat]=useState(listaCats[0]?.id||"PROFESIÓN");
   const [nivel,setNivel]=useState("simple");
-  const [editIdx,setEditIdx]=useState(null);
+  const [items,setItems]=useState([]);
+  const [cargando,setCargando]=useState(true);
+  const [editId,setEditId]=useState(null);
   const [editText,setEditText]=useState("");
   const [newText,setNewText]=useState("");
-  const [userStimuli,setUserStimuli]=useState(()=>ls.get("impro_user_stimuli",{}));
+  const [busca,setBusca]=useState("");
+  const [langCol,setLangCol]=useState("es");
 
-  const getBase=()=>ESTIMULOS_BASE[cat]?.[nivel]||[];
-  const getUserAdds=()=>(userStimuli[cat]?.[nivel])||[];
-  const getEdits=()=>(userStimuli[`${cat}_edits`]?.[nivel])||{};
-  const getDeleted=()=>(userStimuli[`${cat}_deleted`]?.[nivel])||[];
-  const allItems=()=>{
-    const base=getBase().filter((_,i)=>!getDeleted().includes(i)).map((text,origIdx)=>{
-      const actualIdx=getBase().indexOf(text);const edited=getEdits()[actualIdx];
-      return{text:edited||text,orig:text,idx:actualIdx,isBase:true,isEdited:!!edited};
-    });
-    const user=getUserAdds().map((text,i)=>({text,orig:text,idx:i,isBase:false}));
-    return[...base,...user];
+  const cargar=useCallback(async()=>{
+    setCargando(true);
+    const r=await listarEstimulos(cat,nivel);
+    setItems(r);setCargando(false);
+  },[cat,nivel]);
+  useEffect(()=>{cargar();},[cargar]);
+
+  const colOf=l=>l==="es"?"texto_es":`texto_${l}`;
+  const textoDe=it=>it[colOf(langCol)]||"";
+
+  const addItem=async()=>{
+    if(!newText.trim())return;
+    const novo=await engadirEstimulo(cat,nivel,newText.trim());
+    if(novo){setItems(p=>[...p,novo]);setNewText("");recargar(true);}
   };
-  const saveUserStimuli=u=>{setUserStimuli(u);ls.set("impro_user_stimuli",u);};
-  const addItem=()=>{if(!newText.trim())return;const u={...userStimuli};u[cat]=u[cat]||{simple:[],plus:[]};u[cat][nivel]=[...(u[cat][nivel]||[]),newText.trim()];saveUserStimuli(u);setNewText("");};
-  const editItem=(item)=>{setEditIdx(`${item.isBase?"b":"u"}_${item.idx}`);setEditText(item.text);};
-  const saveEdit=(item)=>{const u={...userStimuli};if(item.isBase){const key=`${cat}_edits`;u[key]=u[key]||{};u[key][nivel]=u[key][nivel]||{};u[key][nivel][item.idx]=editText.trim();}else{u[cat][nivel][item.idx]=editText.trim();}saveUserStimuli(u);setEditIdx(null);setEditText("");};
-  const deleteItem=(item)=>{if(!confirm("¿Eliminar?"))return;const u={...userStimuli};if(item.isBase){const key=`${cat}_deleted`;u[key]=u[key]||{};u[key][nivel]=[...(u[key][nivel]||[]),item.idx];}else{u[cat][nivel]=(u[cat][nivel]||[]).filter((_,i)=>i!==item.idx);}saveUserStimuli(u);};
-  const resetCat=()=>{if(!confirm(`¿Restaurar ${cat} ${nivel}?`))return;const u={...userStimuli};delete u[cat];delete u[`${cat}_edits`];delete u[`${cat}_deleted`];saveUserStimuli(u);};
-  const items=allItems();
+  const saveEdit=async(it)=>{
+    if(!editText.trim())return;
+    const ok=await editarEstimulo(it.id,{[colOf(langCol)]:editText.trim()});
+    if(ok){setItems(p=>p.map(x=>x.id===it.id?{...x,[colOf(langCol)]:editText.trim()}:x));recargar(true);}
+    setEditId(null);setEditText("");
+  };
+  const delItem=async(it)=>{
+    if(!confirm(`Eliminar "${it.texto_es}"?`))return;
+    const ok=await borrarEstimulo(it.id);
+    if(ok){setItems(p=>p.filter(x=>x.id!==it.id));recargar(true);}
+  };
+
+  const visibles=items.filter(it=>!busca||(it.texto_es||"").toLowerCase().includes(busca.toLowerCase()));
+  const traducidos=items.filter(it=>langCol==="es"||it[colOf(langCol)]).length;
+
   return(<div>
-    <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-      <select value={cat} onChange={e=>setCat(e.target.value)} style={{...S.input,flex:1,minWidth:130}}>
-        {Object.keys(ESTIMULOS_BASE).map(c=><option key={c} value={c}>{CAT_ICONS[c]||"◆"} {c}</option>)}
+    <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.85rem",flexWrap:"wrap"}}>
+      <select value={cat} onChange={e=>setCat(e.target.value)} style={{...S.input,flex:1,minWidth:140}}>
+        {listaCats.map(c=><option key={c.id} value={c.id}>{c.icona} {c.nome}</option>)}
       </select>
       <div style={{display:"flex",background:T.bg3,borderRadius:10,padding:3,gap:2}}>
-        {[["simple","◆"],["plus","⭐"]].map(([v,l])=><button key={v} onClick={()=>setNivel(v)} style={{...S.btn(nivel===v?T.accent:"transparent",nivel===v?"#fff":T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>)}
+        {[["simple","◆ Simple"],["plus","⭐ Plus"]].map(([v,l])=>
+          <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(nivel===v?T.accent:"transparent",nivel===v?"#fff":T.text3),borderRadius:8,padding:"0.35rem 0.7rem",fontSize:"0.78rem"}}>{l}</button>)}
       </div>
-      <button onClick={resetCat} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem"}}>↺</button>
     </div>
-    <div style={{...S.panel,marginBottom:"0.85rem",padding:"0.5rem 1rem",display:"flex",gap:"1rem"}}>
-      <span style={{color:T.text3,fontSize:"0.8rem"}}>Base: <strong style={{color:T.text}}>{getBase().length}</strong></span>
-      <span style={{color:"#69f0ae",fontSize:"0.8rem"}}>+: <strong>{getUserAdds().length}</strong></span>
-      <span style={{color:"#ff6e40",fontSize:"0.8rem"}}>-: <strong>{getDeleted().length}</strong></span>
-      <span style={{color:T.accent,fontSize:"0.8rem"}}>Total: <strong>{items.length}</strong></span>
+
+    <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.85rem",flexWrap:"wrap",alignItems:"center"}}>
+      <span style={{color:T.text4,fontSize:"0.72rem",fontFamily:"monospace",letterSpacing:"0.1em"}}>IDIOMA</span>
+      {IDIOMAS.map(l=>
+        <button key={l.id} onClick={()=>setLangCol(l.id)} style={{background:langCol===l.id?T.accent:T.bg3,color:langCol===l.id?"#fff":T.text3,border:"none",borderRadius:16,padding:"0.22rem 0.6rem",fontSize:"0.72rem",fontWeight:langCol===l.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l.id.toUpperCase()}</button>)}
+      {langCol!=="es"&&<span style={{color:traducidos===items.length?"#69f0ae":"#ffd740",fontSize:"0.75rem",marginLeft:"auto"}}>{traducidos}/{items.length} traducidos</span>}
     </div>
-    <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem"}}>
+
+    <div style={{...S.panel,marginBottom:"0.85rem",padding:"0.5rem 1rem",display:"flex",gap:"1.25rem",flexWrap:"wrap"}}>
+      <span style={{color:T.text3,fontSize:"0.8rem"}}>Total: <strong style={{color:T.text}}>{items.length}</strong></span>
+      <span style={{color:T.text3,fontSize:"0.8rem"}}>Visibles: <strong style={{color:T.accent}}>{visibles.length}</strong></span>
+    </div>
+
+    <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.85rem"}}>
+      <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1}}/>
+    </div>
+
+    {langCol==="es"&&<div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem"}}>
       <input value={newText} onChange={e=>setNewText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addItem()} placeholder={`Novo estímulo de ${cat}...`} style={{...S.input,flex:1}}/>
       <button onClick={addItem} style={S.btn(T.accent)}>+ Engadir</button>
+    </div>}
+
+    {cargando?<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>:(
+      <div style={{display:"flex",flexDirection:"column",gap:"0.35rem",maxHeight:520,overflowY:"auto"}}>
+        {visibles.map(it=>{
+          const editando=editId===it.id;
+          const val=textoDe(it);
+          const falta=langCol!=="es"&&!val;
+          return(<div key={it.id} style={{...S.panel,padding:"0.55rem 0.8rem",display:"flex",gap:"0.6rem",alignItems:"center",border:`1.5px solid ${falta?"#ffd74033":T.border}`}}>
+            {editando?(<>
+              <input value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(it)} style={{...S.input,flex:1,fontSize:"0.86rem"}} autoFocus/>
+              <button onClick={()=>saveEdit(it)} style={{...S.btn(T.accent),padding:"0.3rem 0.6rem"}}>✓</button>
+              <button onClick={()=>setEditId(null)} style={{...S.btn(T.bg3,T.text3),padding:"0.3rem 0.6rem"}}>✕</button>
+            </>):(<>
+              <div style={{flex:1,minWidth:0}}>
+                <span style={{color:falta?T.text4:T.text,fontSize:"0.86rem",fontStyle:falta?"italic":"normal"}}>{val||"— sen tradución —"}</span>
+                {langCol!=="es"&&<p style={{color:T.text4,fontSize:"0.74rem",margin:"0.1rem 0 0"}}>{it.texto_es}</p>}
+              </div>
+              <button onClick={()=>{setEditId(it.id);setEditText(val);}} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
+              {langCol==="es"&&<button onClick={()=>delItem(it)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>}
+            </>)}
+          </div>);
+        })}
+        {visibles.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen resultados.</p>}
+      </div>
+    )}
+  </div>);
+}
+
+function AdminTraducions({T,S}){
+  const {recargar}=useEstimulos();
+  const [lang,setLang]=useState("gl");
+  const [soloPendentes,setSoloPendentes]=useState(true);
+  const [progreso,setProgreso]=useState(null);
+  const [msg,setMsg]=useState(null);
+  const [traballando,setTraballando]=useState(false);
+  const fileRef=useRef(null);
+
+  useEffect(()=>{progresoTraducion().then(setProgreso);},[]);
+
+  const exportar=async()=>{
+    setTraballando(true);setMsg(null);
+    const json=await exportarTraducion(lang,{soloPendentes});
+    if(!json||json.items.length===0){
+      setMsg({t:"err",m:soloPendentes?"Non hai nada pendente de traducir neste idioma.":"Non se puido exportar."});
+      setTraballando(false);return;
+    }
+    const blob=new Blob([JSON.stringify(json,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`improapp_traducion_${lang}_${json._data}.json`;
+    a.click();URL.revokeObjectURL(a.href);
+    setMsg({t:"ok",m:`Exportadas ${json.items.length} entradas. Pásallo a Claude para traducir.`});
+    setTraballando(false);
+  };
+
+  const importar=async(ev)=>{
+    const f=ev.target.files?.[0];if(!f)return;
+    setTraballando(true);setMsg(null);
+    try{
+      const json=JSON.parse(await f.text());
+      const r=await importarTraducion(json);
+      if(!r.ok)setMsg({t:"err",m:r.erro});
+      else{
+        setMsg({t:"ok",m:`Importadas ${r.actualizados} traducións${r.erros?` (${r.erros} erros)`:""}.`});
+        progresoTraducion().then(setProgreso);
+        recargar(true);
+      }
+    }catch(e){setMsg({t:"err",m:"O ficheiro non é un JSON válido."});}
+    setTraballando(false);
+    if(fileRef.current)fileRef.current.value="";
+  };
+
+  const tot=progreso?.total||{total:0,gl:0,en:0,pt:0,it:0};
+  const pct=k=>tot.total?Math.round((tot[k]/tot.total)*100):0;
+
+  return(<div style={{display:"flex",flexDirection:"column",gap:"0.85rem"}}>
+    <div style={S.panel}>
+      <p style={S.ptitle(T.accent)}>Progreso de tradución</p>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.55rem"}}>
+        {IDIOMAS.filter(l=>l.id!=="es").map(l=>(
+          <div key={l.id} style={{display:"flex",gap:"0.6rem",alignItems:"center"}}>
+            <span style={{color:T.text3,fontSize:"0.8rem",width:78,flexShrink:0}}>{l.label}</span>
+            <div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${pct(l.id)}%`,background:pct(l.id)===100?"#69f0ae":T.accent,borderRadius:4,transition:"width 0.5s"}}/>
+            </div>
+            <span style={{color:T.text,fontSize:"0.78rem",fontWeight:700,width:58,textAlign:"right"}}>{tot[l.id]}/{tot.total}</span>
+          </div>
+        ))}
+      </div>
     </div>
-    <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
-      {items.map((item,i)=>{
-        const eKey=`${item.isBase?"b":"u"}_${item.idx}`;
-        const isEditing=editIdx===eKey;
-        return(<div key={i} style={{...S.panel,padding:"0.6rem 0.85rem",display:"flex",gap:"0.6rem",alignItems:"center",border:`1.5px solid ${item.isEdited?"#ffd74033":item.isBase?T.border:"#69f0ae33"}`}}>
-          {isEditing?(<><input value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(item)} style={{...S.input,flex:1,fontSize:"0.88rem"}} autoFocus/><button onClick={()=>saveEdit(item)} style={S.btn(T.accent)}>✓</button><button onClick={()=>setEditIdx(null)} style={S.btn(T.bg3,T.text3)}>✕</button></>
-          ):(<><div style={{flex:1}}><span style={{color:T.text,fontSize:"0.88rem"}}>{item.text}</span>{!item.isBase&&<span style={{...S.tag("#69f0ae"),marginLeft:"0.4rem"}}>novo</span>}{item.isEdited&&<span style={{...S.tag("#ffd740"),marginLeft:"0.4rem"}}>editado</span>}</div>
-          <button onClick={()=>editItem(item)} style={{...S.btn(T.bg3,T.text3),padding:"0.3rem 0.5rem",fontSize:"0.78rem"}}>✏️</button>
-          <button onClick={()=>deleteItem(item)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button></>)}
-        </div>);
-      })}
+
+    <div style={S.panel}>
+      <p style={S.ptitle("#40c4ff")}>Exportar para traducir</p>
+      <p style={{color:T.text3,fontSize:"0.82rem",lineHeight:1.6,marginBottom:"0.85rem"}}>
+        Descarga un JSON coas entradas a traducir, pásallo a Claude e volve importalo aquí.
+      </p>
+      <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
+        {IDIOMAS.filter(l=>l.id!=="es").map(l=>
+          <button key={l.id} onClick={()=>setLang(l.id)} style={{background:lang===l.id?"#40c4ff":T.bg3,color:lang===l.id?"#000":T.text3,border:"none",borderRadius:16,padding:"0.25rem 0.7rem",fontSize:"0.76rem",fontWeight:lang===l.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l.label}</button>)}
+      </div>
+      <label style={{display:"flex",gap:"0.45rem",alignItems:"center",marginBottom:"0.85rem",cursor:"pointer"}}>
+        <input type="checkbox" checked={soloPendentes} onChange={e=>setSoloPendentes(e.target.checked)} style={{accentColor:T.accent}}/>
+        <span style={{color:T.text2,fontSize:"0.82rem"}}>Só as entradas sen traducir</span>
+      </label>
+      <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+        <button onClick={exportar} disabled={traballando} style={{...S.btn("#40c4ff","#000"),opacity:traballando?0.5:1}}>⬇ Exportar JSON</button>
+        <button onClick={()=>fileRef.current?.click()} disabled={traballando} style={{...S.btn("#69f0ae","#000"),opacity:traballando?0.5:1}}>⬆ Importar traducido</button>
+        <input ref={fileRef} type="file" accept=".json,application/json" onChange={importar} style={{display:"none"}}/>
+      </div>
+      {msg&&<div style={{marginTop:"0.75rem",background:msg.t==="ok"?"#69f0ae15":"#ff6e4015",border:`1px solid ${msg.t==="ok"?"#69f0ae44":"#ff6e4044"}`,borderRadius:9,padding:"0.6rem 0.85rem"}}>
+        <p style={{color:msg.t==="ok"?"#69f0ae":"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
+      </div>}
+    </div>
+
+    <div style={{...S.panel,border:`1.5px solid ${T.border}`}}>
+      <p style={S.ptitle(T.text3)}>Como traducir con Claude</p>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
+        {["Exporta o JSON do idioma que queiras.",
+          "Abre unha conversa con Claude e sobe o ficheiro.",
+          "Pídelle que encha o campo do idioma en cada entrada, mantendo os ids intactos.",
+          "Garda o JSON que devolva e impórtao aquí."].map((t,i)=>(
+          <div key={i} style={{display:"flex",gap:"0.55rem"}}>
+            <span style={{color:T.accent,fontSize:"0.78rem",fontFamily:"monospace",flexShrink:0}}>{i+1}</span>
+            <span style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.5}}>{t}</span>
+          </div>
+        ))}
+      </div>
     </div>
   </div>);
 }
@@ -1985,9 +2172,9 @@ function TabIdioma(){
 
 
 
-function LoginScreen(){
+function LoginModal({onClose}){
   const {T}=useTheme();const S=mkS(T);
-  const [mode,setMode]=useState("login"); // login | signup | reset
+  const [mode,setMode]=useState("login");
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
   const [nome,setNome]=useState("");
@@ -1999,52 +2186,45 @@ function LoginScreen(){
     setLoading(true);setMsg(null);
     if(mode==="reset"){
       const r=await resetPassword(email.trim());
-      setMsg(r.ok?{t:"ok",m:"Enviamos un email para restablecer o contrasinal."}:{t:"err",m:r.error});
+      setMsg(r.ok?{t:"ok",m:"Enviámosche un email para restablecer o contrasinal."}:{t:"err",m:r.error});
       setLoading(false);return;
     }
     if(!pass||pass.length<6){setMsg({t:"err",m:"O contrasinal debe ter polo menos 6 caracteres."});setLoading(false);return;}
     if(mode==="signup"){
       const r=await signUp(email.trim(),pass,nome.trim()||email.split("@")[0]);
-      if(r.ok)setMsg({t:"ok",m:"Conta creada. Un administrador debe aprobala antes de que poidas entrar."});
+      if(r.ok)setMsg({t:"ok",m:"Conta creada! Xa podes usar todas as funcións."});
       else setMsg({t:"err",m:r.error});
     }else{
       const r=await signIn(email.trim(),pass);
-      if(!r.ok)setMsg({t:"err",m:r.error});
+      if(r.ok)onClose();
+      else setMsg({t:"err",m:r.error});
     }
     setLoading(false);
   };
 
-  return(<div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem",fontFamily:"'Inter',system-ui,sans-serif"}}>
-    <div style={{width:"100%",maxWidth:380}}>
-      <div style={{textAlign:"center",marginBottom:"2rem"}}>
-        <div style={{fontSize:"3rem",marginBottom:"0.4rem"}}>🎭</div>
-        <h1 style={{fontWeight:900,fontSize:"1.6rem",margin:0,color:T.text,letterSpacing:"-0.02em"}}>impro<span style={{color:T.accent}}>App</span></h1>
-        <p style={{color:T.text3,fontSize:"0.85rem",margin:"0.3rem 0 0"}}>Ferramenta para facilitadores de impro</p>
+  return(<div onClick={onClose} style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem",backdropFilter:"blur(4px)",animation:"fadeIn 0.2s ease"}}>
+    <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:380,background:T.bg2,borderRadius:16,padding:"1.5rem",border:`1.5px solid ${T.border}`,animation:"pubIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",maxHeight:"90vh",overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1.25rem"}}>
+        <div>
+          <div style={{fontSize:"2rem",marginBottom:"0.2rem"}}>🎭</div>
+          <h2 style={{color:T.text,fontWeight:900,fontSize:"1.15rem",margin:0}}>{mode==="signup"?"Crear conta":mode==="reset"?"Recuperar acceso":"Entrar"}</h2>
+          <p style={{color:T.text3,fontSize:"0.82rem",margin:"0.25rem 0 0",lineHeight:1.5}}>Cunha conta podes gardar dinámicas, grupos e sesións en todos os teus dispositivos.</p>
+        </div>
+        <button onClick={onClose} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"1.2rem",padding:0,lineHeight:1}}>×</button>
       </div>
 
-      <div style={{...S.panel,display:"flex",flexDirection:"column",gap:"0.75rem"}}>
-        <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:"0.3rem"}}>
+      <div style={{display:"flex",flexDirection:"column",gap:"0.7rem"}}>
+        {mode!=="reset"&&<div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3}}>
           {[["login","Entrar"],["signup","Crear conta"]].map(([id,label])=>
             <button key={id} onClick={()=>{setMode(id);setMsg(null);}} style={{...S.btn(mode===id?T.bg2:"transparent",mode===id?T.text:T.text3),flex:1,borderRadius:8,fontSize:"0.82rem",boxShadow:mode===id?"0 1px 4px rgba(0,0,0,0.2)":"none"}}>{label}</button>
           )}
-        </div>
-
-        {mode==="signup"&&<div>
-          <label style={{color:T.text3,fontSize:"0.75rem",display:"block",marginBottom:"0.25rem"}}>Nome</label>
-          <input value={nome} onChange={e=>setNome(e.target.value)} placeholder="O teu nome" style={S.input}/>
         </div>}
 
-        <div>
-          <label style={{color:T.text3,fontSize:"0.75rem",display:"block",marginBottom:"0.25rem"}}>Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="ti@exemplo.com" style={S.input} autoComplete="email"/>
-        </div>
+        {mode==="signup"&&<input value={nome} onChange={e=>setNome(e.target.value)} placeholder="O teu nome" style={S.input}/>}
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="ti@exemplo.com" style={S.input} autoComplete="email"/>
+        {mode!=="reset"&&<input type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Contrasinal (mín. 6)" style={S.input} autoComplete={mode==="signup"?"new-password":"current-password"}/>}
 
-        {mode!=="reset"&&<div>
-          <label style={{color:T.text3,fontSize:"0.75rem",display:"block",marginBottom:"0.25rem"}}>Contrasinal</label>
-          <input type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="••••••" style={S.input} autoComplete={mode==="signup"?"new-password":"current-password"}/>
-        </div>}
-
-        {msg&&<div style={{background:msg.t==="ok"?"#69f0ae15":"#ff6e4015",border:`1px solid ${msg.t==="ok"?"#69f0ae44":"#ff6e4044"}`,borderRadius:9,padding:"0.6rem 0.85rem"}}>
+        {msg&&<div style={{background:msg.t==="ok"?"#69f0ae15":"#ff6e4015",border:`1px solid ${msg.t==="ok"?"#69f0ae44":"#ff6e4044"}`,borderRadius:9,padding:"0.6rem 0.8rem"}}>
           <p style={{color:msg.t==="ok"?"#69f0ae":"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
         </div>}
 
@@ -2052,29 +2232,25 @@ function LoginScreen(){
           {loading?"...":mode==="signup"?"Crear conta":mode==="reset"?"Enviar email":"Entrar"}
         </button>
 
-        <button onClick={()=>{setMode(mode==="reset"?"login":"reset");setMsg(null);}} style={{background:"none",border:"none",color:T.text3,fontSize:"0.78rem",cursor:"pointer",fontFamily:"inherit",padding:"0.2rem"}}>
-          {mode==="reset"?"← Volver ao login":"Esquecín o contrasinal"}
+        <button onClick={()=>{setMode(mode==="reset"?"login":"reset");setMsg(null);}} style={{background:"none",border:"none",color:T.text3,fontSize:"0.78rem",cursor:"pointer",fontFamily:"inherit"}}>
+          {mode==="reset"?"← Volver":"Esquecín o contrasinal"}
         </button>
+        <button onClick={onClose} style={{background:"none",border:"none",color:T.text4,fontSize:"0.78rem",cursor:"pointer",fontFamily:"inherit"}}>Seguir sen conta</button>
       </div>
-
-      <p style={{color:T.text4,fontSize:"0.72rem",textAlign:"center",marginTop:"1.25rem",lineHeight:1.6}}>
-        As contas novas requiren aprobación dun administrador antes de poder acceder.
-      </p>
     </div>
   </div>);
 }
 
-function PendingApproval({perfil}){
+// Bloqueo suave: mostra un aviso e invita a entrar
+function LoginGate({children,titulo,descricion}){
   const {T}=useTheme();const S=mkS(T);
-  return(<div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem",fontFamily:"'Inter',system-ui,sans-serif"}}>
-    <div style={{maxWidth:380,textAlign:"center"}}>
-      <div style={{fontSize:"3rem",marginBottom:"1rem"}}>⏳</div>
-      <h2 style={{color:T.text,fontWeight:900,margin:"0 0 0.5rem"}}>Conta pendente de aprobación</h2>
-      <p style={{color:T.text3,fontSize:"0.88rem",lineHeight:1.6,marginBottom:"1.5rem"}}>
-        A túa conta ({perfil?.email}) foi creada correctamente, pero necesita a aprobación dun administrador antes de poder usar a app.
-      </p>
-      <button onClick={()=>signOut()} style={{...S.btn(T.bg3,T.text2)}}>Pechar sesión</button>
-    </div>
+  const {logueado,pedirLogin}=useAuth();
+  if(logueado)return children;
+  return(<div style={{...S.panel,textAlign:"center",padding:"2.5rem 1.5rem",border:`1.5px dashed ${T.border}`}}>
+    <div style={{fontSize:"2.5rem",marginBottom:"0.75rem",opacity:0.5}}>🔒</div>
+    <h3 style={{color:T.text,fontWeight:900,fontSize:"1.05rem",margin:"0 0 0.4rem"}}>{titulo||"Necesitas unha conta"}</h3>
+    <p style={{color:T.text3,fontSize:"0.85rem",lineHeight:1.6,margin:"0 0 1.25rem",maxWidth:340,marginLeft:"auto",marginRight:"auto"}}>{descricion||"Crea unha conta gratuíta para gardar os teus datos e acceder dende calquera dispositivo."}</p>
+    <button onClick={pedirLogin} style={{...S.btn(T.accent),padding:"0.6rem 1.5rem"}}>Entrar ou crear conta</button>
   </div>);
 }
 
@@ -2179,6 +2355,7 @@ const TABS=[
 
 function AppInner({perfil,publico}={}){
   const {dark,toggle,T}=useTheme();
+  const {logueado,pedirLogin,esAdmin,migrando}=useAuth();
   const [tab,setTab]=useState("generar");
   const [animating,setAnimating]=useState(false);
   const [pubStimulus,setPubStimulus]=useState(null);
@@ -2187,7 +2364,8 @@ function AppInner({perfil,publico}={}){
   const [pubTimerRunning,setPubTimerRunning]=useState(false);
   const [pubRundown,setPubRundown]=useState([]);
   const [lang,setLangState]=useState(()=>ls.get("impro_lang","es"));
-  const setLang=l=>{setLangState(l);ls.set("impro_lang",l);};
+  const {recargar:recargarEstimulos}=useEstimulos();
+  const setLang=l=>{setLangState(l);ls.set("impro_lang",l);invalidarCache();recargarEstimulos(true);};
   const [grupoActivo,setGrupoActivo]=useState(()=>ls.get("impro_grupo_activo",null));
   const setGrupo=g=>{setGrupoActivo(g);ls.set("impro_grupo_activo",g);};
   const timerLaunchRef=useRef(null);
@@ -2234,24 +2412,27 @@ function AppInner({perfil,publico}={}){
             </div>
             <button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>
             <button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>
-            {perfil&&<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>⏻</button>}
+            {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.75rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit"}}>Entrar</button>}
           </div>
         </div>
         <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
-          {TABS.map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:"0.45rem 0.75rem",fontSize:"0.8rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
+          {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:"0.45rem 0.75rem",fontSize:"0.8rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
             <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
           </button>))}
         </nav>
       </div>
     </header>
+    {migrando&&<div style={{background:"#69f0ae15",borderBottom:"1px solid #69f0ae33",padding:"0.5rem 1rem",textAlign:"center"}}>
+      <span style={{color:"#69f0ae",fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
+    </div>}
     <main style={{maxWidth:960,margin:"0 auto",padding:"1.25rem 1rem 6rem"}}>
       <div className="tab-content" key={tab}>
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
-        {tab==="sesiones"&&<TabSesiones onLaunchTimer={launchTimer}/>}
+        {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
         {tab==="show"&&<TabShow audio={audio} onRundownChange={setPubRundown}/>}
-        {tab==="grupos"&&<TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/>}
+        {tab==="grupos"&&<LoginGate titulo="Xestiona os teus grupos" descricion="Crea grupos, engade membros e fai seguimento das súas estatísticas."><TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/></LoginGate>}
         {tab==="qr"&&<TabQR/>}
         {tab==="admin"&&<TabAdmin/>}
         {tab==="ajustes"&&<TabAjustes/>}
@@ -2265,9 +2446,10 @@ function AppInner({perfil,publico}={}){
 
 function AuthGate(){
   const {T}=useTheme();
-  const [session,setSession]=useState(undefined); // undefined = cargando
+  const [session,setSession]=useState(undefined);
   const [perfil,setPerfil]=useState(null);
-  const [loadingPerfil,setLoadingPerfil]=useState(false);
+  const [showLogin,setShowLogin]=useState(false);
+  const [migrando,setMigrando]=useState(false);
 
   useEffect(()=>{
     getSession().then(s=>setSession(s));
@@ -2277,26 +2459,55 @@ function AuthGate(){
 
   useEffect(()=>{
     if(!session?.user?.id){setPerfil(null);return;}
-    setLoadingPerfil(true);
-    getPerfil(session.user.id).then(p=>{setPerfil(p);setLoadingPerfil(false);});
+    getPerfil(session.user.id).then(async p=>{
+      setPerfil(p);
+      // Migrar datos locais á conta a primeira vez
+      if(p&&!ls.get("impro_migrado_"+p.id,false)){
+        setMigrando(true);
+        await migrarDatosLocais(p.id);
+        ls.set("impro_migrado_"+p.id,true);
+        setMigrando(false);
+      }
+    });
   },[session?.user?.id]);
 
-  // O público que entra por QR non necesita conta
-  const params=new URLSearchParams(window.location.search);
-  const isPublico=!!params.get("sala");
-  if(isPublico)return<AppInner perfil={null} publico/>;
+  const loading=session===undefined;
 
-  if(session===undefined||loadingPerfil)return(<div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+  if(loading)return(<div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
     <div style={{textAlign:"center"}}>
       <div style={{fontSize:"2.5rem",marginBottom:"0.5rem"}}>🎭</div>
       <p style={{color:T.text4,fontSize:"0.85rem"}}>Cargando...</p>
     </div>
   </div>);
 
-  if(!session)return<LoginScreen/>;
-  if(perfil&&!perfil.aprobado&&perfil.rol!=="admin")return<PendingApproval perfil={perfil}/>;
+  const authValue={
+    session,perfil,user:session?.user||null,
+    logueado:!!session,
+    aprobado:perfil?.aprobado||perfil?.rol==="admin",
+    esAdmin:perfil?.rol==="admin",
+    pedirLogin:()=>setShowLogin(true),
+    migrando,
+  };
 
-  return<AuthCtx.Provider value={{session,perfil,user:session.user}}><AppInner perfil={perfil}/></AuthCtx.Provider>;
+  const langActual=ls.get("impro_lang","es");
+  return(<AuthCtx.Provider value={authValue}>
+    <EstimulosProvider lang={langActual}>
+      <AppInner perfil={perfil}/>
+      {showLogin&&<LoginModal onClose={()=>setShowLogin(false)}/>}
+    </EstimulosProvider>
+  </AuthCtx.Provider>);
+}
+
+// Migra datos de localStorage á conta ao entrar por primeira vez
+async function migrarDatosLocais(userId){
+  try{
+    const dins=ls.get("impro_dinamicas_v2",[]).filter(d=>!d.es_base);
+    for(const d of dins)await saveDinamica(d);
+    const grupos=ls.get("impro_grupos",[]);
+    for(const g of grupos)await saveGrupo(g);
+    const sesiones=ls.get("impro_sesiones",[]);
+    for(const s of sesiones)await saveSesion(s);
+  }catch(e){console.warn("Migración parcial:",e);}
 }
 
 export default function ImproApp(){
