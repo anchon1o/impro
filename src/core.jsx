@@ -137,13 +137,137 @@ export const trackMins = (m) => {
   ls.set("impro_stats", s);
 };
 
+// ── SISTEMA TIPOGRÁFICO ──
+// Tres familias con roles claros:
+//   FONT_UI    → interface xeral, corpo de texto
+//   FONT_TIT   → títulos e cifras grandes (mesmo stack, pesos altos)
+//   FONT_MONO  → etiquetas, códigos, temporizadores, datos
+// Os tamaños usan clamp() para escalar entre móbil e escritorio sen media queries.
+export const FONT_UI   = "'Inter','SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif";
+export const FONT_TIT  = "'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif";
+export const FONT_MONO = "'JetBrains Mono','SF Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+
+// Escala tipográfica: [móbil, ideal vw, escritorio]
+export const TYPE = {
+  display: { fontFamily:FONT_TIT,  fontSize:"clamp(1.75rem,1.2rem + 2.6vw,2.75rem)", fontWeight:800, lineHeight:1.1,  letterSpacing:"-0.03em" },
+  h1:      { fontFamily:FONT_TIT,  fontSize:"clamp(1.25rem,1.05rem + 1vw,1.6rem)",   fontWeight:800, lineHeight:1.2,  letterSpacing:"-0.02em" },
+  h2:      { fontFamily:FONT_TIT,  fontSize:"clamp(1.02rem,0.95rem + 0.4vw,1.18rem)",fontWeight:700, lineHeight:1.3,  letterSpacing:"-0.01em" },
+  h3:      { fontFamily:FONT_TIT,  fontSize:"clamp(0.9rem,0.86rem + 0.2vw,0.98rem)", fontWeight:700, lineHeight:1.35 },
+  body:    { fontFamily:FONT_UI,   fontSize:"clamp(0.875rem,0.85rem + 0.15vw,0.94rem)", fontWeight:400, lineHeight:1.6 },
+  bodySm:  { fontFamily:FONT_UI,   fontSize:"clamp(0.8rem,0.78rem + 0.1vw,0.85rem)", fontWeight:400, lineHeight:1.55 },
+  label:   { fontFamily:FONT_MONO, fontSize:"0.7rem",  fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase" },
+  caption: { fontFamily:FONT_UI,   fontSize:"0.75rem", fontWeight:400, lineHeight:1.45 },
+  numeric: { fontFamily:FONT_MONO, fontWeight:700, fontVariantNumeric:"tabular-nums", letterSpacing:"-0.01em" },
+};
+
+// Puntos de corte compartidos por toda a app
+export const BP = { movil:520, tablet:900 };
+
+// Hook de tamaño de pantalla, para adaptar layouts que clamp() non cobre
+export function useViewport(){
+  const [w,setW]=useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
+  useEffect(()=>{
+    let raf=null;
+    const onR=()=>{if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>setW(window.innerWidth));};
+    window.addEventListener("resize",onR);
+    return()=>{window.removeEventListener("resize",onR);if(raf)cancelAnimationFrame(raf);};
+  },[]);
+  return { w, esMovil:w<BP.movil, esTablet:w>=BP.movil&&w<BP.tablet, esPC:w>=BP.tablet };
+}
+
 export const mkS = (T) => ({
-  panel:{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:14,padding:"1.25rem"},
-  btn:(bg,color="#fff")=>({background:bg,color,border:"none",borderRadius:9,padding:"0.5rem 1rem",fontWeight:700,cursor:"pointer",fontSize:"0.85rem",transition:"all 0.15s",whiteSpace:"nowrap",fontFamily:"inherit"}),
-  input:{background:T.input,border:`1.5px solid ${T.inputBorder}`,borderRadius:8,color:T.text,padding:"0.48rem 0.75rem",fontSize:"0.88rem",fontFamily:"inherit",outline:"none",width:"100%",boxSizing:"border-box"},
-  ptitle:(c)=>({color:c,fontSize:"0.72rem",letterSpacing:"0.15em",margin:"0 0 0.9rem",fontFamily:"monospace",fontWeight:700,textTransform:"uppercase"}),
-  tag:(c)=>({background:c+"22",color:c,borderRadius:5,padding:"0.1rem 0.45rem",fontSize:"0.72rem",fontWeight:700}),
+  // Tipografía lista para espallar: {...S.t.h1}
+  t: TYPE,
+  font: FONT_UI,
+  fontTit: FONT_TIT,
+  fontMono: FONT_MONO,
+
+  panel:{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:14,padding:"clamp(0.9rem,0.7rem + 0.8vw,1.25rem)",fontFamily:FONT_UI},
+  btn:(bg,color="#fff")=>({background:bg,color,border:"none",borderRadius:10,padding:"0.55rem 1rem",fontWeight:650,cursor:"pointer",fontSize:"0.85rem",fontFamily:FONT_UI,letterSpacing:"-0.005em",transition:"all 0.15s",whiteSpace:"nowrap",minHeight:38,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:"0.35rem"}),
+  input:{background:T.input,border:`1.5px solid ${T.inputBorder}`,borderRadius:9,color:T.text,padding:"0.55rem 0.8rem",fontSize:"16px",fontFamily:FONT_UI,lineHeight:1.4,outline:"none",width:"100%",boxSizing:"border-box",minHeight:42},
+  ptitle:(c)=>({color:c,...TYPE.label,margin:"0 0 0.9rem"}),
+  tag:(c)=>({background:c+"22",color:c,borderRadius:6,padding:"0.14rem 0.5rem",fontSize:"0.7rem",fontWeight:650,fontFamily:FONT_UI,letterSpacing:"0.01em",display:"inline-block"}),
+
+  // Novos helpers
+  h1:{...TYPE.h1,color:T.text,margin:0},
+  h2:{...TYPE.h2,color:T.text,margin:0},
+  h3:{...TYPE.h3,color:T.text,margin:0},
+  body:{...TYPE.body,color:T.text2,margin:0},
+  caption:{...TYPE.caption,color:T.text3,margin:0},
+  num:(c,size="1.5rem")=>({...TYPE.numeric,color:c,fontSize:size,lineHeight:1}),
+  // Reixa responsive: cae a unha columna en móbil automaticamente
+  grid:(min=240)=>({display:"grid",gridTemplateColumns:`repeat(auto-fill,minmax(min(${min}px,100%),1fr))`,gap:"0.6rem"}),
 });
+
+
+// ── EDITOR DE DINÁMICAS COMPARTIDO ──
+// Usado tanto en Guía coma en Admin → Dinámicas, para que a experiencia
+// de edición sexa idéntica nos dous sitios.
+export function Campo({label,children}){
+  const {T}=useTheme();
+  return(<div>
+    <p style={{color:T.text3,...TYPE.label,margin:"0 0 0.3rem"}}>{label}</p>
+    {children}
+  </div>);
+}
+
+export function EditorDinamica({form,setForm,onGardar,onCancelar,editando,tiposDisponibles}){
+  const {T}=useTheme();const S=mkS(T);
+  const {esMovil}=useViewport();
+  const tipos=tiposDisponibles||["calentamiento","entrenamiento","juego","formato","musical","pausa","cierre"];
+  const valido=form.nombre.trim().length>0;
+  return(<div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
+    <p style={S.ptitle(T.accent)}>{editando?"Editar dinámica":"Nova dinámica"}</p>
+    <div style={{display:"grid",gap:"0.7rem"}}>
+      <Campo label="Nome">
+        <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} style={S.input} autoFocus/>
+      </Campo>
+      <div style={{display:"grid",gridTemplateColumns:esMovil?"1fr":"1fr 1fr 1fr",gap:"0.5rem"}}>
+        <Campo label="Tipo">
+          <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
+            {tipos.map(t=><option key={t} value={t}>{t}</option>)}
+          </select>
+        </Campo>
+        <Campo label="Duración (min)">
+          <input type="number" inputMode="numeric" value={form.duracion} onChange={e=>setForm(f=>({...f,duracion:e.target.value}))} style={S.input}/>
+        </Campo>
+        <Campo label="Participantes">
+          <input value={form.participantes} onChange={e=>setForm(f=>({...f,participantes:e.target.value}))} style={S.input}/>
+        </Campo>
+      </div>
+      <Campo label="Descrición">
+        <textarea value={form.descripcion} onChange={e=>setForm(f=>({...f,descripcion:e.target.value}))} style={{...S.input,height:70,resize:"vertical"}}/>
+      </Campo>
+      <Campo label="Pasos (un por liña)">
+        <textarea value={form.pasos} onChange={e=>setForm(f=>({...f,pasos:e.target.value}))} style={{...S.input,height:100,resize:"vertical"}}/>
+      </Campo>
+      <Campo label="Obxectivo">
+        <input value={form.objetivo} onChange={e=>setForm(f=>({...f,objetivo:e.target.value}))} style={S.input}/>
+      </Campo>
+      <Campo label="Variantes (unha por liña)">
+        <textarea value={form.variantes} onChange={e=>setForm(f=>({...f,variantes:e.target.value}))} style={{...S.input,height:70,resize:"vertical"}}/>
+      </Campo>
+    </div>
+    <div style={{display:"flex",gap:"0.5rem",marginTop:"0.9rem"}}>
+      <button onClick={onGardar} disabled={!valido} style={{...S.btn(T.accent),opacity:valido?1:0.4,flex:esMovil?1:"none"}}>Gardar</button>
+      <button onClick={onCancelar} style={{...S.btn(T.bg3,T.text2),flex:esMovil?1:"none"}}>Cancelar</button>
+    </div>
+  </div>);
+}
+
+export const FORM_DINAMICA_BALEIRO={nombre:"",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"",pasos:"",objetivo:"",variantes:""};
+
+export function dinamicaDesdeForm(form,editId){
+  return {...form,id:editId||String(Date.now()),duracion:Number(form.duracion)||10,
+    pasos:form.pasos.split("\n").map(s=>s.trim()).filter(Boolean),
+    variantes:form.variantes.split("\n").map(s=>s.trim()).filter(Boolean)};
+}
+
+export function formDesdeDinamica(d){
+  return {...d,duracion:d.duracion??10,participantes:d.participantes||"grupo",
+    descripcion:d.descripcion||"",objetivo:d.objetivo||"",
+    pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")};
+}
 
 export function useAudio() {
   const ctxRef=useRef(null);

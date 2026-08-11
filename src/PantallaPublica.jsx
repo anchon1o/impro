@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { FMT } from './core.jsx';
+import { FMT, FONT_UI, FONT_MONO } from './core.jsx';
 
 export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onClose}){
   const [td,setTd]=useState(timerDisplay||0);
@@ -38,7 +38,7 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
   const urgent=td>0&&td<10,warning=td>0&&td<30;
   const timerColor=urgent?"#ff6e40":warning?"#ffd740":"#e040fb";
 
-  return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:"'Inter',system-ui,sans-serif"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:FONT_UI}}>
     <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Cerrar</button>
 
     {/* Notificación flotante */}
@@ -50,7 +50,7 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
     <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem",gap:"1.5rem"}}>
       {stimulus?(
         <>
-          <p style={{color:"#e040fb",fontFamily:"monospace",fontSize:"clamp(0.8rem,2vw,1rem)",letterSpacing:"0.3em",margin:0,textTransform:"uppercase",opacity:0.8}}>{stimulus.category}</p>
+          <p style={{color:"#e040fb",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontSize:"clamp(0.8rem,2vw,1rem)",letterSpacing:"0.3em",margin:0,textTransform:"uppercase",opacity:0.8}}>{stimulus.category}</p>
           <h1 style={{fontSize:"clamp(3rem,10vw,8rem)",fontWeight:900,color:"#fff",textShadow:"0 0 80px rgba(224,64,251,0.5)",lineHeight:1.05,maxWidth:"85vw",textAlign:"center",margin:0,animation:"pubIn 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{stimulus.word}</h1>
         </>
       ):(
@@ -67,13 +67,13 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
 
       {/* Timer */}
       <div style={{display:"flex",alignItems:"center",gap:"0.85rem",cursor:"pointer"}} onClick={()=>setShowTimer(!showTimer)}>
-        {showTimer&&<div style={{fontFamily:"monospace",fontWeight:900,fontSize:"clamp(1.8rem,5vw,3rem)",color:timerColor,textShadow:urgent?`0 0 30px ${timerColor}`:"none",animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",lineHeight:1,minWidth:"4ch"}}>{FMT(td)}</div>}
+        {showTimer&&<div style={{fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontWeight:900,fontSize:"clamp(1.8rem,5vw,3rem)",color:timerColor,textShadow:urgent?`0 0 30px ${timerColor}`:"none",animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",lineHeight:1,minWidth:"4ch"}}>{FMT(td)}</div>}
         {timerRunning&&<div style={{width:8,height:8,borderRadius:"50%",background:timerColor,boxShadow:`0 0 12px ${timerColor}`,animation:"urgentPulse 1s ease infinite alternate"}}/>}
       </div>
 
       {/* Actuación activa */}
       {activeAct&&<div style={{flex:1}}>
-        <p style={{color:"#555",fontSize:"0.65rem",letterSpacing:"0.15em",margin:"0 0 0.15rem",fontFamily:"monospace"}}>EN ESCENA</p>
+        <p style={{color:"#555",fontSize:"0.65rem",letterSpacing:"0.15em",margin:"0 0 0.15rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums"}}>EN ESCENA</p>
         <p style={{color:"#40c4ff",fontWeight:900,fontSize:"clamp(0.9rem,2.5vw,1.3rem)",margin:0}}>{activeAct.nombre}{activeAct.formato&&<span style={{color:"#40c4ff88",fontWeight:400,fontSize:"0.8em",marginLeft:"0.5rem"}}>{activeAct.formato}</span>}</p>
       </div>}
 

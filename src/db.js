@@ -170,10 +170,15 @@ export async function listarTodosGrupos() {
   try {
     const { data, error } = await supabase
       .from('grupos')
-      .select('*, perfis(nome,email)')
+      .select('*')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    const filas = data || [];
+    const ids = [...new Set(filas.map(f => f.user_id).filter(Boolean))];
+    if (ids.length === 0) return filas;
+    const { data: perfis } = await supabase.from('perfis').select('id,nome,email').in('id', ids);
+    const mapa = Object.fromEntries((perfis || []).map(p => [p.id, p]));
+    return filas.map(f => ({ ...f, perfis: f.user_id ? mapa[f.user_id] : null }));
   } catch (e) {
     console.warn('[db] listarTodosGrupos:', e?.message);
     return [];

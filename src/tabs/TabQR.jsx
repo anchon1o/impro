@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { useAuth, useTheme, UID, ls, mkS, QRCode } from '../core.jsx';
+import { useAuth, useTheme, UID, ls, mkS, QRCode, FONT_UI } from '../core.jsx';
 import { abrirSala, cerrarSala, enviarProposta, getPropostas, subscribeToPropostas, getHistorialSalas } from '../db.js';
 
 export function TabQR(){
@@ -113,7 +113,7 @@ export function TabQR(){
   const qrUrl=`${window.location.href.split("?")[0]}?sala=${salaCode}`;
 
   // VISTA: PANTALLA PÚBLICA (PÚBLICO ENVIANDO)
-  if(mode==="send")return(<div style={{minHeight:"100vh",background:T.bg,fontFamily:"'Inter',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
+  if(mode==="send")return(<div style={{minHeight:"100vh",background:T.bg,fontFamily:FONT_UI,display:"flex",flexDirection:"column"}}>
     <div style={{background:T.accent,padding:"0.85rem 1.25rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
       <div><p style={{color:"rgba(255,255,255,0.7)",fontSize:"0.7rem",letterSpacing:"0.2em",margin:"0 0 0.1rem",fontFamily:"monospace"}}>SALA</p><p style={{color:"#fff",fontWeight:900,fontSize:"1.6rem",letterSpacing:"0.15em",margin:0}}>{salaCode}</p></div>
       <span style={{fontSize:"1.8rem"}}>🎭</span>

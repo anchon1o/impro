@@ -8,6 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ThemeCtx, LangCtx, AuthCtx, useAuth, useLang, useTheme, useThemeProvider,
   EstimulosProvider, useEstimulos, TAB_LABELS, ls, mkS, TimerBar, useAudio,
+  FONT_UI, FONT_MONO, TYPE, useViewport,
 } from './core.jsx';
 import {
   getSession, onAuthChange, getPerfil, signOut,
@@ -49,6 +50,7 @@ const TABS=[
 function AppInner({perfil,publico}={}){
   const {dark,toggle,T}=useTheme();
   const {logueado,pedirLogin,esAdmin,migrando}=useAuth();
+  const {esMovil,esTablet}=useViewport();
   const [tab,setTab]=useState("generar");
   const [animating,setAnimating]=useState(false);
   const [pubStimulus,setPubStimulus]=useState(null);
@@ -67,7 +69,7 @@ function AppInner({perfil,publico}={}){
   const audio=useAudio();
   useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("sala"))setTab("qr");},[]);
   const changeTab=newTab=>{if(newTab===tab||animating)return;setAnimating(true);setTab(newTab);setTimeout(()=>setAnimating(false),280);};
-  return(<LangCtx.Provider value={{lang,setLang}}><div style={{minHeight:"100vh",background:T.bg,color:T.text,fontFamily:"'Inter','Segoe UI',system-ui,sans-serif",transition:"background 0.3s,color 0.3s"}}>
+  return(<LangCtx.Provider value={{lang,setLang}}><div style={{minHeight:"100vh",background:T.bg,color:T.text,fontFamily:FONT_UI,transition:"background 0.3s,color 0.3s"}}>
     <style>{`
       @keyframes fadeIn{from{opacity:0}to{opacity:1}}
       @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -75,9 +77,16 @@ function AppInner({perfil,publico}={}){
       @keyframes pubIn{from{transform:scale(0.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
       @keyframes urgentPulse{from{opacity:1}to{opacity:0.4}}
       .tab-content{animation:slideUp 0.28s ease}
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
       *{box-sizing:border-box;outline:none;-webkit-tap-highlight-color:transparent}
-      html,body{margin:0;padding:0;border:none;outline:none;background:#0d0d0d}
-      #root{margin:0;padding:0;border:none;outline:none}
+      html,body{margin:0;padding:0;border:none;outline:none;background:#0d0d0d;
+        font-family:${FONT_UI};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+        text-rendering:optimizeLegibility;font-size:16px}
+      #root{margin:0;padding:0;border:none;outline:none;font-family:${FONT_UI}}
+      input,textarea,select,button{font-family:${FONT_UI}}
+      h1,h2,h3,h4{font-family:${FONT_UI};letter-spacing:-0.02em}
+      /* Evita o zoom automático de iOS ao enfocar campos */
+      @media (max-width:820px){input,textarea,select{font-size:16px}}
       ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
       button{outline:none}
       button:hover{opacity:0.84}
@@ -98,12 +107,12 @@ function AppInner({perfil,publico}={}){
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem"}}>
           <div style={{display:"flex",alignItems:"center",gap:"0.45rem"}}>
             <span style={{fontSize:"1.15rem"}}>🎭</span>
-            <span style={{fontWeight:900,fontSize:"1.05rem",letterSpacing:"-0.02em"}}>impro<span style={{color:T.accent}}>App</span></span>
+            <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em"}}>impro<span style={{color:T.accent}}>App</span></span>
             <span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700}}>v8</span>
           </div>
           <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
             <div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
-              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.22rem 0.5rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
+              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:esMovil?"0.28rem 0.45rem":"0.24rem 0.55rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
             </div>
             <button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>
             <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:"#40c4ff",border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit"}}>🎬</button>
@@ -112,7 +121,7 @@ function AppInner({perfil,publico}={}){
           </div>
         </div>
         <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
-          {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:"0.45rem 0.75rem",fontSize:"0.8rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
+          {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:esMovil?"0.55rem 0.7rem":"0.45rem 0.8rem",fontSize:esMovil?"0.78rem":"0.82rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
             <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
           </button>))}
         </nav>
@@ -124,7 +133,7 @@ function AppInner({perfil,publico}={}){
     {migrando&&<div style={{background:"#69f0ae15",borderBottom:"1px solid #69f0ae33",padding:"0.5rem 1rem",textAlign:"center"}}>
       <span style={{color:"#69f0ae",fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
     </div>}
-    <main style={{maxWidth:960,margin:"0 auto",padding:"1.25rem 1rem 6rem"}}>
+    <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?"0.9rem 0.75rem 6.5rem":"1.4rem 1.25rem 6rem"}}>
       <div className="tab-content" key={tab}>
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}

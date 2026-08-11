@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, TIPO_COLOR } from '../core.jsx';
+import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, TIPO_COLOR, EditorDinamica, useViewport } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
 import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
@@ -15,6 +15,7 @@ export const ADMIN_PIN = "1234";
 
 export function TabAdmin(){
   const {T}=useTheme();const S=mkS(T);
+  const {esMovil}=useViewport();
   const {perfil}=useAuth();
   const [adminTab,setAdminTab]=useState("usuarios");
 
@@ -42,8 +43,8 @@ export function TabAdmin(){
     </div>
 
     {/* Menú interno */}
-    <div style={{display:"flex",gap:3,marginBottom:"1.25rem",background:T.bg3,borderRadius:12,padding:3}}>
-      {ADMIN_TABS.map(tab=><button key={tab.id} onClick={()=>setAdminTab(tab.id)} style={{...S.btn(adminTab===tab.id?T.bg2:"transparent",adminTab===tab.id?T.text:T.text3),flex:1,borderRadius:9,padding:"0.4rem 0.3rem",fontSize:"0.75rem",fontWeight:adminTab===tab.id?700:400,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.15rem",boxShadow:adminTab===tab.id?"0 1px 4px rgba(0,0,0,0.2)":"none"}}>
+    <div style={{display:"flex",gap:3,marginBottom:"1.25rem",background:T.bg3,borderRadius:12,padding:3,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}} className="admin-tabs">
+      {ADMIN_TABS.map(tab=><button key={tab.id} onClick={()=>setAdminTab(tab.id)} style={{...S.btn(adminTab===tab.id?T.bg2:"transparent",adminTab===tab.id?T.text:T.text3),flex:esMovil?"0 0 auto":1,minWidth:esMovil?64:0,borderRadius:9,padding:"0.45rem 0.5rem",fontSize:"0.72rem",fontWeight:adminTab===tab.id?700:500,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.2rem",boxShadow:adminTab===tab.id?"0 1px 4px rgba(0,0,0,0.2)":"none"}}>
         <span style={{fontSize:"1rem"}}>{tab.emoji}</span>
         <span>{tab.label}</span>
       </button>)}
@@ -314,27 +315,11 @@ export function AdminDinamicas({T,S}){
       <button onClick={openNew} style={S.btn(T.accent)}>+ Nova dinámica</button>
     </div>
 
-    {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
-      <p style={S.ptitle(T.accent)}>{editId?"Editar dinámica":"Nova dinámica"}</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
-        <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Nome" style={S.input}/>
-        <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
-          {["calentamiento","entrenamiento","juego","formato","musical","pausa","cierre"].map(t=><option key={t} value={t}>{t}</option>)}
-        </select>
-        <input type="number" value={form.duracion} onChange={e=>setForm(f=>({...f,duracion:e.target.value}))} placeholder="Duración (min)" style={S.input}/>
-        <select value={form.participantes} onChange={e=>setForm(f=>({...f,participantes:e.target.value}))} style={S.input}>
-          <option value="grupo">grupo</option><option value="parejas">parejas</option>
-        </select>
-      </div>
-      <textarea value={form.descripcion} onChange={e=>setForm(f=>({...f,descripcion:e.target.value}))} placeholder="Descrición" style={{...S.input,minHeight:55,marginBottom:"0.5rem",resize:"vertical"}}/>
-      <textarea value={form.pasos} onChange={e=>setForm(f=>({...f,pasos:e.target.value}))} placeholder="Pasos (unha liña cada un)" style={{...S.input,minHeight:70,marginBottom:"0.5rem",resize:"vertical"}}/>
-      <input value={form.objetivo} onChange={e=>setForm(f=>({...f,objetivo:e.target.value}))} placeholder="Obxectivo" style={{...S.input,marginBottom:"0.5rem"}}/>
-      <textarea value={form.variantes} onChange={e=>setForm(f=>({...f,variantes:e.target.value}))} placeholder="Variantes (unha liña cada unha)" style={{...S.input,minHeight:50,marginBottom:"0.75rem",resize:"vertical"}}/>
-      <div style={{display:"flex",gap:"0.5rem"}}>
-        <button onClick={saveForm} disabled={!form.nombre.trim()} style={{...S.btn(T.accent),opacity:form.nombre.trim()?1:0.4}}>Gardar</button>
-        <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text3)}>Cancelar</button>
-      </div>
+    {showForm&&<div style={{marginBottom:"1rem"}}>
+      <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
+        editando={!!editId} tiposDisponibles={Object.keys(TIPO_COLOR)}/>
     </div>}
+
 
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap",alignItems:"center"}}>
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{...S.input,flex:1,minWidth:140}}/>

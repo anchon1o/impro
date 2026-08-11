@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useAuth, t, useTheme, ls, mkS, TIPO_COLOR } from '../core.jsx';
+import { useAuth, t, useTheme, ls, mkS, TIPO_COLOR, EditorDinamica } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { getDinamicas, saveDinamica, deleteDinamica } from '../db.js';
 
@@ -36,27 +36,10 @@ export function TabGuia(){
 
   if(showForm)return(<div>
     <button onClick={()=>setShowForm(false)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button>
-    <div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
-      <p style={S.ptitle(T.accent)}>{editId?"Editar dinámica":"Nueva dinámica"}</p>
-      <div style={{display:"grid",gap:"0.65rem"}}>
-        <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>NOMBRE</p><input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} style={S.input}/></div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem"}}>
-          <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>TIPO</p>
-            <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={{...S.input,padding:"0.45rem 0.6rem"}}>{Object.keys(TIPO_COLOR).map(t=><option key={t} value={t}>{t}</option>)}</select></div>
-          <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>DURACIÓN (min)</p><input type="number" value={form.duracion} onChange={e=>setForm(f=>({...f,duracion:e.target.value}))} style={S.input}/></div>
-          <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>PARTICIPANTES</p><input value={form.participantes} onChange={e=>setForm(f=>({...f,participantes:e.target.value}))} style={S.input}/></div>
-        </div>
-        <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>DESCRIPCIÓN</p><textarea value={form.descripcion} onChange={e=>setForm(f=>({...f,descripcion:e.target.value}))} style={{...S.input,height:70,resize:"vertical"}}/></div>
-        <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>PASOS (uno por línea)</p><textarea value={form.pasos} onChange={e=>setForm(f=>({...f,pasos:e.target.value}))} style={{...S.input,height:100,resize:"vertical"}}/></div>
-        <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>OBJETIVO</p><input value={form.objetivo} onChange={e=>setForm(f=>({...f,objetivo:e.target.value}))} style={S.input}/></div>
-        <div><p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.2rem",letterSpacing:"0.1em"}}>VARIANTES (una por línea)</p><textarea value={form.variantes} onChange={e=>setForm(f=>({...f,variantes:e.target.value}))} style={{...S.input,height:70,resize:"vertical"}}/></div>
-      </div>
-      <div style={{display:"flex",gap:"0.5rem",marginTop:"0.85rem"}}>
-        <button onClick={saveForm} disabled={!form.nombre.trim()} style={{...S.btn(T.accent),opacity:!form.nombre.trim()?0.4:1}}>Guardar</button>
-        <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text2)}>Cancelar</button>
-      </div>
-    </div>
+    <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
+      editando={!!editId} tiposDisponibles={Object.keys(TIPO_COLOR)}/>
   </div>);
+
 
   if(sel)return(<div>
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap"}}>

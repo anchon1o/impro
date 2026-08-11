@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { useAuth, useTheme, useEstimulos, CAT_ICONS, FMT, pick, ls, trackGen, mkS, QRCode } from './core.jsx';
+import { useAuth, useTheme, useEstimulos, CAT_ICONS, FMT, pick, ls, trackGen, mkS, QRCode, FONT_UI, FONT_MONO } from './core.jsx';
 import { PLAYLISTS_DEFAULT, EFECTOS_DEFAULT } from './datos.js';
 import { getPlaylists, getEfectos, abrirSala, cerrarSala, getPropostas, subscribeToPropostas, trackGenSupa } from './db.js';
 
@@ -119,7 +119,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   const urx=restante>0&&restante<10, avi=restante>0&&restante<30;
   const colT=urx?"#ff6e40":avi?"#ffd740":T.accent;
 
-  return(<div style={{position:"fixed",inset:0,zIndex:1500,background:T.bg,display:"flex",flexDirection:"column",fontFamily:"'Inter',system-ui,sans-serif",overflow:"hidden"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:1500,background:T.bg,display:"flex",flexDirection:"column",fontFamily:FONT_UI,overflow:"hidden"}}>
 
     {/* Cabeceira */}
     <div style={{background:T.bg2,borderBottom:`1px solid ${T.border}`,padding:"0.5rem 0.9rem",display:"flex",alignItems:"center",gap:"0.75rem",flexShrink:0}}>
@@ -137,7 +137,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         {/* Estímulo */}
         <div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.9rem",textAlign:"center"}}>
           {estimulo?(<>
-            <p style={{color:T.accent,fontSize:"0.68rem",letterSpacing:"0.2em",margin:"0 0 0.3rem",fontFamily:"monospace"}}>{iconOf(estimulo.cat)} {estimulo.cat}</p>
+            <p style={{color:T.accent,fontSize:"0.68rem",letterSpacing:"0.2em",margin:"0 0 0.3rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums"}}>{iconOf(estimulo.cat)} {estimulo.cat}</p>
             <p style={{color:T.text,fontWeight:900,fontSize:"clamp(1.3rem,3.4vw,2.1rem)",margin:0,lineHeight:1.15}}>{estimulo.word}</p>
           </>):(<p style={{color:T.text4,fontSize:"0.85rem",margin:"0.8rem 0"}}>Xera un estímulo para a escena</p>)}
         </div>
@@ -161,7 +161,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
 
         {/* Timer */}
         <div style={{background:T.bg2,border:`1.5px solid ${urx?"#ff6e4055":T.border}`,borderRadius:12,padding:"0.7rem",display:"flex",alignItems:"center",gap:"0.85rem",flexWrap:"wrap"}}>
-          <div style={{fontFamily:"monospace",fontWeight:900,fontSize:"2.1rem",color:colT,lineHeight:1,minWidth:"3.6ch",textShadow:urx?`0 0 20px ${colT}`:"none",animation:urx&&corre?"urgentPulse 0.5s ease infinite alternate":"none"}}>{FMT(restante)}</div>
+          <div style={{fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontWeight:900,fontSize:"2.1rem",color:colT,lineHeight:1,minWidth:"3.6ch",textShadow:urx?`0 0 20px ${colT}`:"none",animation:urx&&corre?"urgentPulse 0.5s ease infinite alternate":"none"}}>{FMT(restante)}</div>
           <button onClick={()=>setCorre(v=>!v)} style={{...S.btn(corre?"#ff6e40":"#69f0ae","#000"),padding:"0.4rem 0.9rem"}}>{corre?"⏸":"▶"}</button>
           <button onClick={()=>{setRestante(seg);setCorre(false);}} style={{...S.btn(T.bg3,T.text3),padding:"0.4rem 0.7rem",fontSize:"0.78rem"}}>↺</button>
           <div style={{display:"flex",gap:"0.25rem",flexWrap:"wrap"}}>
@@ -182,7 +182,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         {/* Audio */}
         <div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem"}}>
-            <span style={{color:T.text3,fontSize:"0.7rem",letterSpacing:"0.1em",fontFamily:"monospace"}}>AUDIO</span>
+            <span style={{color:T.text3,fontSize:"0.7rem",letterSpacing:"0.1em",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums"}}>AUDIO</span>
             {pistas.length>0&&<button onClick={pararTodo} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.72rem",padding:"0.2rem 0.5rem"}}>⏹ Todas</button>}
           </div>
           {pistas.map(p=>(<div key={p.id} style={{background:T.bg3,borderRadius:8,padding:"0.45rem 0.6rem",marginBottom:"0.35rem"}}>
@@ -215,7 +215,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
           {(!rundown||rundown.length===0)&&<p style={{color:T.text4,fontSize:"0.8rem",textAlign:"center",padding:"1.5rem 0"}}>Crea o rundown en Show → Rundown</p>}
           <div style={{display:"flex",flexDirection:"column",gap:"0.3rem"}}>
             {(rundown||[]).map((a,i)=>(<button key={a.id} onClick={()=>activar(a.id)} style={{background:a.activa?"#40c4ff18":T.bg3,border:`1px solid ${a.activa?"#40c4ff":T.border}`,borderRadius:8,padding:"0.45rem 0.6rem",cursor:"pointer",textAlign:"left",display:"flex",gap:"0.45rem",alignItems:"center",fontFamily:"inherit"}}>
-              <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:"monospace",flexShrink:0}}>{i+1}</span>
+              <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{i+1}</span>
               <span style={{flex:1,color:a.hecho?T.text4:a.activa?"#40c4ff":T.text2,fontSize:"0.8rem",textDecoration:a.hecho?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.nombre}</span>
               {a.activa&&<span style={{color:"#40c4ff",fontSize:"0.7rem"}}>▶</span>}
             </button>))}
@@ -229,7 +229,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
             <button onClick={abrir} style={{...S.btn(T.accent),padding:"0.45rem 1.1rem"}}>Abrir sala</button>
           </div>):(<>
             <div style={{textAlign:"center",marginBottom:"0.7rem"}}>
-              <p style={{color:T.accent,fontFamily:"monospace",fontWeight:900,fontSize:"1.5rem",letterSpacing:"0.2em",margin:"0 0 0.4rem"}}>{salaCode}</p>
+              <p style={{color:T.accent,fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontWeight:900,fontSize:"1.5rem",letterSpacing:"0.2em",margin:"0 0 0.4rem"}}>{salaCode}</p>
               <QRCode value={`${window.location.href.split("?")[0]}?sala=${salaCode}`} size={110}/>
               <button onClick={pechar} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.74rem",padding:"0.25rem 0.7rem",marginTop:"0.5rem"}}>⏹ Pechar</button>
             </div>

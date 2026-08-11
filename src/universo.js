@@ -82,21 +82,37 @@ export async function borrarUniverso(id) {
 // ─────────────────────────────────────────────
 // ADMIN: moderación e xestión completa
 // ─────────────────────────────────────────────
+// NOTA: universo.user_id referencia auth.users(id), non perfis(id), polo que
+// PostgREST non pode inferir un join con perfis. Buscamos os perfís á parte.
+async function anexarPerfis(filas) {
+  const ids = [...new Set(filas.map(f => f.user_id).filter(Boolean))];
+  if (ids.length === 0) return filas.map(f => ({ ...f, achegadoPor: null }));
+  const { data: perfis } = await supabase
+    .from('perfis')
+    .select('id,nome,email')
+    .in('id', ids);
+  const mapa = Object.fromEntries((perfis || []).map(p => [p.id, p.nome || p.email]));
+  return filas.map(f => ({ ...f, achegadoPor: f.user_id ? (mapa[f.user_id] || null) : null }));
+}
+
 export async function listarTodoUniverso() {
   const { data, error } = await supabase
     .from('universo')
-    .select('*, perfis(nome,email)')
+    .select('*')
     .order('created_at', { ascending: false });
-  return error ? [] : (data || []).map(d => ({ ...mapRow(d), achegadoPor: d.perfis?.nome || d.perfis?.email || null }));
+  if (error) { console.error('[universo] listarTodo:', error.message); return []; }
+  const conPerfis = await anexarPerfis(data || []);
+  return conPerfis.map(d => ({ ...mapRow(d), achegadoPor: d.achegadoPor }));
 }
 
 export async function listarPendentesUniverso() {
   const { data, error } = await supabase
     .from('universo')
-    .select('*, perfis(nome,email)')
+    .select('*')
     .eq('verificado', false)
     .order('created_at', { ascending: false });
-  return error ? [] : (data || []);
+  if (error) { console.error('[universo] listarPendentes:', error.message); return []; }
+  return anexarPerfis(data || []);
 }
 
 export async function verificarUniverso(id, verificar) {

@@ -99,11 +99,16 @@ export async function proporCompartir(dinamicaId) {
 export async function listarPropostasCompartir() {
   const { data, error } = await supabase
     .from('dinamicas')
-    .select('*, perfis(nome,email)')
+    .select('*')
     .eq('proposta_compartir', true)
     .eq('compartida', false);
-  if (error) return [];
-  return data || [];
+  if (error) { console.error('[auth] listarPropostas:', error.message); return []; }
+  const filas = data || [];
+  const ids = [...new Set(filas.map(f => f.user_id).filter(Boolean))];
+  if (ids.length === 0) return filas;
+  const { data: perfis } = await supabase.from('perfis').select('id,nome,email').in('id', ids);
+  const mapa = Object.fromEntries((perfis || []).map(p => [p.id, p]));
+  return filas.map(f => ({ ...f, perfis: f.user_id ? mapa[f.user_id] : null }));
 }
 
 export async function aprobarCompartir(dinamicaId, aprobar) {

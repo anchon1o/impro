@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import { t, useTheme, mkS } from '../core.jsx';
+import { t, useTheme, mkS, FONT_UI, TYPE } from '../core.jsx';
 import { signUp, signIn, resetPassword } from '../auth.js';
 
 export function LoginModal({onClose}){
@@ -37,13 +37,13 @@ export function LoginModal({onClose}){
     setLoading(false);
   };
 
-  return(<div onClick={onClose} style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem",backdropFilter:"blur(4px)",animation:"fadeIn 0.2s ease"}}>
+  return(<div onClick={onClose} style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",padding:"1.25rem",backdropFilter:"blur(6px)",animation:"fadeIn 0.2s ease",fontFamily:FONT_UI}}>
     <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:380,background:T.bg2,borderRadius:16,padding:"1.5rem",border:`1.5px solid ${T.border}`,animation:"pubIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",maxHeight:"90vh",overflowY:"auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"1.25rem"}}>
         <div>
           <div style={{fontSize:"2rem",marginBottom:"0.2rem"}}>🎭</div>
-          <h2 style={{color:T.text,fontWeight:900,fontSize:"1.15rem",margin:0}}>{mode==="signup"?"Crear conta":mode==="reset"?"Recuperar acceso":"Entrar"}</h2>
-          <p style={{color:T.text3,fontSize:"0.82rem",margin:"0.25rem 0 0",lineHeight:1.5}}>Cunha conta podes gardar dinámicas, grupos e sesións en todos os teus dispositivos.</p>
+          <h2 style={{...TYPE.h1,color:T.text,margin:0}}>{mode==="signup"?"Crear conta":mode==="reset"?"Recuperar acceso":"Entrar"}</h2>
+          <p style={{...TYPE.bodySm,color:T.text3,margin:"0.3rem 0 0"}}>Cunha conta podes gardar dinámicas, grupos e sesións en todos os teus dispositivos.</p>
         </div>
         <button onClick={onClose} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"1.2rem",padding:0,lineHeight:1}}>×</button>
       </div>
