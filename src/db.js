@@ -94,18 +94,48 @@ export async function deleteUserStimulus(cat, nivel, orig_idx, isBase) {
 // DINÁMICAS
 // ─────────────────────────────────────────────
 export async function getDinamicas(base) {
+  // As dinámicas base viven en datos.js e actualízanse con cada despregue.
+  // A BD garda só as propias do usuario.
+  //
+  // ⚠️ Comportamento anterior: se a consulta devolvía calquera fila, retornábase
+  // SÓ esa lista e descartábanse as base por completo. Bastaba con que o usuario
+  // creara unha dinámica propia para que desaparecesen as 136 base. Ademais,
+  // as base novas engadidas en datos.js nunca chegaban a verse.
+  //
+  // A sementeira a Supabase eliminouse: a política `dinamicas_insert` esixe
+  // with_check (user_id = auth.uid() AND is_aprobado()) e o insert non mandaba
+  // user_id, polo que sempre fallaba en silencio. Era unha petición morta en
+  // cada carga.
+  const baseNorm = (base || []).map(d => ({ ...d, id: String(d.id), es_base: true }));
+
+  const fusionar = (propias) => {
+    const porId = new Map();
+    const porNome = new Map();
+    for (const d of baseNorm) {
+      porId.set(String(d.id), d);
+      if (d.nombre) porNome.set(d.nombre.trim().toLowerCase(), String(d.id));
+    }
+    for (const d of propias || []) {
+      if (d.es_base) continue; // resto dunha sementeira antiga: manda datos.js
+      const clave = (d.nombre || '').trim().toLowerCase();
+      // Se unha propia comparte nome cunha base (sementeira vella sen a marca
+      // es_base), a propia substitúea en lugar de duplicarse na lista.
+      if (clave && porNome.has(clave)) porId.set(porNome.get(clave), d);
+      else porId.set(String(d.id), d);
+    }
+    return [...porId.values()];
+  };
+
   try {
     const { data, error } = await supabase.from('dinamicas').select('*').order('created_at');
     if (error) throw error;
-    if (data && data.length > 0) {
-      ls.set('impro_dinamicas_v2', data);
-      return data;
-    }
-    // Sen datos en Supabase → gardar as base
-    await supabase.from('dinamicas').insert(base.map(d => ({ ...d, id: String(d.id), es_base: true })));
-    return base;
+    const fusionadas = fusionar(data);
+    ls.set('impro_dinamicas_v2', fusionadas);
+    return fusionadas;
   } catch {
-    return ls.get('impro_dinamicas_v2', base);
+    // Sen rede: as propias que quedaran en caché, sempre sobre as base actuais
+    const cache = ls.get('impro_dinamicas_v2', []);
+    return fusionar(Array.isArray(cache) ? cache : []);
   }
 }
 

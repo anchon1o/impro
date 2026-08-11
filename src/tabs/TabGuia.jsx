@@ -56,6 +56,11 @@ export function TabGuia(){
       {(sel.pasos||[]).map((p,i)=>(<div key={i} style={{display:"flex",gap:"0.6rem",marginBottom:"0.4rem",alignItems:"flex-start"}}><span style={{...S.tag(TIPO_COLOR[sel.tipo]),borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"0.68rem"}}>{i+1}</span><span style={{color:T.text2,fontSize:"0.86rem",lineHeight:1.5}}>{p}</span></div>))}
       {sel.objetivo&&<div style={{background:T.bg3,borderRadius:10,padding:"0.85rem",margin:"1rem 0"}}><p style={S.ptitle("#ffd740")}>🎯 Objetivo</p><p style={{color:T.text2,fontSize:"0.86rem",margin:0}}>{sel.objetivo}</p></div>}
       {(sel.variantes||[]).length>0&&<><p style={S.ptitle(T.text4)}>Variantes</p>{sel.variantes.map((v,i)=><p key={i} style={{color:T.text3,fontSize:"0.82rem",margin:"0.18rem 0"}}>◆ {v}</p>)}</>}
+      {sel.licencia&&<div style={{background:"rgba(255,110,64,0.10)",border:"1px solid rgba(255,110,64,0.35)",borderRadius:10,padding:"0.8rem",marginTop:"1.1rem"}}>
+        <p style={{color:"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{sel.licencia}</p>
+      </div>}
+      {sel.autoria&&<p style={{color:T.text3,fontSize:"0.78rem",marginTop:"1rem",lineHeight:1.5}}><strong style={{color:T.text2}}>Autoría:</strong> {sel.autoria}</p>}
+      {sel.fuente&&<p style={{color:T.text4,fontSize:"0.72rem",marginTop:sel.autoria?"0.4rem":"1.1rem",paddingTop:"0.6rem",borderTop:`1px solid ${T.border}`}}>Catalogada a partir de {sel.fuente}</p>}
     </div>
   </div>);
 

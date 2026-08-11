@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth, useTheme, UID, ls, mkS, QRCode, FONT_UI } from '../core.jsx';
-import { abrirSala, cerrarSala, enviarProposta, getPropostas, subscribeToPropostas, getHistorialSalas } from '../db.js';
+import { cerrarSala, enviarProposta, getPropostas, subscribeToPropostas, getHistorialSalas } from '../db.js';
+import { supabase as sb } from '../supabase.js';
 
 export function TabQR(){
   const {T}=useTheme();const S=mkS(T);
@@ -47,17 +48,23 @@ export function TabQR(){
 
   const abrirSalaQR=async()=>{
     const code=genCode();
+    setError("");
+    // A política RLS `salas_write` esixe with_check (user_id = auth.uid()).
+    // Sen user_id, o insert é rexeitado. supabase-js NON lanza excepción
+    // nese caso: devolve {error}. O try/catch anterior nunca saltaba, así
+    // que a sala non se creaba e a UI mostraba o QR igualmente (sala
+    // fantasma: o público recibía "Sala no encontrada").
+    const {data:{user}={}}=await sb.auth.getUser();
+    if(!user){setError("Precisas iniciar sesión para abrir unha sala.");return;}
+    const {error:errIns}=await sb.from('salas').insert({code,open:true,config:preguntas,user_id:user.id});
+    if(errIns){
+      console.error('abrirSala:',errIns);
+      setError("Non se puido abrir a sala. Téntao de novo.");
+      return;
+    }
     setSalaCode(code);setPropuestas([]);
     setSalaConfig(preguntas);
     setMode("open");
-    // Gardar sala con config en Supabase
-    try{
-      const {supabase:sb}=await import('../supabase.js');
-      await sb.from('salas').insert({code,open:true,config:preguntas});
-    }catch(e){
-      const {abrirSala:ab}=await import('../db.js');
-      await ab(code);
-    }
     const existing=await getPropostas(code);
     setPropuestas(existing);
     unsubRef.current=subscribeToPropostas(code,nova=>{
@@ -77,7 +84,6 @@ export function TabQR(){
     if(!joinCode.trim())return;
     setLoading(true);setError("");
     try{
-      const {supabase:sb}=await import('../supabase.js');
       const {data,error:err}=await sb.from('salas').select('open,config').eq('code',joinCode.toUpperCase()).single();
       if(err||!data){setError("Sala no encontrada.");setLoading(false);return;}
       if(!data.open){setError("Esta sala ya está cerrada.");setLoading(false);return;}
@@ -198,6 +204,7 @@ export function TabQR(){
         {preguntas.length===0&&<p style={{color:T.text4,fontSize:"0.82rem"}}>Engade polo menos unha pregunta.</p>}
       </div>
     </div>
+    {error&&<p style={{color:"#ff6e40",fontSize:"0.85rem",margin:"0 0 0.6rem"}}>{error}</p>}
     <button onClick={abrirSalaQR} disabled={preguntas.length===0} style={{...S.btn(T.accent),width:"100%",padding:"0.75rem",opacity:preguntas.length===0?0.4:1}}>📺 Abrir sala con estas preguntas</button>
   </div>);
 
