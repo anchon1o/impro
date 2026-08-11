@@ -11,7 +11,7 @@ import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
 // Dentro dunha sección mantense o menú horizontal de sempre.
 
 export const AREAS=[
-  {id:"generar",  emoji:"✦",  cor:"#e040fb", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
+  {id:"generar",  emoji:"🎲",  cor:"#e040fb", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
   {id:"reto",     emoji:"⚡", cor:"#ffd740", desc:"Unha dinámica ao chou con estímulos, coas súas instrucións."},
   {id:"show",     emoji:"🎭", cor:"#ff6e40", desc:"Audio multipista, efectos, metrónomo, rundown e sorteos."},
   {id:"guia",     emoji:"📖", cor:"#69f0ae", desc:"Catálogo de dinámicas con pasos, obxectivos e variantes."},

@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ThemeCtx, LangCtx, AuthCtx, useAuth, useLang, useTheme, useThemeProvider,
-  EstimulosProvider, useEstimulos, TAB_LABELS, ls, mkS, TimerBar, useAudio,
+  EstimulosProvider, useEstimulos, TAB_LABELS, LANGS, ls, mkS, TimerBar, useAudio,
   FONT_UI, FONT_MONO, TYPE, useViewport,
 } from './core.jsx';
 import {
@@ -35,7 +35,7 @@ import { LoginGate } from './auth/LoginGate.jsx';
 import { Inicio } from './Inicio.jsx';
 
 const TABS=[
-  {id:"generar",label:"Generar",emoji:"✦"},
+  {id:"generar",label:"Generar",emoji:"🎲"},
   {id:"reto",label:"Reto",emoji:"⚡"},
   {id:"sesiones",label:"Sesiones",emoji:"📋"},
   {id:"guia",label:"Guía",emoji:"📖"},
@@ -57,6 +57,7 @@ function AppInner({perfil,publico}={}){
   const [pubStimulus,setPubStimulus]=useState(null);
   const [pubOpen,setPubOpen]=useState(false);
   const [menuAberto,setMenuAberto]=useState(false);
+  const [langAberto,setLangAberto]=useState(false);
   // IM-M03: o temporizador xa non está sempre montado. Só cando se pide.
   const [timerAberto,setTimerAberto]=useState(false);
   const [pubTimerDisplay,setPubTimerDisplay]=useState(0);
@@ -127,12 +128,26 @@ function AppInner({perfil,publico}={}){
             {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v8</span>}
           </button>
           <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
-            {!esMovil&&<div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
-              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.24rem 0.55rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
+            {!esMovil&&<div style={{position:"relative"}}>
+              <button onClick={()=>setLangAberto(v=>!v)} title="Idioma" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.78rem",color:T.text3,fontFamily:"inherit",display:"flex",alignItems:"center",gap:"0.25rem"}}>
+                <span style={{fontSize:"0.95rem"}}>🌐</span><span style={{fontWeight:700,fontSize:"0.7rem"}}>{lang.toUpperCase()}</span>
+              </button>
+              {langAberto&&<>
+                <div onClick={()=>setLangAberto(false)} style={{position:"fixed",inset:0,zIndex:150}}/>
+                <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",zIndex:151,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,padding:"0.3rem",minWidth:170,boxShadow:"0 8px 24px rgba(0,0,0,0.35)"}}>
+                  {LANGS.map(L=><button key={L.id} onClick={()=>{setLang(L.id);setLangAberto(false);}} style={{display:"flex",alignItems:"center",gap:"0.5rem",width:"100%",background:lang===L.id?T.accent+"22":"none",border:"none",borderRadius:7,padding:"0.45rem 0.55rem",cursor:"pointer",color:lang===L.id?T.accent:T.text2,fontSize:"0.8rem",fontFamily:"inherit",textAlign:"left"}}>
+                    <span style={{fontFamily:"monospace",fontWeight:700,fontSize:"0.68rem",opacity:0.7,width:18}}>{L.id.toUpperCase()}</span>
+                    <span style={{flex:1}}>{L.nativo}</span>
+                    {!L.uiCompleta&&<span style={{fontSize:"0.6rem",color:T.text4,whiteSpace:"nowrap"}}>só contido</span>}
+                  </button>)}
+                </div>
+              </>}
             </div>}
-            {!esMovil&&<button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>}
-            {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:timerAberto?T.accent+"22":T.bg3,border:`1px solid ${timerAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:timerAberto?T.accent:T.text3}}>⏱</button>}
-            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>}
+            {/* Secundarios: icona soa, sen recadro. Antes tiñan o mesmo peso
+                visual có botón de Modo Show, que si é a acción principal. */}
+            {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}>{dark?"☀️":"🌙"}</button>}
+            {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}>⏱</button>}
+            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Pantalla pública" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>📺</button>}
             <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:"#40c4ff",border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
             {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
             {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
@@ -142,11 +157,19 @@ function AppInner({perfil,publico}={}){
         {/* Menú de desbordamento: só móbil. Recolle o que se retirou da fila. */}
         {esMovil&&menuAberto&&<div style={{paddingBottom:"0.6rem",animation:"slideUp 0.2s ease"}}>
           <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"0.6rem"}}>
-            <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.5rem"}}>
-              <span style={{color:T.text4,fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",flexShrink:0}}>IDIOMA</span>
-              <div style={{display:"flex",background:T.bg2,borderRadius:20,padding:2,gap:1,marginLeft:"auto"}}>
-                {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.3rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",fontWeight:lang===l?700:400,fontFamily:"inherit"}}>{l.toUpperCase()}</button>)}
-              </div>
+            <div style={{marginBottom:"0.5rem"}}>
+              <button onClick={()=>setLangAberto(v=>!v)} style={{display:"flex",alignItems:"center",gap:"0.5rem",width:"100%",background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",color:T.text2,fontSize:"0.78rem",fontFamily:"inherit",minHeight:38}}>
+                <span style={{fontSize:"0.95rem"}}>🌐</span>
+                <span style={{flex:1,textAlign:"left"}}>{LANGS.find(L=>L.id===lang)?.nativo||lang}</span>
+                <span style={{color:T.text4,fontSize:"0.8rem"}}>{langAberto?"▴":"▾"}</span>
+              </button>
+              {langAberto&&<div style={{marginTop:"0.35rem",display:"flex",flexDirection:"column",gap:"0.2rem"}}>
+                {LANGS.map(L=><button key={L.id} onClick={()=>{setLang(L.id);setLangAberto(false);}} style={{display:"flex",alignItems:"center",gap:"0.5rem",background:lang===L.id?T.accent+"22":T.bg2,border:`1px solid ${lang===L.id?T.accent:T.border}`,borderRadius:7,padding:"0.5rem 0.55rem",cursor:"pointer",color:lang===L.id?T.accent:T.text2,fontSize:"0.78rem",fontFamily:"inherit",textAlign:"left",minHeight:38}}>
+                  <span style={{fontFamily:"monospace",fontWeight:700,fontSize:"0.68rem",opacity:0.7,width:18}}>{L.id.toUpperCase()}</span>
+                  <span style={{flex:1}}>{L.nativo}</span>
+                  {!L.uiCompleta&&<span style={{fontSize:"0.6rem",color:T.text4}}>só contido</span>}
+                </button>)}
+              </div>}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(100px,100%),1fr))",gap:"0.4rem"}}>
               <button onClick={toggle} style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:T.text2,fontFamily:"inherit",minHeight:38}}>{dark?"☀️ Claro":"🌙 Escuro"}</button>

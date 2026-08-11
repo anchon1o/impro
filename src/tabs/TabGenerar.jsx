@@ -83,7 +83,7 @@ export function TabGenerar({onStimulus}){
     </div>
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap",alignItems:"center"}}>
       <div style={{display:"flex",background:T.bg3,borderRadius:10,padding:3,gap:2}}>
-        {[["simple","◆ Simple"],["plus","⭐ Plus"]].map(([v,l])=>(
+        {[["simple","🌱 Simple"],["plus","⭐ Plus"]].map(([v,l])=>(
           <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(v==="plus"&&nivel==="plus"?T.accent:v==="simple"&&nivel==="simple"?T.bg2:"transparent",v===nivel?(v==="plus"?"#fff":T.text):T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>
         ))}
       </div>

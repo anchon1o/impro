@@ -28,6 +28,17 @@ export const t = (lang, key) => UI_STRINGS[lang]?.[key] || UI_STRINGS.es[key] ||
 
 export const TAB_LABELS = UI_STRINGS;
 
+// Idiomas. `uiCompleta` marca os que teñen UI_STRINGS traducido; os outros
+// aplican ao contido (a táboa `estimulos` ten columna por idioma) e a UI cae
+// a castelán vía t(). Cando se traduza a UI, só hai que virar a bandeira.
+export const LANGS = [
+  {id:"es",label:"Castelán",  nativo:"Castellano", uiCompleta:true},
+  {id:"gl",label:"Galego",    nativo:"Galego",     uiCompleta:true},
+  {id:"en",label:"Inglés",    nativo:"English",    uiCompleta:true},
+  {id:"pt",label:"Portugués", nativo:"Português",  uiCompleta:false},
+  {id:"it",label:"Italiano",  nativo:"Italiano",   uiCompleta:false},
+];
+
 export const GrupoCtx = createContext(null);
 
 export const useGrupo = () => useContext(GrupoCtx);
@@ -95,7 +106,7 @@ export function EstimulosProvider({ lang, children }) {
   return <EstimulosCtx.Provider value={{ data, cats, cargando, recargar }}>{children}</EstimulosCtx.Provider>;
 }
 
-export const CAT_ICONS = {PROFESIÓN:"👤",OBJETO:"✦",LUGAR:"📍",EMOCIÓN:"💜",ACCIÓN:"🎭",NOMBRE:"📛",SUPERPODER:"⚡",ESTILO:"🎬",DUDA:"❓",CONFESIÓN:"🤫",FRASE:"💬"};
+export const CAT_ICONS = {PROFESIÓN:"👤",OBJETO:"📦",LUGAR:"📍",EMOCIÓN:"💜",ACCIÓN:"🎭",NOMBRE:"📛",SUPERPODER:"⚡",ESTILO:"🎬",DUDA:"❓",CONFESIÓN:"🤫",FRASE:"💬"};
 
 export const CATS_FALLBACK = Object.keys(FALLBACK_ESTIMULOS);
 

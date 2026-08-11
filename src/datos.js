@@ -330,7 +330,12 @@ export const EFECTOS_DEFAULT=[
 ];
 
 export const MANUAL_SECCIONES=[
-  {id:"generar",emoji:"✦",titulo:"Xerador de estímulos",intro:"1.653 estímulos reais do grupo de impro. Xera palabras e escenas para exercicios.",items:[
+  {id:"inicio",emoji:"🏠",titulo:"Pantalla de inicio",intro:"A app abre nunha botonera con todas as áreas á vista. O logo 🎭 da cabeceira devólvete aquí desde calquera sitio.",items:[
+    {t:"Por que existe",d:"Antes a app abría en Xerar e o resto de áreas só se alcanzaban pola tira de pestanas, que en móbil hai que desprazar para descubrir o que hai ao final. Na botonera todas as áreas teñen o mesmo peso e o mesmo tamaño de pulsación."},
+    {t:"Que cambia na interface",d:"Na botonera non se mostra a tira de pestanas: a propia botonera é a navegación. Ao entrar nunha área aparece o menú horizontal de sempre para moverte entre seccións sen volver ao inicio."},
+    {t:"Etiqueta «conta»",d:"As tarxetas de Sesións, Grupos e QR levan esa marca porque precisan iniciar sesión. Podes entrar igualmente e ver o que fan; pediráseche a conta ao gardar."},
+  ]},
+  {id:"generar",emoji:"🎲",titulo:"Xerador de estímulos",intro:"1.653 estímulos reais do grupo de impro. Xera palabras e escenas para exercicios.",items:[
     {t:"Categorías",d:"11 categorías: PROFESIÓN, LUGAR, EMOCIÓN, ACCIÓN, OBXECTO, SUPERPODER, ESTILO, DUDA, CONFESIÓN, FRASE e NOME. Cada unha ten nivel Simple (máis accesible) e Plus (máis creativo)."},
     {t:"Escena combinada",d:"Pestana 🎬 Escena: combina varias categorías para xerar unha escena completa. Usa plantillas rápidas (Clásica, Conflito, Absurda...) ou escolle manualmente. O botón 🔒 conxela elementos para rexenerar só o resto."},
     {t:"Spotlight",d:"Toca calquera estímulo xerado para mostralo en pantalla completa ao grupo. Ideal para que todos o vexan á vez."},
@@ -340,6 +345,12 @@ export const MANUAL_SECCIONES=[
     {t:"Como funciona",d:"Selecciona nivel Simple ou Plus e preme Xerar reto. A app escolle unha dinámica aleatoria da biblioteca e asígnalle estímulos compatibles automaticamente."},
     {t:"O reto",d:"Ves a dinámica, os estímulos asociados e un resumo: 'Fai X usando Y en Z minutos'. Un clic e tes un exercicio completo."},
   ]},
+  {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Máis de 85 exercicios e xogos de impro documentados.",items:[
+    {t:"Filtros e busca",d:"Filtra por tipo (calentamento, entrenamento, xogo, formato, musical, pausa, peche) ou busca por nome e descrición."},
+    {t:"Favoritas",d:"Marca dinámicas con ★ para acceder rapidamente. Filtro especial '★ Favoritas'."},
+    {t:"Detalle completo",d:"Cada dinámica ten descrición, pasos numerados, obxectivo pedagóxico e variantes. Toca calquera para ver o detalle completo."},
+    {t:"Crear e editar",d:"Engade as túas propias dinámicas con todos os campos. Edita ou elimina as existentes."},
+  ]},
   {id:"sesiones",emoji:"📋",titulo:"Planificación de sesións",intro:"Organiza, rexistra e cronometra as túas sesións de ensaio.",items:[
     {t:"Plantillas",d:"4 plantillas predefinidas: Entrenamento estándar 90min, Calentamento rápido 30min, Show Harold 60min e Sesión musical 75min. Cárgaas e modifícaas ao teu gusto."},
     {t:"Bloques",d:"Cada sesión ten bloques con tipo (calentamento, entrenamento, xogo...), título, duración e notas. Marca como completados durante a sesión."},
@@ -347,18 +358,26 @@ export const MANUAL_SECCIONES=[
     {t:"Historial",d:"As sesións gardadas quedan en Supabase con data, minutos totais e bloques completados."},
     {t:"Modo ensaio 🍅",d:"Pomodoro adaptado a impro. Presets: Estándar, Show e Maratón. A app xestiona os tempos e avisa con son ao cambiar de bloque."},
   ]},
-  {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Máis de 85 exercicios e xogos de impro documentados.",items:[
-    {t:"Filtros e busca",d:"Filtra por tipo (calentamento, entrenamento, xogo, formato, musical, pausa, peche) ou busca por nome e descrición."},
-    {t:"Favoritas",d:"Marca dinámicas con ★ para acceder rapidamente. Filtro especial '★ Favoritas'."},
-    {t:"Detalle completo",d:"Cada dinámica ten descrición, pasos numerados, obxectivo pedagóxico e variantes. Toca calquera para ver o detalle completo."},
-    {t:"Crear e editar",d:"Engade as túas propias dinámicas con todos os campos. Edita ou elimina as existentes."},
-  ]},
   {id:"show",emoji:"🎭",titulo:"Control de show",intro:"Panel completo para xestionar un show en directo.",items:[
     {t:"Audio — pistas múltiples",d:"Pestana 🎵 Audio: engade pistas de música simultáneas con volume independente por pista. Soporta YouTube embed e MP3 directo. Parar todas cun clic."},
     {t:"Efectos de son",d:"Pestana 🔊 Efectos: 8 efectos con síntese de audio (aplausos, campá, buzzer...). Asigna URLs MP3 propias para usar os teus sons."},
     {t:"Metrónomo",d:"Pestana 🥁 Metro: control de BPM de 30 a 240, visualización de pulsos, presets rápidos. Útil para escenas musicais."},
     {t:"Rundown",d:"Pestana 📋 Rundown: guión do show con actuacións ordenadas. Marca como activa (▶) ou completada (✓). Reordena con ▲▼."},
     {t:"Sorteo",d:"Pestana 🎲 Sorteo: sorteo de parellas, equipos e roles. Xerador de número 1-9 e letra aleatoria."},
+  ]},
+  {id:"modos",emoji:"🖥",titulo:"Modos de visualización",intro:"Hai tres formas distintas de ver a app durante un ensaio ou un show. Convén saber cal usar en cada momento.",items:[
+    {t:"Vista normal",d:"A de sempre: cabeceira, pestanas e contido. É a que usas para preparar, consultar dinámicas, planificar sesións e administrar. Non está pensada para proxectar."},
+    {t:"🎬 Modo Show",d:"Botón azul na cabeceira. Panel unificado de directo que xunta nunha soa pantalla o estímulo actual, o temporizador, o audio, os efectos, o rundown e o QR. Está pensado para o dispositivo que TI manexas durante a función, para non ter que cambiar de pestana no medio dunha escena. Ábrese enriba de todo e péchase co seu botón."},
+    {t:"📺 Pantalla Pública",d:"Botón 📺 da cabeceira. É a vista que ve o PÚBLICO: estímulo grande, temporizador e rundown, sen controis nin nada que estorbe. Pensada para o proxector ou a segunda pantalla. Amosa avisos automáticos aos 30 e aos 10 segundos, e cando remata o tempo."},
+    {t:"Cal uso e cando",d:"Preparación e ensaio → vista normal. Durante a función, no teu dispositivo → Modo Show. No proxector que ve a sala → Pantalla Pública. Modo Show e Pantalla Pública pódense ter abertos á vez: o que xeras nun reflíctese no outro."},
+    {t:"⚠️ Sobre os nomes",d:"«Show» (a pestana 🎭) e «Modo Show» (o botón 🎬) son cousas distintas cun nome case igual. A pestana é o taller onde preparas audio, efectos, metrónomo e rundown. O Modo Show é o panel de directo. Se te perdes, esta é a razón."},
+  ]},
+  {id:"temporizador",emoji:"⏱",titulo:"Temporizador",intro:"Ferramenta opcional. Non aparece ata que a pides, e péchase cando remates.",items:[
+    {t:"Como abrilo",d:"En escritorio, o botón ⏱ da cabeceira. En móbil, dentro do menú ⋯. Ábrese como barra fixa na parte inferior e péchase co ✕. Mentres está pechado recuperas ese espazo de pantalla."},
+    {t:"Dous modos",d:"⏲ Conta atrás para limitar unha escena ou un exercicio, con campá ao rematar e barra de progreso. ⏱ Cronómetro ascendente para medir canto dura algo sen límite previo. Cámbiase no despregable da esquerda."},
+    {t:"Editar o tempo",d:"Toca as cifras cando estea detido e escribe. Acepta só minutos («5») ou minutos e segundos («4:30»). Tamén hai presets rápidos de 30 s a 10 min en conta atrás."},
+    {t:"Controis",d:"▶ inicia ou continúa, ⏸ pausa, ↺ reinicia ao valor de partida. Desde Sesións tamén se pode lanzar directamente cun tempo dado: se o temporizador estaba pechado, ábrese só."},
+    {t:"No proxector",d:"O que marca o temporizador reflíctese na Pantalla Pública, para que a sala vexa o tempo que queda."},
   ]},
   {id:"grupos",emoji:"👥",titulo:"Xestor de grupos",intro:"Xestiona os teus grupos de impro con membros e estadísticas.",items:[
     {t:"Crear grupo",d:"Nome, cor e lista de membros. O grupo activo úsase para rastrexar estatísticas específicas por grupo."},
@@ -371,21 +390,21 @@ export const MANUAL_SECCIONES=[
     {t:"Tempo real",d:"As propostas aparecen en tempo real grazas a Supabase Realtime. Acepta propostas para engadilas ás ideas do grupo."},
     {t:"Unirse como público",d:"O público introduce o código de 4 letras ou escanea o QR. Ve a pregunta e envía a súa resposta."},
   ]},
-  {id:"admin",emoji:"🔐",titulo:"Panel de administración",intro:"Xestión avanzada. PIN por defecto: 1234.",items:[
-    {t:"Estímulos",d:"Engade, edita ou elimina estímulos de calquera categoría e nivel. Os cambios gárdanse en Supabase e son visibles en todos os dispositivos."},
-    {t:"Dinámicas",d:"Lista completa de dinámicas con filtro por tipo. Elimina as que non queiras."},
-    {t:"Estatísticas",d:"Totais de estímulos xerados, minutos de ensaio e sesións. Gráfica das categorías máis usadas."},
-    {t:"Config",d:"Cambia o PIN de admin. Borra datos locais (favoritos, historial). Información da app."},
+  {id:"universo",emoji:"🌍",titulo:"Universo Impro",intro:"Directorio de compañías, festivais, escolas e persoas do mundo do impro.",items:[
+    {t:"Contido",d:"Máis de 20 entradas: compañías de referencia mundial (Second City, UCB, iO, Loose Moose...), festivais internacionais, escolas e figuras históricas como Keith Johnstone, Viola Spolin e Del Close."},
+    {t:"Filtros",d:"Filtra por tipo: Compañías, Festivais, Escolas, Persoas, Proxectos. Busca por nome, descrición ou etiquetas."},
+    {t:"Detalle",d:"Cada entrada ten descrición completa, ubicación, etiquetas temáticas e enlace á web oficial."},
   ]},
   {id:"ajustes",emoji:"⚙️",titulo:"Axustes",intro:"Configuración xeral e tradución da interface.",items:[
     {t:"Idioma",d:"Cambia entre Castelán (base), Galego e Inglés. Os campos sen traducir mostran o castelán por defecto."},
     {t:"Tradución",d:"Exporta un JSON con todo o contido traducible e impórtao de volta despois de traducilo. Fluxo: exportar → traducir con Claude → importar."},
     {t:"Tema",d:"Alterna entre modo escuro (por defecto, fondo #0d0d0d) e modo claro dende o botón ☀️/🌙 da cabeceira."},
   ]},
-  {id:"universo",emoji:"🌍",titulo:"Universo Impro",intro:"Directorio de compañías, festivais, escolas e persoas do mundo do impro.",items:[
-    {t:"Contido",d:"Máis de 20 entradas: compañías de referencia mundial (Second City, UCB, iO, Loose Moose...), festivais internacionais, escolas e figuras históricas como Keith Johnstone, Viola Spolin e Del Close."},
-    {t:"Filtros",d:"Filtra por tipo: Compañías, Festivais, Escolas, Persoas, Proxectos. Busca por nome, descrición ou etiquetas."},
-    {t:"Detalle",d:"Cada entrada ten descrición completa, ubicación, etiquetas temáticas e enlace á web oficial."},
+  {id:"admin",emoji:"🔐",titulo:"Panel de administración",intro:"Xestión avanzada. PIN por defecto: 1234.",items:[
+    {t:"Estímulos",d:"Engade, edita ou elimina estímulos de calquera categoría e nivel. Os cambios gárdanse en Supabase e son visibles en todos os dispositivos."},
+    {t:"Dinámicas",d:"Lista completa de dinámicas con filtro por tipo. Elimina as que non queiras."},
+    {t:"Estatísticas",d:"Totais de estímulos xerados, minutos de ensaio e sesións. Gráfica das categorías máis usadas."},
+    {t:"Config",d:"Cambia o PIN de admin. Borra datos locais (favoritos, historial). Información da app."},
   ]},
 ];
 
