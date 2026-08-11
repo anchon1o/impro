@@ -7,7 +7,8 @@
 import { useState, useEffect } from 'react';
 import { useTheme, mkS, useAuth, UID } from '../core.jsx';
 import { UNIVERSO_DATA, UNIVERSO_TIPOS } from '../datos.js';
-import { cargarUniverso, engadirUniverso } from '../universo.js';
+import { LIGAZONS, camposDeCategoria } from '../universoModelo.js';
+import { cargarUniverso, engadirUniverso, cargarCategorias } from '../universo.js';
 
 export function TabUniverso(){
   const {T}=useTheme();const S=mkS(T);
@@ -15,6 +16,9 @@ export function TabUniverso(){
   const [filtro,setFiltro]=useState("todos");
   const [search,setSearch]=useState("");
   const [sel,setSel]=useState(null);
+  // Categorías desde BD (M07); se aínda non hai táboa, cae á constante do código.
+  const [cats,setCats]=useState(()=>UNIVERSO_TIPOS.filter(t=>t.id!=="todos").map(t=>({id:t.id,nome:t.label,emoji:t.emoji,plantilla:"entidade"})));
+  useEffect(()=>{cargarCategorias().then(c=>{if(c&&c.length)setCats(c.filter(x=>x.activa!==false));});},[]);
   const [datos,setDatos]=useState(UNIVERSO_DATA);
   const [cargando,setCargando]=useState(true);
   const [showForm,setShowForm]=useState(false);
@@ -48,27 +52,79 @@ export function TabUniverso(){
     if(nova){setDatos(d=>[...d,nova]);setEnviado(true);setTimeout(()=>{setShowForm(false);setEnviado(false);},1800);}
   };
 
-  if(sel)return(<div>
-    <button onClick={()=>setSel(null)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Universo Impro</button>
-    <div style={{...S.panel,border:`1.5px solid ${TIPO_COL[sel.tipo]||T.accent}33`,borderTop:`4px solid ${TIPO_COL[sel.tipo]||T.accent}`}}>
-      <div style={{display:"flex",gap:"1rem",alignItems:"flex-start",marginBottom:"1rem",flexWrap:"wrap"}}>
-        <div style={{fontSize:"3rem",lineHeight:1,flexShrink:0}}>{sel.logo}</div>
-        <div style={{flex:1}}>
-          <div style={{display:"flex",gap:"0.5rem",alignItems:"center",flexWrap:"wrap",marginBottom:"0.3rem"}}>
-            <span style={S.tag(TIPO_COL[sel.tipo]||T.accent)}>{sel.tipo}</span>
-            <span style={{color:T.text3,fontSize:"0.82rem"}}>{sel.pais} {sel.cidade}</span>
-            {sel.verificado===false&&<span style={S.tag("#ffd740")}>sen verificar</span>}
+  // ── Ficha rica (M06) ──
+  // Só se pintan os campos que teñan contido. Como `datos` e `ligazons` só
+  // gardan o que ten valor, a regra sae soa dos datos.
+  if(sel){
+    const cor=TIPO_COL[sel.tipo]||T.accent;
+    const cat=cats.find(c=>c.id===sel.tipo);
+    const {opcionais}=camposDeCategoria(cat);
+    const lig=sel.ligazons||{};
+    const url=u=>String(u||"").startsWith("http")?u:`https://${u}`;
+    const dat=sel.datos||{};
+    const conValor=opcionais.filter(c=>{
+      const v=c.columna?sel[c.id==="data_inicio"?"dataInicio":c.id==="data_fin"?"dataFin":c.id]:dat[c.id];
+      return !(v===undefined||v===null||v===""||(Array.isArray(v)&&!v.length));
+    });
+    const valor=c=>c.columna?sel[c.id==="data_inicio"?"dataInicio":c.id==="data_fin"?"dataFin":c.id]:dat[c.id];
+
+    return(<div>
+      <button onClick={()=>setSel(null)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Universo Impro</button>
+      <div style={{...S.panel,border:`1.5px solid ${cor}33`,borderTop:`4px solid ${cor}`}}>
+
+        <div style={{display:"flex",gap:"1rem",alignItems:"flex-start",marginBottom:"1rem",flexWrap:"wrap"}}>
+          {/* Identidade visual: imaxe se a hai, emoji se non */}
+          {sel.logoUrl
+            ?<img src={sel.logoUrl} alt="" onError={e=>{e.currentTarget.style.display="none";}} style={{width:64,height:64,borderRadius:12,objectFit:"contain",background:T.bg3,flexShrink:0}}/>
+            :<div style={{fontSize:"3rem",lineHeight:1,flexShrink:0}}>{sel.logo}</div>}
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",gap:"0.5rem",alignItems:"center",flexWrap:"wrap",marginBottom:"0.3rem"}}>
+              <span style={S.tag(cor)}>{cat?`${cat.emoji} ${cat.nome}`:sel.tipo}</span>
+              {(sel.pais||sel.cidade)&&<span style={{color:T.text3,fontSize:"0.82rem"}}>{sel.pais} {sel.cidade}</span>}
+              {sel.estado==="pendente"&&<span style={S.tag("#ffd740")}>pendente de revisión</span>}
+              {sel.estado==="rexeitada"&&<span style={S.tag("#ff6e40")}>rexeitada</span>}
+              {sel.activo===false&&<span style={{...S.tag(T.text4),background:T.bg3}}>inactiva</span>}
+            </div>
+            <h2 style={{color:T.text,fontWeight:900,fontSize:"1.3rem",margin:"0 0 0.5rem"}}>{sel.nome}</h2>
+            <p style={{color:T.text2,fontSize:"0.88rem",lineHeight:1.6,margin:0}}>{sel.desc}</p>
           </div>
-          <h2 style={{color:T.text,fontWeight:900,fontSize:"1.3rem",margin:"0 0 0.5rem"}}>{sel.nome}</h2>
-          <p style={{color:T.text2,fontSize:"0.88rem",lineHeight:1.6,margin:0}}>{sel.desc}</p>
         </div>
+
+        {(sel.dataInicio||sel.dataFin)&&<p style={{color:T.text3,fontSize:"0.8rem",margin:"0 0 0.8rem"}}>
+          🗓 {sel.dataInicio||"?"}{sel.dataFin?` — ${sel.dataFin}`:" — en activo"}
+        </p>}
+
+        {(sel.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:"0.3rem",marginBottom:"1rem"}}>
+          {sel.tags.map(tag=><span key={tag} style={{...S.tag(T.text4),background:T.bg3}}>#{tag}</span>)}
+        </div>}
+
+        {/* Campos opcionais da plantilla da categoría */}
+        {conValor.length>0&&<div style={{borderTop:`1px solid ${T.border}`,paddingTop:"0.9rem",marginBottom:"1rem",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(220px,100%),1fr))",gap:"0.75rem"}}>
+          {conValor.map(c=>{
+            const v=valor(c);
+            return(<div key={c.id}>
+              <p style={{color:T.text4,fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",margin:"0 0 0.2rem"}}>{c.label}</p>
+              {Array.isArray(v)
+                ?<p style={{color:T.text2,fontSize:"0.83rem",margin:0,lineHeight:1.5}}>{v.join(" · ")}</p>
+                :<p style={{color:T.text2,fontSize:"0.83rem",margin:0,lineHeight:1.5}}>{String(v)}</p>}
+            </div>);
+          })}
+        </div>}
+
+        {/* Ligazóns clicables */}
+        {(LIGAZONS.some(L=>lig[L.id])||(lig.outras||[]).length>0)&&<div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",borderTop:`1px solid ${T.border}`,paddingTop:"0.9rem"}}>
+          {LIGAZONS.filter(L=>lig[L.id]).map(L=>(
+            <a key={L.id} href={url(lig[L.id])} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
+              <span>{L.emoji}</span><span>{L.label}</span>
+            </a>))}
+          {(lig.outras||[]).map((o,i)=>(
+            <a key={i} href={url(o.url)} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
+              <span>🔗</span><span>{o.etiqueta||o.url}</span>
+            </a>))}
+        </div>}
       </div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:"0.3rem",marginBottom:"1rem"}}>
-        {(sel.tags||[]).map(tag=><span key={tag} style={{...S.tag(T.text4),background:T.bg3}}>#{tag}</span>)}
-      </div>
-      {sel.web&&<a href={sel.web.startsWith("http")?sel.web:`https://${sel.web}`} target="_blank" rel="noopener noreferrer" style={{...S.btn(TIPO_COL[sel.tipo]||T.accent),display:"inline-block",textDecoration:"none",color:"#000"}}>🌐 Visitar web</a>}
-    </div>
-  </div>);
+    </div>);
+  }
 
   return(<div>
     <div style={{...S.panel,marginBottom:"1rem",background:T.accent+"08",border:`1.5px solid ${T.accent}22`}}>
@@ -92,7 +148,7 @@ export function TabUniverso(){
         <p style={{color:T.text4,fontSize:"0.76rem",marginBottom:"0.75rem"}}>Só datos reais e verificables. Un admin revisará a entrada antes de publicala.</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(140px,100%),1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
           <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
-            {UNIVERSO_TIPOS.filter(t=>t.id!=="todos").map(t=><option key={t.id} value={t.id}>{t.emoji} {t.label}</option>)}
+            {cats.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.nome}</option>)}
           </select>
           <input value={form.pais} onChange={e=>setForm(f=>({...f,pais:e.target.value}))} placeholder="🇪🇸 País (emoji)" style={S.input}/>
           <input value={form.cidade} onChange={e=>setForm(f=>({...f,cidade:e.target.value}))} placeholder="Cidade" style={S.input}/>
