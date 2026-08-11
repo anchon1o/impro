@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useTheme, mkS, useAuth, UID } from '../core.jsx';
 import { UNIVERSO_DATA, UNIVERSO_TIPOS } from '../datos.js';
 import { LIGAZONS, camposDeCategoria } from '../universoModelo.js';
+import { UniversoForm } from './UniversoForm.jsx';
 import { cargarUniverso, engadirUniverso, cargarCategorias } from '../universo.js';
 
 export function TabUniverso(){
@@ -23,9 +24,8 @@ export function TabUniverso(){
   const [cargando,setCargando]=useState(true);
   const [showForm,setShowForm]=useState(false);
   const [enviado,setEnviado]=useState(false);
+  const [erroEnvio,setErroEnvio]=useState("");
 
-  const FORM0={tipo:"compañía",nome:"",pais:"🇪🇸",cidade:"",desc:"",web:"",tags:""};
-  const [form,setForm]=useState(FORM0);
 
   useEffect(()=>{
     cargarUniverso(UNIVERSO_DATA).then(d=>{setDatos(d);setCargando(false);});
@@ -35,21 +35,17 @@ export function TabUniverso(){
 
   const TIPO_COL={"compañía":"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
 
-  const abrirForm=()=>{
-    if(!logueado){pedirLogin();return;}
-    setForm(FORM0);setShowForm(true);setEnviado(false);
-  };
+  // M08: xa non se esixe conta. A política RLS acepta propostas anónimas
+  // e forza estado='pendente' en todos os casos.
+  const abrirForm=()=>{setShowForm(true);setEnviado(false);};
 
-  const enviarEntrada=async()=>{
-    if(!form.nome.trim()||!form.desc.trim())return;
-    const entry={
-      tipo:form.tipo,nome:form.nome.trim(),pais:form.pais.trim()||"🌍",
-      cidade:form.cidade.trim(),desc:form.desc.trim(),web:form.web.trim(),
-      tags:form.tags.split(",").map(t=>t.trim()).filter(Boolean),
-      logo:{"compañía":"🎭",festival:"🎉",escola:"📚",persoa:"👤",proxecto:"🚀"}[form.tipo]||"🎭",
-    };
-    const nova=await engadirUniverso(entry,user?.id);
-    if(nova){setDatos(d=>[...d,nova]);setEnviado(true);setTimeout(()=>{setShowForm(false);setEnviado(false);},1800);}
+  const enviarEntrada=async(ficha)=>{
+    const nova=await engadirUniverso(ficha,user?.id);
+    if(!nova){setErroEnvio("Non se puido enviar. Se xa enviaches varias propostas hai pouco, agarda un anaco.");return;}
+    setErroEnvio("");
+    // Non se engade á lista: queda pendente e non debe verse como publicada.
+    // A quen ten conta si lla mostra a política RLS ao recargar.
+    setEnviado(true);setShowForm(false);
   };
 
   // ── Ficha rica (M06) ──
@@ -137,35 +133,18 @@ export function TabUniverso(){
       <button onClick={abrirForm} style={{...S.btn(T.accent),flexShrink:0}}>{logueado?"+ Engadir entrada":"🔒 Engadir entrada"}</button>
     </div>
 
-    {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
-      {enviado?(
-        <div style={{textAlign:"center",padding:"1rem 0"}}>
-          <p style={{fontSize:"2rem",margin:"0 0 0.4rem"}}>✓</p>
-          <p style={{color:"#69f0ae",fontWeight:700}}>Grazas! Queda pendente de revisión antes de ser visible para todos.</p>
-        </div>
-      ):(<>
-        <p style={S.ptitle(T.accent)}>Nova entrada</p>
-        <p style={{color:T.text4,fontSize:"0.76rem",marginBottom:"0.75rem"}}>Só datos reais e verificables. Un admin revisará a entrada antes de publicala.</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(140px,100%),1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
-          <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
-            {cats.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.nome}</option>)}
-          </select>
-          <input value={form.pais} onChange={e=>setForm(f=>({...f,pais:e.target.value}))} placeholder="🇪🇸 País (emoji)" style={S.input}/>
-          <input value={form.cidade} onChange={e=>setForm(f=>({...f,cidade:e.target.value}))} placeholder="Cidade" style={S.input}/>
-        </div>
-        <input value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Nome" style={{...S.input,marginBottom:"0.5rem"}}/>
-        <textarea value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Descrición breve e real..." style={{...S.input,minHeight:70,marginBottom:"0.5rem",resize:"vertical"}}/>
-        <input value={form.web} onChange={e=>setForm(f=>({...f,web:e.target.value}))} placeholder="Web (opcional)" style={{...S.input,marginBottom:"0.5rem"}}/>
-        <input value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="Etiquetas separadas por coma" style={{...S.input,marginBottom:"0.75rem"}}/>
-        <div style={{display:"flex",gap:"0.5rem"}}>
-          <button onClick={enviarEntrada} disabled={!form.nome.trim()||!form.desc.trim()} style={{...S.btn(T.accent),opacity:(!form.nome.trim()||!form.desc.trim())?0.4:1}}>Enviar</button>
-          <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text3)}>Cancelar</button>
-        </div>
-      </>)}
+    {enviado&&!showForm&&<div style={{...S.panel,marginBottom:"1rem",border:"1.5px solid #69f0ae44",textAlign:"center",padding:"1.1rem"}}>
+      <p style={{fontSize:"1.8rem",margin:"0 0 0.35rem"}}>✓</p>
+      <p style={{color:"#69f0ae",fontWeight:700,margin:0}}>Grazas! Queda pendente de revisión antes de ser visible.</p>
+      <button onClick={()=>setEnviado(false)} style={{...S.btn(T.bg3,T.text2),marginTop:"0.8rem"}}>Pechar</button>
     </div>}
 
+    {erroEnvio&&<p style={{color:"#ff6e40",fontSize:"0.83rem",marginBottom:"0.8rem"}}>{erroEnvio}</p>}
+
+    {showForm&&<UniversoForm cats={cats} logueado={logueado} onEnviar={enviarEntrada} onCancelar={()=>{setShowForm(false);setErroEnvio("");}}/>}
+
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-      {UNIVERSO_TIPOS.map(t=><button key={t.id} onClick={()=>setFiltro(t.id)} style={{background:filtro===t.id?(TIPO_COL[t.id]||T.accent):T.bg3,color:filtro===t.id?"#000":T.text3,border:"none",borderRadius:20,padding:"0.28rem 0.75rem",fontSize:"0.74rem",fontWeight:filtro===t.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t.emoji} {t.label}</button>)}
+      {[{id:"todos",emoji:"🌍",nome:"Todo"},...cats].map(t=><button key={t.id} onClick={()=>setFiltro(t.id)} style={{background:filtro===t.id?(TIPO_COL[t.id]||T.accent):T.bg3,color:filtro===t.id?"#000":T.text3,border:"none",borderRadius:20,padding:"0.28rem 0.75rem",fontSize:"0.74rem",fontWeight:filtro===t.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t.emoji} {t.nome}</button>)}
       <span style={{color:T.text4,fontSize:"0.75rem",alignSelf:"center",marginLeft:"auto"}}>{cargando?"cargando...":`${lista.length} entradas`}</span>
     </div>
 

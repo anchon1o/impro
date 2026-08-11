@@ -9,7 +9,7 @@ import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
 import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
-import { listarPendentesUniverso, listarTodoUniverso, verificarUniverso, engadirUniverso, editarUniverso, borrarUniverso } from '../universo.js';
+import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso } from '../universo.js';
 
 export const ADMIN_PIN = "1234";
 
@@ -368,9 +368,12 @@ export function AdminUniverso({T,S}){
   },[]);
   useEffect(()=>{cargar();},[cargar]);
 
-  const decidir=async(id,aprobar)=>{
-    await verificarUniverso(id,aprobar);
-    cargar();
+  const [notas,setNotas]=useState({});
+  // Recibe o estado destino ('publicada' | 'rexeitada' | 'borrador') en vez
+  // dun booleano. Rexeitar deixa rastro; xa non borra a fila.
+  const decidir=async(id,estado)=>{
+    const ok=await moderarUniverso(id,estado,notas[id]||undefined);
+    if(ok){setNotas(n=>{const x={...n};delete x[id];return x;});cargar();}
   };
   const borrar=async(id)=>{
     if(!confirm("Eliminar esta entrada de Universo Impro?"))return;
@@ -424,21 +427,53 @@ export function AdminUniverso({T,S}){
       </div>
     </div>}
 
+    {/* M08 — Cola de moderación.
+        Rexeitar xa NON borra a fila: cambia o estado a 'rexeitada'. Así
+        queda o rastro de quen propuxo que e por que se descartou, e sempre
+        se pode reverter. Antes «rexeitar» chamaba a borrarUniverso(). */}
     {vista==="pendentes"&&<div style={S.panel}>
       {pendentes.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen entradas pendentes.</p>}
-      <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
-        {pendentes.map(p=>(<div key={p.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",borderLeft:`3px solid ${TIPO_COL[p.tipo]||T.accent}`}}>
-          <div style={{marginBottom:"0.5rem"}}>
-            <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{p.pais} {p.nome}</span>
-            <span style={{...S.tag(TIPO_COL[p.tipo]||T.accent),marginLeft:"0.4rem"}}>{p.tipo}</span>
-            <p style={{color:T.text3,fontSize:"0.78rem",margin:"0.35rem 0 0",lineHeight:1.5}}>{p.descricion}</p>
-            <p style={{color:T.text4,fontSize:"0.72rem",margin:"0.3rem 0 0"}}>{p.cidade} · achegado por {p.perfis?.nome||p.perfis?.email||"?"}{p.web&&` · ${p.web}`}</p>
-          </div>
-          <div style={{display:"flex",gap:"0.4rem"}}>
-            <button onClick={()=>decidir(p.id,true)} style={{...S.btn("#69f0ae","#000"),fontSize:"0.78rem"}}>✓ Verificar e publicar</button>
-            <button onClick={()=>decidir(p.id,false)} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>✕ Rexeitar e borrar</button>
-          </div>
-        </div>))}
+      <div style={{display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+        {pendentes.map(p=>{
+          const lig=p.ligazons||{};
+          const dat=p.datos||{};
+          const claves=Object.keys(dat);
+          return(<div key={p.id} style={{background:T.bg3,borderRadius:10,padding:"0.8rem 0.9rem",borderLeft:`3px solid ${TIPO_COL[p.tipo]||T.accent}`}}>
+            <div style={{marginBottom:"0.6rem"}}>
+              <span style={{color:T.text,fontWeight:700,fontSize:"0.9rem"}}>{p.pais} {p.nome}</span>
+              <span style={{...S.tag(TIPO_COL[p.tipo]||T.accent),marginLeft:"0.4rem"}}>{p.tipo}</span>
+              <p style={{color:T.text3,fontSize:"0.79rem",margin:"0.4rem 0 0",lineHeight:1.5}}>{p.descricion}</p>
+
+              {claves.length>0&&<p style={{color:T.text4,fontSize:"0.73rem",margin:"0.4rem 0 0",lineHeight:1.5}}>
+                {claves.map(k=>`${k}: ${Array.isArray(dat[k])?dat[k].join(", "):dat[k]}`).join(" · ")}
+              </p>}
+
+              {Object.keys(lig).length>0&&<p style={{margin:"0.35rem 0 0",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
+                {Object.entries(lig).filter(([k])=>k!=="outras").map(([k,v])=>
+                  <a key={k} href={String(v).startsWith("http")?v:`https://${v}`} target="_blank" rel="noopener noreferrer" style={{color:"#40c4ff",fontSize:"0.73rem"}}>{k} ↗</a>)}
+              </p>}
+
+              <p style={{color:T.text4,fontSize:"0.72rem",margin:"0.45rem 0 0"}}>
+                {p.cidade&&`${p.cidade} · `}
+                {p.user_id
+                  ? `achegado por ${p.achegadoPor||"usuaria con conta"}`
+                  : (p.proposta_nome||p.proposta_email)
+                    ? `sen conta: ${p.proposta_nome||""}${p.proposta_email?` <${p.proposta_email}>`:""}`
+                    : "proposta anónima"}
+                {p.created_at&&` · ${new Date(p.created_at).toLocaleDateString()}`}
+              </p>
+            </div>
+
+            <input value={notas[p.id]||""} onChange={e=>setNotas(n=>({...n,[p.id]:e.target.value}))}
+              placeholder="Nota de revisión (opcional)" style={{...S.input,marginBottom:"0.5rem",fontSize:"0.78rem"}}/>
+
+            <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
+              <button onClick={()=>decidir(p.id,"publicada")} style={{...S.btn("#69f0ae","#000"),fontSize:"0.78rem"}}>✓ Publicar</button>
+              <button onClick={()=>decidir(p.id,"rexeitada")} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>✕ Rexeitar</button>
+              <button onClick={()=>decidir(p.id,"borrador")} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>◷ Deixar en borrador</button>
+            </div>
+          </div>);
+        })}
       </div>
     </div>}
 
