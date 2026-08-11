@@ -37,7 +37,7 @@ export function TabManual(){
       <p style={{color:T.text,fontWeight:700,margin:"0 0 0.3rem",fontSize:"0.95rem"}}>📘 Manual de ImproApp</p>
       <p style={{color:T.text3,fontSize:"0.83rem",margin:0,lineHeight:1.5}}>Guía completa de todas las funciones. Toca una sección para ver los detalles.</p>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:"0.55rem"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:"0.55rem"}}>
       {MANUAL_SECCIONES.map(sec=>(
         <button key={sec.id} onClick={()=>setSel(sec.id)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",border:`1.5px solid ${T.border}`,display:"flex",gap:"0.85rem",alignItems:"flex-start"}}>
           <span style={{fontSize:"1.5rem",flexShrink:0,lineHeight:1,marginTop:"0.1rem"}}>{sec.emoji}</span>

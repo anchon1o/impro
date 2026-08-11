@@ -90,7 +90,7 @@ export function TabUniverso(){
       ):(<>
         <p style={S.ptitle(T.accent)}>Nova entrada</p>
         <p style={{color:T.text4,fontSize:"0.76rem",marginBottom:"0.75rem"}}>Só datos reais e verificables. Un admin revisará a entrada antes de publicala.</p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(140px,100%),1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
           <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
             {UNIVERSO_TIPOS.filter(t=>t.id!=="todos").map(t=><option key={t.id} value={t.id}>{t.emoji} {t.label}</option>)}
           </select>
@@ -113,7 +113,7 @@ export function TabUniverso(){
       <span style={{color:T.text4,fontSize:"0.75rem",alignSelf:"center",marginLeft:"auto"}}>{cargando?"cargando...":`${lista.length} entradas`}</span>
     </div>
 
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"0.6rem"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(260px,100%),1fr))",gap:"0.6rem"}}>
       {lista.map(item=>(<button key={item.id} onClick={()=>setSel(item)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",border:`1.5px solid ${T.border}`,borderTop:`3px solid ${TIPO_COL[item.tipo]||T.accent}`,transition:"all 0.15s"}}>
         <div style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
           <span style={{fontSize:"1.6rem",lineHeight:1,flexShrink:0}}>{item.logo}</span>

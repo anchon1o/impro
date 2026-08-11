@@ -151,7 +151,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
                 <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(nivel===v?T.accent:"transparent",nivel===v?"#fff":T.text3),borderRadius:6,padding:"0.2rem 0.5rem",fontSize:"0.75rem"}}>{l}</button>)}
             </div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(78px,1fr))",gap:"0.3rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(78px,100%),1fr))",gap:"0.3rem"}}>
             {CATS.map(cat=>(<button key={cat} onClick={()=>xerar(cat)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.2rem",cursor:"pointer",color:T.text2,fontSize:"0.68rem",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:"0.1rem"}}>
               <span style={{fontSize:"0.95rem"}}>{iconOf(cat)}</span>
               <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{cat}</span>
@@ -171,7 +171,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
 
         {/* Efectos */}
         <div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem"}}>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(66px,1fr))",gap:"0.35rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(66px,100%),1fr))",gap:"0.35rem"}}>
             {efectos.map(ef=>(<button key={ef.id} onClick={()=>efecto(ef)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:9,padding:"0.55rem 0.2rem",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:"0.15rem"}}>
               <span style={{fontSize:"1.3rem",lineHeight:1}}>{ef.emoji}</span>
               <span style={{fontSize:"0.64rem",color:T.text3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:"100%"}}>{ef.nombre}</span>

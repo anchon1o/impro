@@ -404,7 +404,7 @@ export function AdminUniverso({T,S}){
 
     {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
       <p style={S.ptitle(T.accent)}>{editId?"Editar entrada":"Nova entrada (xa verificada)"}</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(120px,100%),1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
         <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
           {["compañía","festival","escola","persoa","proxecto"].map(t=><option key={t} value={t}>{t}</option>)}
         </select>

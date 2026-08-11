@@ -3,7 +3,7 @@
 // Xerado automaticamente na división de ImproApp.jsx (T04)
 // ============================================================
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { FMT, FONT_UI, FONT_MONO } from './core.jsx';
 
 export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onClose}){
@@ -11,9 +11,13 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
   const [notif,setNotif]=useState(null);
   const [prevActive,setPrevActive]=useState(null);
   const [showTimer,setShowTimer]=useState(true);
-  const ref=useRef(null);
+  // ⚠️ Antes había aquí un segundo setInterval que decrementaba `td` pola súa
+  // conta, ademais desta sincronización por props. Dous intervalos de 1s
+  // independentes sobre o mesmo valor: a conta saltaba números e as
+  // notificacións de td===30 e td===10 podían dispararse dúas veces ou
+  // perderse. O TimerBar xa emite o valor cada segundo, así que esta pantalla
+  // só ten que reflectilo.
   useEffect(()=>setTd(timerDisplay||0),[timerDisplay]);
-  useEffect(()=>{if(timerRunning){ref.current=setInterval(()=>setTd(p=>Math.max(0,p-1)),1000);}else clearInterval(ref.current);return()=>clearInterval(ref.current);},[timerRunning]);
 
   useEffect(()=>{
     if(!timerRunning)return;

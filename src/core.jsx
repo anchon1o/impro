@@ -278,37 +278,85 @@ export function useAudio() {
   return{tone,playBell,metroBeat};
 }
 
-export function TimerBar({audio,launchRef,onTimerChange}){
+// IM-M03. Antes era un elemento global permanente montado sempre en
+// ImproApp. Agora ImproApp só o monta cando o usuario o pide, e admite dous
+// modos: conta atrás e cronómetro ascendente.
+export function TimerBar({audio,launchRef,onTimerChange,onClose}){
   const {T}=useTheme();
+  const [modo,setModo]=useState("atras"); // atras | arriba
   const [display,setDisplay]=useState(300);
   const [preset,setPreset]=useState(300);
   const [running,setRunning]=useState(false);
   const [expanded,setExpanded]=useState(false);
+  const [editando,setEditando]=useState(false);
+  const [borrador,setBorrador]=useState("");
   const ref=useRef(null);
-  const urgent=display>0&&display<10,warning=display>0&&display<30;
+  const atras=modo==="atras";
+  const urgent=atras&&display>0&&display<10,warning=atras&&display>0&&display<30;
+
   useEffect(()=>{
-    if(running){ref.current=setInterval(()=>{setDisplay(p=>{if(p<=1){setRunning(false);audio.playBell();return 0;}return p-1;});},1000);}
-    else clearInterval(ref.current);
+    if(running){
+      ref.current=setInterval(()=>{
+        setDisplay(p=>{
+          if(!atras)return p+1;                       // cronómetro: sobe sen límite
+          if(p<=1){setRunning(false);audio.playBell();return 0;}
+          return p-1;
+        });
+      },1000);
+    } else clearInterval(ref.current);
     return()=>clearInterval(ref.current);
-  },[running]);
-  useEffect(()=>{if(launchRef)launchRef.current=(secs)=>{setPreset(secs);setDisplay(secs);setRunning(true);setExpanded(false);};},[launchRef]);
+  },[running,atras]);
+
+  useEffect(()=>{if(launchRef)launchRef.current=(secs)=>{setModo("atras");setPreset(secs);setDisplay(secs);setRunning(true);setExpanded(false);};},[launchRef]);
   useEffect(()=>{if(onTimerChange)onTimerChange(display,running,preset);},[display,running,preset]);
+
+  const cambiarModo=m=>{setModo(m);setRunning(false);setDisplay(m==="atras"?preset:0);};
+  const reiniciar=()=>{setRunning(false);setDisplay(atras?preset:0);};
+
+  // Edición do tempo escribindo mm:ss ou só minutos
+  const abrirEdicion=()=>{if(running)return;setBorrador(FMT(display));setEditando(true);};
+  const confirmarEdicion=()=>{
+    const t=borrador.trim();
+    let secs=null;
+    if(/^\d{1,3}$/.test(t)) secs=parseInt(t,10)*60;
+    else if(/^\d{1,3}:[0-5]?\d$/.test(t)){const[m,s]=t.split(":");secs=parseInt(m,10)*60+parseInt(s,10);}
+    if(secs!==null&&secs>=0&&secs<=359999){setDisplay(secs);if(atras)setPreset(secs);}
+    setEditando(false);
+  };
+
   const PRESETS=[30,60,120,180,300,600];
+  const btnMini=activo=>({background:activo?T.accent+"22":T.bg3,border:`1px solid ${activo?T.accent:T.border}`,color:activo?T.accent:T.text3,borderRadius:7,padding:"0.22rem 0.55rem",fontSize:"0.76rem",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"});
+
   return(
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:T.nav,borderTop:`1px solid ${T.navBorder}`,transition:"all 0.3s"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:T.nav,borderTop:`1px solid ${T.navBorder}`,transition:"all 0.3s",paddingBottom:"env(safe-area-inset-bottom)"}}>
       {expanded&&(
-        <div style={{padding:"0.55rem 1rem",display:"flex",gap:"0.4rem",justifyContent:"center",flexWrap:"wrap",borderBottom:`1px solid ${T.border}`}}>
-          {PRESETS.map(t=><button key={t} onClick={()=>{setPreset(t);setDisplay(t);setRunning(false);}} style={{background:preset===t?T.accent+"22":T.bg3,border:`1px solid ${preset===t?T.accent:T.border}`,color:preset===t?T.accent:T.text3,borderRadius:7,padding:"0.22rem 0.55rem",fontSize:"0.76rem",cursor:"pointer",fontFamily:"inherit"}}>{FMT(t)}</button>)}
-          <button onClick={()=>{setRunning(false);setDisplay(preset);}} style={{background:T.bg3,border:`1px solid ${T.border}`,color:T.text3,borderRadius:7,padding:"0.22rem 0.55rem",fontSize:"0.76rem",cursor:"pointer"}}>↺</button>
+        <div style={{padding:"0.55rem 0.75rem",borderBottom:`1px solid ${T.border}`,maxWidth:960,margin:"0 auto"}}>
+          <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.5rem"}}>
+            <button onClick={()=>cambiarModo("atras")} style={{...btnMini(atras),flex:1}}>⏲ Conta atrás</button>
+            <button onClick={()=>cambiarModo("arriba")} style={{...btnMini(!atras),flex:1}}>⏱ Cronómetro</button>
+          </div>
+          {atras&&<div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",justifyContent:"center"}}>
+            {PRESETS.map(t=><button key={t} onClick={()=>{setPreset(t);setDisplay(t);setRunning(false);}} style={btnMini(preset===t)}>{FMT(t)}</button>)}
+          </div>}
         </div>
       )}
-      <div style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.5rem 1rem",maxWidth:960,margin:"0 auto"}}>
-        <button onClick={()=>setExpanded(!expanded)} style={{background:"none",border:"none",color:T.text3,cursor:"pointer",fontSize:"0.8rem",padding:"0.2rem",flexShrink:0}}>⏱</button>
-        <div onClick={()=>setExpanded(!expanded)} style={{fontFamily:"monospace",fontWeight:900,fontSize:"clamp(1rem,4vw,1.4rem)",color:urgent?"#ff6e40":warning?"#ffd740":T.text,textShadow:urgent?"0 0 20px #ff6e4066":"none",minWidth:70,cursor:"pointer",animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none"}}>{FMT(display)}</div>
-        <button onClick={()=>setRunning(!running)} style={{background:running?"#ff6e40":"#69f0ae",color:"#000",border:"none",borderRadius:7,padding:"0.35rem 0.85rem",fontWeight:700,cursor:"pointer",fontSize:"0.82rem",flexShrink:0}}>{running?"⏸":"▶"}</button>
-        <div style={{flex:1,height:4,background:T.bg4,borderRadius:2,overflow:"hidden"}}>
-          <div style={{height:"100%",width:`${preset>0?(display/preset)*100:0}%`,background:urgent?"#ff6e40":warning?"#ffd740":T.accent,borderRadius:2,transition:"width 1s linear"}}/>
-        </div>
+      <div style={{display:"flex",alignItems:"center",gap:"0.5rem",padding:"0.5rem 0.75rem",maxWidth:960,margin:"0 auto",minWidth:0}}>
+        <button onClick={()=>setExpanded(!expanded)} title="Opcións" style={{background:"none",border:"none",color:T.text3,cursor:"pointer",fontSize:"0.9rem",padding:"0.2rem",flexShrink:0}}>{atras?"⏲":"⏱"}</button>
+
+        {editando
+          ?<input autoFocus value={borrador} onChange={e=>setBorrador(e.target.value)} onBlur={confirmarEdicion} onKeyDown={e=>{if(e.key==="Enter")confirmarEdicion();if(e.key==="Escape")setEditando(false);}} placeholder="mm:ss" style={{width:82,background:T.bg3,border:`1px solid ${T.accent}`,borderRadius:7,color:T.text,fontFamily:"monospace",fontWeight:900,fontSize:"1.1rem",textAlign:"center",padding:"0.2rem",flexShrink:0}}/>
+          :<div onClick={abrirEdicion} title={running?"Detén para editar":"Toca para editar o tempo"} style={{fontFamily:"monospace",fontWeight:900,fontSize:"clamp(1rem,4vw,1.4rem)",color:urgent?"#ff6e40":warning?"#ffd740":T.text,textShadow:urgent?"0 0 20px #ff6e4066":"none",minWidth:70,cursor:running?"default":"text",flexShrink:0,animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none"}}>{FMT(display)}</div>}
+
+        <button onClick={()=>setRunning(!running)} style={{background:running?"#ff6e40":"#69f0ae",color:"#000",border:"none",borderRadius:7,padding:"0.35rem 0.8rem",fontWeight:700,cursor:"pointer",fontSize:"0.82rem",flexShrink:0}}>{running?"⏸":"▶"}</button>
+        <button onClick={reiniciar} title="Reiniciar" style={{background:T.bg3,border:`1px solid ${T.border}`,color:T.text3,borderRadius:7,padding:"0.35rem 0.6rem",fontSize:"0.82rem",cursor:"pointer",flexShrink:0}}>↺</button>
+
+        {atras
+          ?<div style={{flex:1,height:4,background:T.bg4,borderRadius:2,overflow:"hidden",minWidth:20}}>
+             <div style={{height:"100%",width:`${preset>0?(display/preset)*100:0}%`,background:urgent?"#ff6e40":warning?"#ffd740":T.accent,borderRadius:2,transition:"width 1s linear"}}/>
+           </div>
+          :<div style={{flex:1,minWidth:20}}/>}
+
+        {onClose&&<button onClick={onClose} title="Pechar temporizador" style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"1rem",padding:"0.2rem 0.3rem",flexShrink:0}}>✕</button>}
       </div>
     </div>
   );

@@ -36,10 +36,40 @@ export function TabQR(){
   const [newPregunta,setNewPregunta]=useState("");
   const [salaConfig,setSalaConfig]=useState([]);
 
-  const genCode=()=>Math.random().toString(36).substring(2,6).toUpperCase();
+  // ⚠️ Xerador anterior: Math.random().toString(36).substring(2,6).toUpperCase()
+  // Dous fallos: (a) toString(36) pode devolver unha cadea curta e saía un
+  // código de menos de 4 caracteres, inaccesible porque o campo do público
+  // esixe exactamente 4; (b) non comprobaba colisións, e as salas non se
+  // borraban nunca.
+  // Alfabeto sen O/0/I/1 para que non se confundan ao ditar o código en voz
+  // alta nun show.
+  const ALFABETO="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const genCode=()=>{
+    let c="";
+    const r=new Uint32Array(4);
+    (window.crypto||window.msCrypto).getRandomValues(r);
+    for(let i=0;i<4;i++) c+=ALFABETO[r[i]%ALFABETO.length];
+    return c;
+  };
+  // Pide un código libre. O índice único parcial `salas_code_viva_uniq`
+  // é a garantía real; isto só evita a maioría dos reintentos.
+  const genCodeLibre=async()=>{
+    for(let i=0;i<8;i++){
+      const c=genCode();
+      const {data}=await sb.from('salas').select('code').eq('code',c).eq('open',true).maybeSingle();
+      if(!data)return c;
+    }
+    return null;
+  };
 
   useEffect(()=>{
     getHistorialSalas().then(setHistorial);
+    // Pecha as salas que xa caducaron. Non hai pg_cron, así que se chama
+    // baixo demanda: como a pestana QR se abre en cada show, na práctica
+    // límpase soa. Se a función aínda non está creada, ignórase en silencio.
+    sb.rpc('pechar_salas_caducadas').then(({error})=>{
+      if(error) console.warn('pechar_salas_caducadas:',error.message);
+    });
     const params=new URLSearchParams(window.location.search);
     const sala=params.get("sala");
     if(sala){setJoinCode(sala.toUpperCase());setSalaCode(sala.toUpperCase());setMode("send");}
@@ -47,7 +77,6 @@ export function TabQR(){
   },[]);
 
   const abrirSalaQR=async()=>{
-    const code=genCode();
     setError("");
     // A política RLS `salas_write` esixe with_check (user_id = auth.uid()).
     // Sen user_id, o insert é rexeitado. supabase-js NON lanza excepción
@@ -56,10 +85,16 @@ export function TabQR(){
     // fantasma: o público recibía "Sala no encontrada").
     const {data:{user}={}}=await sb.auth.getUser();
     if(!user){setError("Precisas iniciar sesión para abrir unha sala.");return;}
+    const code=await genCodeLibre();
+    if(!code){setError("Non se puido xerar un código libre. Téntao de novo.");return;}
     const {error:errIns}=await sb.from('salas').insert({code,open:true,config:preguntas,user_id:user.id});
     if(errIns){
       console.error('abrirSala:',errIns);
-      setError("Non se puido abrir a sala. Téntao de novo.");
+      // 23505 = violación do índice único parcial: alguén ocupou ese código
+      // entre a comprobación e o insert. Improbable, pero posible.
+      setError(errIns.code==='23505'
+        ?"Ese código acaba de ocuparse. Preme outra vez."
+        :"Non se puido abrir a sala. Téntao de novo.");
       return;
     }
     setSalaCode(code);setPropuestas([]);
@@ -84,11 +119,18 @@ export function TabQR(){
     if(!joinCode.trim())return;
     setLoading(true);setError("");
     try{
-      const {data,error:err}=await sb.from('salas').select('open,config').eq('code',joinCode.toUpperCase()).single();
-      if(err||!data){setError("Sala no encontrada.");setLoading(false);return;}
+      const cod=joinCode.toUpperCase();
+      // maybeSingle() en vez de single(): se por algún motivo houbese dúas
+      // filas, single() lanzaba erro e o público vía "Sala no encontrada"
+      // sen entender por que. O índice único parcial xa o impide, pero non
+      // convén depender dunha soa capa.
+      const {data,error:err}=await sb.from('salas').select('open,config,expira_en').eq('code',cod).maybeSingle();
+      if(err){setError("Error al conectar.");setLoading(false);return;}
+      if(!data){setError("Sala no encontrada. Revisa el código.");setLoading(false);return;}
       if(!data.open){setError("Esta sala ya está cerrada.");setLoading(false);return;}
+      if(data.expira_en&&new Date(data.expira_en)<=new Date()){setError("Esta sala ha caducado.");setLoading(false);return;}
       setSalaConfig(data.config||[{id:"p1",pregunta:"Escribe tu propuesta",tipo:"libre"}]);
-      setSalaCode(joinCode.toUpperCase());setMode("send");
+      setSalaCode(cod);setMode("send");
     }catch(e){setError("Error al conectar.");}
     setLoading(false);
   };
@@ -210,7 +252,7 @@ export function TabQR(){
 
   // VISTA: INICIO
   return(<div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:"1rem",marginBottom:"1.25rem"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(260px,100%),1fr))",gap:"1rem",marginBottom:"1.25rem"}}>
       <div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
         <p style={S.ptitle(T.accent)}>🎭 Soy el facilitador</p>
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"1rem"}}>Configura as preguntas e abre a sala. O público escanea o QR e responde dende o seu móbil.</p>

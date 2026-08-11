@@ -204,7 +204,7 @@ export function TabGenerar({onStimulus}){
     </div>)}
 
     {view==="cats"&&(<>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:"0.5rem"}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(185px,100%),1fr))",gap:"0.5rem"}}>
         {CATS.map(cat=>{return(
           <button key={cat} onClick={()=>generate(cat)} style={{background:sel?.cat===cat?T.accent+"18":T.bg2,border:`1.5px solid ${sel?.cat===cat?T.accent:T.border}`,borderRadius:10,padding:"0.75rem 0.9rem",color:T.text,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:"0.5rem",transition:"all 0.15s"}}>
             <span>{CAT_ICONS[cat]||"◆"}</span>

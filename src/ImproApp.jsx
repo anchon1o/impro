@@ -55,6 +55,9 @@ function AppInner({perfil,publico}={}){
   const [animating,setAnimating]=useState(false);
   const [pubStimulus,setPubStimulus]=useState(null);
   const [pubOpen,setPubOpen]=useState(false);
+  const [menuAberto,setMenuAberto]=useState(false);
+  // IM-M03: o temporizador xa non está sempre montado. Só cando se pide.
+  const [timerAberto,setTimerAberto]=useState(false);
   const [pubTimerDisplay,setPubTimerDisplay]=useState(0);
   const [pubTimerRunning,setPubTimerRunning]=useState(false);
   const [pubRundown,setPubRundown]=useState([]);
@@ -65,7 +68,13 @@ function AppInner({perfil,publico}={}){
   const [grupoActivo,setGrupoActivo]=useState(()=>ls.get("impro_grupo_activo",null));
   const setGrupo=g=>{setGrupoActivo(g);ls.set("impro_grupo_activo",g);};
   const timerLaunchRef=useRef(null);
-  const launchTimer=useCallback((mins)=>{if(timerLaunchRef.current)timerLaunchRef.current(mins*60);},[]);
+  // Sesións chama a isto. Como o temporizador pode estar pechado, ábreo
+  // primeiro e lanza no seguinte tick, cando launchRef xa está asignado.
+  const launchTimer=useCallback((mins)=>{
+    setTimerAberto(true);
+    if(timerLaunchRef.current)timerLaunchRef.current(mins*60);
+    else setTimeout(()=>{if(timerLaunchRef.current)timerLaunchRef.current(mins*60);},0);
+  },[]);
   const audio=useAudio();
   useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("sala"))setTab("qr");},[]);
   const changeTab=newTab=>{if(newTab===tab||animating)return;setAnimating(true);setTab(newTab);setTimeout(()=>setAnimating(false),280);};
@@ -104,24 +113,50 @@ function AppInner({perfil,publico}={}){
     {pubOpen&&<PantallaPublica stimulus={pubStimulus} timerDisplay={pubTimerDisplay} timerRunning={pubTimerRunning} rundown={pubRundown} onClose={()=>setPubOpen(false)}/>}
     <header style={{borderBottom:`1px solid ${T.navBorder}`,padding:"0.8rem 1rem 0",background:T.nav,position:"sticky",top:0,zIndex:100,transition:"background 0.3s,border-color 0.3s"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.45rem"}}>
-            <span style={{fontSize:"1.15rem"}}>🎭</span>
-            <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em"}}>impro<span style={{color:T.accent}}>App</span></span>
-            <span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700}}>v8</span>
+        {/* IM-B02 / IM-M01. A fila anterior era un flex space-between sen
+            flexWrap nin minWidth:0, con logo + selector de idioma (3 botóns)
+            + tema + 🎬 + 📺 + Entrar. Nun móbil de 360px o contido mínimo
+            medía uns 440px e desbordaba a páxina enteira.
+            Agora en móbil só quedan á vista as accións primarias e o resto
+            móvese a un menú. Non se oculta o overflow: elimínase a causa. */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem",minWidth:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden"}}>
+            <span style={{fontSize:"1.15rem",flexShrink:0}}>🎭</span>
+            <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>impro<span style={{color:T.accent}}>App</span></span>
+            {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v8</span>}
           </div>
-          <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
-            <div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
-              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:esMovil?"0.28rem 0.45rem":"0.24rem 0.55rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
-            </div>
-            <button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>
-            <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:"#40c4ff",border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit"}}>🎬</button>
-            <button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>
-            {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.75rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit"}}>Entrar</button>}
+          <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
+            {!esMovil&&<div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
+              {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.24rem 0.55rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
+            </div>}
+            {!esMovil&&<button onClick={toggle} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.3rem 0.65rem",cursor:"pointer",fontSize:"0.82rem",color:T.text2,transition:"all 0.3s",fontFamily:"inherit"}}>{dark?"☀️":"🌙"}</button>}
+            {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:timerAberto?T.accent+"22":T.bg3,border:`1px solid ${timerAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:timerAberto?T.accent:T.text3}}>⏱</button>}
+            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3}}>📺</button>}
+            <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:"#40c4ff",border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
+            {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
+            {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
           </div>
         </div>
+
+        {/* Menú de desbordamento: só móbil. Recolle o que se retirou da fila. */}
+        {esMovil&&menuAberto&&<div style={{paddingBottom:"0.6rem",animation:"slideUp 0.2s ease"}}>
+          <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"0.6rem"}}>
+            <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.5rem"}}>
+              <span style={{color:T.text4,fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.06em",flexShrink:0}}>IDIOMA</span>
+              <div style={{display:"flex",background:T.bg2,borderRadius:20,padding:2,gap:1,marginLeft:"auto"}}>
+                {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.3rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",fontWeight:lang===l?700:400,fontFamily:"inherit"}}>{l.toUpperCase()}</button>)}
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(100px,100%),1fr))",gap:"0.4rem"}}>
+              <button onClick={toggle} style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:T.text2,fontFamily:"inherit",minHeight:38}}>{dark?"☀️ Claro":"🌙 Escuro"}</button>
+              <button onClick={()=>{setTimerAberto(v=>!v);setMenuAberto(false);}} style={{background:timerAberto?T.accent+"22":T.bg2,border:`1px solid ${timerAberto?T.accent:T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:timerAberto?T.accent:T.text2,fontFamily:"inherit",minHeight:38}}>⏱ Temporizador</button>
+              <button onClick={()=>{setPubOpen(p=>!p);setMenuAberto(false);}} style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:T.text2,fontFamily:"inherit",minHeight:38}}>📺 Pantalla</button>
+            </div>
+          </div>
+        </div>}
+
         <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
-          {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>changeTab(t.id)} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:esMovil?"0.55rem 0.7rem":"0.45rem 0.8rem",fontSize:esMovil?"0.78rem":"0.82rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
+          {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>{setMenuAberto(false);changeTab(t.id);}} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:esMovil?"0.55rem 0.7rem":"0.45rem 0.8rem",fontSize:esMovil?"0.78rem":"0.82rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
             <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
           </button>))}
         </nav>
@@ -133,7 +168,7 @@ function AppInner({perfil,publico}={}){
     {migrando&&<div style={{background:"#69f0ae15",borderBottom:"1px solid #69f0ae33",padding:"0.5rem 1rem",textAlign:"center"}}>
       <span style={{color:"#69f0ae",fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
     </div>}
-    <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?"0.9rem 0.75rem 6.5rem":"1.4rem 1.25rem 6rem"}}>
+    <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
@@ -148,7 +183,7 @@ function AppInner({perfil,publico}={}){
         {tab==="universo"&&<TabUniverso/>}
       </div>
     </main>
-    <TimerBar audio={audio} launchRef={timerLaunchRef} onTimerChange={(d,r,p)=>{setPubTimerDisplay(d);setPubTimerRunning(r);}} />
+    {timerAberto&&<TimerBar audio={audio} launchRef={timerLaunchRef} onClose={()=>setTimerAberto(false)} onTimerChange={(d,r,p)=>{setPubTimerDisplay(d);setPubTimerRunning(r);}} />}
   </div></LangCtx.Provider>);
 }
 
