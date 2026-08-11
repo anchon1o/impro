@@ -32,6 +32,7 @@ import { PantallaPublica } from './PantallaPublica.jsx';
 import { ModoShow } from './ModoShow.jsx';
 import { LoginModal } from './auth/LoginModal.jsx';
 import { LoginGate } from './auth/LoginGate.jsx';
+import { Inicio } from './Inicio.jsx';
 
 const TABS=[
   {id:"generar",label:"Generar",emoji:"✦"},
@@ -51,7 +52,7 @@ function AppInner({perfil,publico}={}){
   const {dark,toggle,T}=useTheme();
   const {logueado,pedirLogin,esAdmin,migrando}=useAuth();
   const {esMovil,esTablet}=useViewport();
-  const [tab,setTab]=useState("generar");
+  const [tab,setTab]=useState("inicio");
   const [animating,setAnimating]=useState(false);
   const [pubStimulus,setPubStimulus]=useState(null);
   const [pubOpen,setPubOpen]=useState(false);
@@ -120,11 +121,11 @@ function AppInner({perfil,publico}={}){
             Agora en móbil só quedan á vista as accións primarias e o resto
             móvese a un menú. Non se oculta o overflow: elimínase a causa. */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem",minWidth:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden"}}>
+          <button onClick={()=>{setMenuAberto(false);changeTab("inicio");}} title="Inicio" style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden",background:"none",border:"none",padding:0,cursor:"pointer",color:"inherit",fontFamily:"inherit"}}>
             <span style={{fontSize:"1.15rem",flexShrink:0}}>🎭</span>
             <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>impro<span style={{color:T.accent}}>App</span></span>
             {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v8</span>}
-          </div>
+          </button>
           <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
             {!esMovil&&<div style={{display:"flex",background:T.bg3,borderRadius:20,padding:2,gap:1}}>
               {["es","gl","en"].map(l=><button key={l} onClick={()=>setLang(l)} style={{background:lang===l?T.accent:"transparent",color:lang===l?"#fff":T.text3,border:"none",borderRadius:18,padding:"0.24rem 0.55rem",cursor:"pointer",fontSize:"0.72rem",fontWeight:lang===l?700:400,fontFamily:"inherit",transition:"all 0.2s"}}>{l.toUpperCase()}</button>)}
@@ -155,11 +156,11 @@ function AppInner({perfil,publico}={}){
           </div>
         </div>}
 
-        <nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
+        {tab!=="inicio"&&<nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
           {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>{setMenuAberto(false);changeTab(t.id);}} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:esMovil?"0.55rem 0.7rem":"0.45rem 0.8rem",fontSize:esMovil?"0.78rem":"0.82rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
             <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
           </button>))}
-        </nav>
+        </nav>}
       </div>
     </header>
     {!supabaseConfigured&&<div style={{background:"#ff6e4022",borderBottom:"1px solid #ff6e4055",padding:"0.55rem 1rem",textAlign:"center"}}>
@@ -170,6 +171,7 @@ function AppInner({perfil,publico}={}){
     </div>}
     <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>
+        {tab==="inicio"&&<Inicio lang={lang} onIr={id=>changeTab(id)}/>}
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
         {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer}/></LoginGate>}
