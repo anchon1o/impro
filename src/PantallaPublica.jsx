@@ -65,7 +65,7 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
         <div style={{textAlign:"center"}}>
           <p style={{fontSize:"5rem",margin:"0 0 1rem"}}>🎭</p>
           <p style={{color:"#333",fontSize:"1.2rem",fontWeight:700}}>improApp</p>
-          <p style={{color:"#222",fontSize:"0.85rem"}}>Pantalla de proxección</p>
+          <p style={{color:"#222",fontSize:"0.85rem"}}>Proxección</p>
         </div>
       )}
     </div>

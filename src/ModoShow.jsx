@@ -123,7 +123,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
 
     {/* Cabeceira */}
     <div style={{background:T.bg2,borderBottom:`1px solid ${T.border}`,padding:"0.5rem 0.9rem",display:"flex",alignItems:"center",gap:"0.75rem",flexShrink:0}}>
-      <span style={{fontWeight:900,fontSize:"0.9rem",color:T.text}}>🎭 Modo show</span>
+      <span style={{fontWeight:900,fontSize:"0.9rem",color:T.text}}>🎬 En directo</span>
       {activa&&<span style={{color:T.info,fontWeight:700,fontSize:"0.85rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>▶ {activa.nombre}</span>}
       {!activa&&<span style={{flex:1}}/>}
       <button onClick={onClose} style={{...S.btn(T.bg3,T.text3),fontSize:"0.78rem",padding:"0.3rem 0.7rem"}}>✕ Saír</button>

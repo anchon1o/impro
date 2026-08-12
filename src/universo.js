@@ -186,16 +186,19 @@ export async function verificarUniverso(id, verificar) {
 // ─────────────────────────────────────────────
 // CATEGORÍAS (M07)
 // ─────────────────────────────────────────────
+// Devolve {cats, erro}. Antes devolvía só o array e tragaba o erro cun
+// console.warn: cando faltaban os GRANT, a UI amosaba «non hai categorías»
+// en vez de «permission denied», e non había forma de saber que pasaba.
 export async function cargarCategorias() {
   try {
     const { data, error } = await supabase
       .from('universo_categorias').select('*').order('orde');
     if (error) throw error;
-    if (data && data.length) { ls.set('impro_universo_cats', data); return data; }
-    return ls.get('impro_universo_cats', []);
+    if (data && data.length) { ls.set('impro_universo_cats', data); return { cats: data, erro: null }; }
+    return { cats: ls.get('impro_universo_cats', []), erro: null };
   } catch (e) {
-    console.warn('[universo] categorías desde caché:', e?.message);
-    return ls.get('impro_universo_cats', []);
+    console.warn('[universo] cargarCategorias:', e?.message);
+    return { cats: ls.get('impro_universo_cats', []), erro: e?.message || 'Erro descoñecido' };
   }
 }
 

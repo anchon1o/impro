@@ -358,7 +358,7 @@ export const MANUAL_SECCIONES=[
     {t:"Historial",d:"As sesións gardadas quedan en Supabase con data, minutos totais e bloques completados."},
     {t:"Modo ensaio 🍅",d:"Pomodoro adaptado a impro. Presets: Estándar, Show e Maratón. A app xestiona os tempos e avisa con son ao cambiar de bloque."},
   ]},
-  {id:"show",emoji:"🎭",titulo:"Control de show",intro:"Panel completo para xestionar un show en directo.",items:[
+  {id:"show",emoji:"🎛",titulo:"Cabina de son e escaleta",intro:"Panel completo para xestionar un show en directo.",items:[
     {t:"Audio — pistas múltiples",d:"Pestana 🎵 Audio: engade pistas de música simultáneas con volume independente por pista. Soporta YouTube embed e MP3 directo. Parar todas cun clic."},
     {t:"Efectos de son",d:"Pestana 🔊 Efectos: 8 efectos con síntese de audio (aplausos, campá, buzzer...). Asigna URLs MP3 propias para usar os teus sons."},
     {t:"Metrónomo",d:"Pestana 🥁 Metro: control de BPM de 30 a 240, visualización de pulsos, presets rápidos. Útil para escenas musicais."},
@@ -367,10 +367,10 @@ export const MANUAL_SECCIONES=[
   ]},
   {id:"modos",emoji:"🖥",titulo:"Modos de visualización",intro:"Hai tres formas distintas de ver a app durante un ensaio ou un show. Convén saber cal usar en cada momento.",items:[
     {t:"Vista normal",d:"A de sempre: cabeceira, pestanas e contido. É a que usas para preparar, consultar dinámicas, planificar sesións e administrar. Non está pensada para proxectar."},
-    {t:"🎬 Modo Show",d:"Botón azul na cabeceira. Panel unificado de directo que xunta nunha soa pantalla o estímulo actual, o temporizador, o audio, os efectos, o rundown e o QR. Está pensado para o dispositivo que TI manexas durante a función, para non ter que cambiar de pestana no medio dunha escena. Ábrese enriba de todo e péchase co seu botón."},
-    {t:"📺 Pantalla Pública",d:"Botón 📺 da cabeceira. É a vista que ve o PÚBLICO: estímulo grande, temporizador e rundown, sen controis nin nada que estorbe. Pensada para o proxector ou a segunda pantalla. Amosa avisos automáticos aos 30 e aos 10 segundos, e cando remata o tempo."},
-    {t:"Cal uso e cando",d:"Preparación e ensaio → vista normal. Durante a función, no teu dispositivo → Modo Show. No proxector que ve a sala → Pantalla Pública. Modo Show e Pantalla Pública pódense ter abertos á vez: o que xeras nun reflíctese no outro."},
-    {t:"⚠️ Sobre os nomes",d:"«Show» (a pestana 🎭) e «Modo Show» (o botón 🎬) son cousas distintas cun nome case igual. A pestana é o taller onde preparas audio, efectos, metrónomo e rundown. O Modo Show é o panel de directo. Se te perdes, esta é a razón."},
+    {t:"🎬 En directo",d:"Botón azul na cabeceira. Panel unificado de directo que xunta nunha soa pantalla o estímulo actual, o temporizador, o audio, os efectos, o rundown e o QR. Está pensado para o dispositivo que TI manexas durante a función, para non ter que cambiar de pestana no medio dunha escena. Ábrese enriba de todo e péchase co seu botón."},
+    {t:"📺 Proxección",d:"Botón 📺 da cabeceira. É a vista que ve o PÚBLICO: estímulo grande, temporizador e rundown, sen controis nin nada que estorbe. Pensada para o proxector ou a segunda pantalla. Amosa avisos automáticos aos 30 e aos 10 segundos, e cando remata o tempo."},
+    {t:"Cal uso e cando",d:"Preparación e ensaio → Cabina. Durante a función, no teu dispositivo → En directo. No proxector que ve a sala → Proxección. En directo e Proxección pódense ter abertos á vez: o que xeras nun reflíctese no outro."},
+    {t:"Os nomes",d:"A pestana 🎛 Cabina é onde PREPARAS: audio, efectos, metrónomo e escaleta. 🎬 En directo é o panel que manexas DURANTE a función. 📺 Proxección é o que ve a sala. Antes chamábanse Show, Modo Show e Pantalla Pública, e as dúas primeiras confundíanse decote."},
   ]},
   {id:"temporizador",emoji:"⏱",titulo:"Temporizador",intro:"Ferramenta opcional. Non aparece ata que a pides, e péchase cando remates.",items:[
     {t:"Como abrilo",d:"En escritorio, o botón ⏱ da cabeceira. En móbil, dentro do menú ⋯. Ábrese como barra fixa na parte inferior e péchase co ✕. Mentres está pechado recuperas ese espazo de pantalla."},

@@ -23,7 +23,8 @@ export function AdminCategorias(){
   const [msg,setMsg]=useState("");
   const [cargando,setCargando]=useState(true);
 
-  const recargar=()=>cargarCategorias().then(c=>{setCats(c||[]);setCargando(false);});
+  const [erroCarga,setErroCarga]=useState("");
+  const recargar=()=>cargarCategorias().then(({cats,erro})=>{setCats(cats||[]);setErroCarga(erro||"");setCargando(false);});
   useEffect(()=>{recargar();},[]);
 
   const novo=()=>{setForm({...BALEIRA});setEditandoId(null);setMsg("");};
@@ -108,7 +109,14 @@ export function AdminCategorias(){
     </div>}
 
     {cargando&&<p style={S.caption}>Cargando…</p>}
-    {!cargando&&cats.length===0&&<p style={S.caption}>Aínda non hai categorías. Executaches <code>supabase_universo_modelo.sql</code>?</p>}
+    {!cargando&&erroCarga&&<div style={{background:T.danger+"12",borderStyle:"solid",borderWidth:1,borderColor:T.danger+"44",borderRadius:8,padding:"0.8rem",marginBottom:"0.8rem"}}>
+      <p style={{color:T.danger,fontWeight:700,fontSize:"0.82rem",margin:"0 0 0.3rem"}}>Non se puideron cargar as categorías</p>
+      <p style={{color:T.text3,fontSize:"0.76rem",margin:0,fontFamily:"monospace",lineHeight:1.5}}>{erroCarga}</p>
+      <p style={{color:T.text3,fontSize:"0.76rem",margin:"0.5rem 0 0",lineHeight:1.5}}>
+        Se pon «permission denied», falta executar <code>supabase_universo_grants.sql</code> no SQL Editor de Supabase.
+      </p>
+    </div>}
+    {!cargando&&!erroCarga&&cats.length===0&&<p style={S.caption}>Aínda non hai categorías. Executaches <code>supabase_universo_modelo.sql</code>?</p>}
 
     <div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
       {cats.map(c=>(

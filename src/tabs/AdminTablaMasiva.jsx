@@ -37,8 +37,9 @@ export function AdminTablaMasiva(){
   const foco=useRef({fila:0,col:0});
 
   useEffect(()=>{
-    Promise.all([cargarCategorias(),listarTodoUniverso()]).then(([c,todo])=>{
+    Promise.all([cargarCategorias(),listarTodoUniverso()]).then(([{cats:c,erro},todo])=>{
       setCats(c||[]);
+      if(erro)setMsg(`Non se puideron cargar as categorías: ${erro}`);
       const t=(c&&c[0]?.id)||"";
       setTipo(t);
       cargarFilas(todo,t);
@@ -158,6 +159,16 @@ export function AdminTablaMasiva(){
   };
 
   if(cargando)return <p style={S.caption}>Cargando…</p>;
+  if(!cats.length)return(<div>
+    <p style={S.ptitle(T.accent)}>Edición masiva</p>
+    <div style={{background:T.danger+"12",borderStyle:"solid",borderWidth:1,borderColor:T.danger+"44",borderRadius:8,padding:"0.8rem"}}>
+      <p style={{color:T.danger,fontWeight:700,fontSize:"0.82rem",margin:"0 0 0.3rem"}}>Sen categorías dispoñibles</p>
+      <p style={{color:T.text3,fontSize:"0.76rem",margin:0,lineHeight:1.5}}>
+        {msg||"A táboa precisa polo menos unha categoría de Universo."} Se o problema é de permisos,
+        executa <code>supabase_universo_grants.sql</code> no SQL Editor de Supabase.
+      </p>
+    </div>
+  </div>);
 
   const celaBase={background:"transparent",border:"none",color:T.text2,fontSize:"0.76rem",
     fontFamily:"inherit",padding:"0.4rem 0.45rem",width:"100%",minWidth:0,outline:"none",boxSizing:"border-box"};

@@ -14,7 +14,7 @@ import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
 export const AREAS=[
   {id:"generar",  emoji:"🎲",  cor:"accent", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
   {id:"reto",     emoji:"⚡", cor:"warn", desc:"Unha dinámica ao chou con estímulos, coas súas instrucións."},
-  {id:"show",     emoji:"🎭", cor:"danger", desc:"Audio multipista, efectos, metrónomo, rundown e sorteos."},
+  {id:"show",     emoji:"🎛", cor:"danger", desc:"Cabina de son: audio multipista, efectos, metrónomo e rundown."},
   {id:"guia",     emoji:"📖", cor:"ok", desc:"Catálogo de dinámicas con pasos, obxectivos e variantes."},
   {id:"sesiones", emoji:"📋", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
   {id:"grupos",   emoji:"👥", cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},

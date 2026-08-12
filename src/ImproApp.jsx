@@ -33,13 +33,14 @@ import { ModoShow } from './ModoShow.jsx';
 import { LoginModal } from './auth/LoginModal.jsx';
 import { LoginGate } from './auth/LoginGate.jsx';
 import { Inicio } from './Inicio.jsx';
+import { BotonReporte } from './tabs/BotonReporte.jsx';
 
 const TABS=[
   {id:"generar",label:"Generar",emoji:"🎲"},
   {id:"reto",label:"Reto",emoji:"⚡"},
   {id:"sesiones",label:"Sesiones",emoji:"📋"},
   {id:"guia",label:"Guía",emoji:"📖"},
-  {id:"show",label:"Show",emoji:"🎭"},
+  {id:"show",label:"Cabina",emoji:"🎛"},
   {id:"grupos",label:"Grupos",emoji:"👥"},
   {id:"qr",label:"QR",emoji:"📱"},
   {id:"admin",label:"Admin",emoji:"🔐"},
@@ -147,8 +148,8 @@ function AppInner({perfil,publico}={}){
                 visual có botón de Modo Show, que si é a acción principal. */}
             {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}>{dark?"☀️":"🌙"}</button>}
             {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}>⏱</button>}
-            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Pantalla pública" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>📺</button>}
-            <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
+            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Proxección" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>📺</button>}
+            <button onClick={()=>setModoShow(true)} title="En directo" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
             {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
             {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
           </div>
@@ -208,6 +209,7 @@ function AppInner({perfil,publico}={}){
         {tab==="universo"&&<TabUniverso/>}
       </div>
     </main>
+    <BotonReporte onde={tab}/>
     {timerAberto&&<TimerBar audio={audio} launchRef={timerLaunchRef} onClose={()=>setTimerAberto(false)} onTimerChange={(d,r,p)=>{setPubTimerDisplay(d);setPubTimerRunning(r);}} />}
   </div></LangCtx.Provider>);
 }

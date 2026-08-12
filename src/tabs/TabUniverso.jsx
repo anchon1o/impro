@@ -19,7 +19,7 @@ export function TabUniverso(){
   const [sel,setSel]=useState(null);
   // Categorías desde BD (M07); se aínda non hai táboa, cae á constante do código.
   const [cats,setCats]=useState(()=>UNIVERSO_TIPOS.filter(t=>t.id!=="todos").map(t=>({id:t.id,nome:t.label,emoji:t.emoji,plantilla:"entidade"})));
-  useEffect(()=>{cargarCategorias().then(c=>{if(c&&c.length)setCats(c.filter(x=>x.activa!==false));});},[]);
+  useEffect(()=>{cargarCategorias().then(({cats:c})=>{if(c&&c.length)setCats(c.filter(x=>x.activa!==false));});},[]);
   const [datos,setDatos]=useState(UNIVERSO_DATA);
   const [cargando,setCargando]=useState(true);
   const [showForm,setShowForm]=useState(false);

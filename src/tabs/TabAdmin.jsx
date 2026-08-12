@@ -33,6 +33,7 @@ export function TabAdmin(){
     {id:"universo",emoji:"🌍",label:"Universo"},
     {id:"categorias",emoji:"🏷",label:"Categorías"},
     {id:"masiva",emoji:"🧮",label:"Táboa"},
+    {id:"reportes",emoji:"🐛",label:"Reportes"},
     {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
     {id:"config",emoji:"⚙️",label:"Config"},
@@ -59,6 +60,7 @@ export function TabAdmin(){
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
     {adminTab==="categorias"&&<AdminCategorias/>}
     {adminTab==="masiva"&&<AdminTablaMasiva/>}
+    {adminTab==="reportes"&&<AdminReportes/>}
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
