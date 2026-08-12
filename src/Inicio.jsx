@@ -33,7 +33,8 @@ export function Inicio({onIr,lang}){
   const {logueado,esAdmin}=useAuth();
   const {w,esMovil}=useViewport();
 
-  const corDe=a=>T[corDe(a)]||T.accent;
+  // Resolve o token de cor da área contra o tema activo.
+  const corDe=a=>T[a.cor]||T.accent;
   const visibles=AREAS.filter(a=>!a.soAdmin||esAdmin);
   // Columnas fixadas en vez de auto-fit. Con auto-fit e un minmax por
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
@@ -55,10 +56,10 @@ export function Inicio({onIr,lang}){
             <button key={a.id} onClick={()=>onIr(a.id)}
               style={{
                 background:T.bg2,
-                // ⚠️ Antes: border:`1px solid ${T.border}` + borderTop:`3px solid ${corDe(a)}`.
+                // ⚠️ Antes: border:`1px solid ${T.border}` + borderTop:`3px solid ${a.cor}`.
                 // Mesturar a abreviatura `border` cunha propiedade longa
                 // (`borderTop`) rompe ao cambiar de tema: React só reescribe
-                // as propiedades que mudaron, e como `corDe(a)` non muda pero
+                // as propiedades que mudaron, e como a cor da área non muda pero
                 // `T.border` si, aplicaba `border` (que en CSS reinicia os
                 // catro lados) sen volver aplicar `borderTop`. Resultado: a
                 // franxa de cor desaparecía ata recargar.
