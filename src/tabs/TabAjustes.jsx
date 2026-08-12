@@ -5,13 +5,14 @@
 
 import { useState } from 'react';
 import { useLang, useTheme, CAT_ICONS, ls, mkS } from '../core.jsx';
+import { SelectorTemas } from './SelectorTemas.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 
 export function TabAjustes(){
   const {T}=useTheme();const S=mkS(T);
   const [msg,setMsg]=useState("");
   const [stats,setStats]=useState(()=>ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
-  const [view,setView]=useState("stats");
+  const [view,setView]=useState("tema");
   const exportAll=()=>{
     const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo","impro_theme"];
     const data={version:"v7",fecha:new Date().toISOString()};
@@ -39,11 +40,12 @@ export function TabAjustes(){
   const maxCat=topCats[0]?.[1]||1;const maxDin=topDins[0]?.[1]||1;
   return(<div>
     <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem"}}>
-      {[["stats","📊 Estadísticas"],["backup","💾 Backup"],["idioma","🌐 Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
+      {[["tema","🎨 Tema"],["stats","📊 Estadísticas"],["backup","💾 Backup"],["idioma","🌐 Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
     </div>
+    {view==="tema"&&<SelectorTemas/>}
     {view==="stats"&&<div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1.25rem"}}>
-        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:"#40c4ff"},{label:"En Guía",val:ls.get("impro_dinamicas_v2",DINAMICAS_BASE).length,col:"#69f0ae"}].map((s,i)=>(
+        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:T.info},{label:"En Guía",val:ls.get("impro_dinamicas_v2",DINAMICAS_BASE).length,col:T.ok}].map((s,i)=>(
           <div key={i} style={{...S.panel,textAlign:"center",border:`1.5px solid ${s.col}44`}}><div style={{color:s.col,fontWeight:900,fontSize:"1.6rem",lineHeight:1}}>{s.val}</div><div style={{color:T.text3,fontSize:"0.7rem",marginTop:"0.25rem"}}>{s.label}</div></div>
         ))}
       </div>
@@ -51,16 +53,16 @@ export function TabAjustes(){
       {topCats.length>0&&<><p style={S.ptitle(T.accent)}>Categorías más generadas</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1.25rem"}}>
         {topCats.map(([cat,n])=>(<div key={cat} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",width:90,flexShrink:0}}>{CAT_ICONS[cat]||"◆"} {cat}</span><div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${(n/maxCat)*100}%`,background:T.accent,borderRadius:4,transition:"width 0.5s"}}/></div><span style={{color:T.accent,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
       </div></>}
-      {topDins.length>0&&<><p style={S.ptitle("#ffd740")}>Dinámicas más usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
-        {topDins.map(([din,n])=>(<div key={din} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{din}</span><div style={{width:80,height:8,background:T.bg3,borderRadius:4,overflow:"hidden",flexShrink:0}}><div style={{height:"100%",width:`${(n/maxDin)*100}%`,background:"#ffd740",borderRadius:4}}/></div><span style={{color:"#ffd740",fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
+      {topDins.length>0&&<><p style={S.ptitle(T.warn)}>Dinámicas más usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
+        {topDins.map(([din,n])=>(<div key={din} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{din}</span><div style={{width:80,height:8,background:T.bg3,borderRadius:4,overflow:"hidden",flexShrink:0}}><div style={{height:"100%",width:`${(n/maxDin)*100}%`,background:T.warn,borderRadius:4}}/></div><span style={{color:T.warn,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
       </div></>}
       {(stats.total||0)>0&&<button onClick={resetStats} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem"}}>↺ Borrar estadísticas</button>}
     </div>}
     {view==="idioma"&&<TabIdioma/>}
     {view==="backup"&&<div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #69f0ae33"}}><p style={S.ptitle("#69f0ae")}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos tus datos: sesiones, grupos, dinámicas, ideas, favoritos, playlists y estadísticas.</p><button onClick={exportAll} style={{...S.btn("#69f0ae","#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #40c4ff33"}}><p style={S.ptitle("#40c4ff")}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un archivo exportado anteriormente. Recarga la página tras importar.</p><label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
-      {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.85rem",marginBottom:"0.75rem"}}>{msg}</div>}
+      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.ok}33`}}><p style={S.ptitle(T.ok)}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos tus datos: sesiones, grupos, dinámicas, ideas, favoritos, playlists y estadísticas.</p><button onClick={exportAll} style={{...S.btn(T.ok,"#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.info}33`}}><p style={S.ptitle(T.info)}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un archivo exportado anteriormente. Recarga la página tras importar.</p><label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
+      {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?T.ok+"44":T.danger+"44"}`,color:msg.startsWith("✓")?T.ok:T.danger,fontSize:"0.85rem",marginBottom:"0.75rem"}}>{msg}</div>}
 
     </div>}
   </div>);
@@ -104,12 +106,12 @@ export function TabIdioma(){
       <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Xera un JSON con todo o contido traducible. Pásallo a Claude con: <em style={{color:T.text3}}>"Traduce ao galego e inglés os campos gl e en baleiros."</em></p>
       <button onClick={exportForTranslation} style={{...S.btn(T.accent),width:"100%"}}>⬇ Exportar para traducir</button>
     </div>
-    <div style={{...S.panel,border:"1.5px solid #40c4ff33"}}>
-      <p style={S.ptitle("#40c4ff")}>2. Importar tradución</p>
+    <div style={{...S.panel,border:`1.5px solid ${T.info}33`}}>
+      <p style={S.ptitle(T.info)}>2. Importar tradución</p>
       <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga o JSON devolto. Só enche os campos baleiros, nunca sobreescribe.</p>
-      <label style={{...S.btn("#40c4ff","#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
+      <label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
     </div>
-    {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?"#69f0ae44":"#ff6e4044"}`,color:msg.startsWith("✓")?"#69f0ae":"#ff6e40",fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
+    {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?T.ok+"44":T.danger+"44"}`,color:msg.startsWith("✓")?T.ok:T.danger,fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
     {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducciones borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducciones</button>}
   </div>);
 }

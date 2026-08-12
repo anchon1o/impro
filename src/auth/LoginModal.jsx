@@ -59,8 +59,8 @@ export function LoginModal({onClose}){
         <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="ti@exemplo.com" style={S.input} autoComplete="email"/>
         {mode!=="reset"&&<input type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Contrasinal (mín. 6)" style={S.input} autoComplete={mode==="signup"?"new-password":"current-password"}/>}
 
-        {msg&&<div style={{background:msg.t==="ok"?"#69f0ae15":"#ff6e4015",border:`1px solid ${msg.t==="ok"?"#69f0ae44":"#ff6e4044"}`,borderRadius:9,padding:"0.6rem 0.8rem"}}>
-          <p style={{color:msg.t==="ok"?"#69f0ae":"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
+        {msg&&<div style={{background:msg.t==="ok"?`${T.ok}15`:`${T.danger}15`,border:`1px solid ${msg.t==="ok"?`${T.ok}44`:`${T.danger}44`}`,borderRadius:9,padding:"0.6rem 0.8rem"}}>
+          <p style={{color:msg.t==="ok"?`${T.ok}`:`${T.danger}`,fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
         </div>}
 
         <button onClick={submit} disabled={loading} style={{...S.btn(T.accent),width:"100%",padding:"0.7rem",opacity:loading?0.6:1}}>

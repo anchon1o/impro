@@ -148,7 +148,7 @@ function AppInner({perfil,publico}={}){
             {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}>{dark?"☀️":"🌙"}</button>}
             {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}>⏱</button>}
             {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Pantalla pública" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>📺</button>}
-            <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:"#40c4ff",border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
+            <button onClick={()=>setModoShow(true)} title="Modo show" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
             {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
             {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
           </div>
@@ -186,11 +186,11 @@ function AppInner({perfil,publico}={}){
         </nav>}
       </div>
     </header>
-    {!supabaseConfigured&&<div style={{background:"#ff6e4022",borderBottom:"1px solid #ff6e4055",padding:"0.55rem 1rem",textAlign:"center"}}>
-      <span style={{color:"#ff6e40",fontSize:"0.82rem",fontWeight:700}}>⚠️ Sen conexión a Supabase — faltan as credenciais (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Login e datos en tempo real non funcionarán.</span>
+    {!supabaseConfigured&&<div style={{background:T.danger+"22",borderBottom:`1px solid ${T.danger}55`,padding:"0.55rem 1rem",textAlign:"center"}}>
+      <span style={{color:T.danger,fontSize:"0.82rem",fontWeight:700}}>⚠️ Sen conexión a Supabase — faltan as credenciais (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Login e datos en tempo real non funcionarán.</span>
     </div>}
-    {migrando&&<div style={{background:"#69f0ae15",borderBottom:"1px solid #69f0ae33",padding:"0.5rem 1rem",textAlign:"center"}}>
-      <span style={{color:"#69f0ae",fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
+    {migrando&&<div style={{background:T.ok+"15",borderBottom:`1px solid ${T.ok}33`,padding:"0.5rem 1rem",textAlign:"center"}}>
+      <span style={{color:T.ok,fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
     </div>}
     <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>

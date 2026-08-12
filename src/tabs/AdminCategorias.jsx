@@ -69,7 +69,7 @@ export function AdminCategorias(){
       {!form&&<button onClick={novo} style={S.btn(T.accent)}>+ Nova categoría</button>}
     </div>
 
-    {msg&&<p style={{color:msg.startsWith("Non")||msg.startsWith("Xa")||msg.startsWith("Fai")?"#ff6e40":"#69f0ae",fontSize:"0.83rem",marginBottom:"0.7rem"}}>{msg}</p>}
+    {msg&&<p style={{color:msg.startsWith("Non")||msg.startsWith("Xa")||msg.startsWith("Fai")?T.danger:T.ok,fontSize:"0.83rem",marginBottom:"0.7rem"}}>{msg}</p>}
 
     {form&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
       <p style={S.ptitle(T.accent)}>{editandoId?`Editar «${editandoId}»`:"Nova categoría"}</p>
@@ -102,7 +102,7 @@ export function AdminCategorias(){
       </label>
 
       <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
-        <button onClick={gardar} style={S.btn("#69f0ae","#000")}>Gardar</button>
+        <button onClick={gardar} style={S.btn(T.ok,"#000")}>Gardar</button>
         <button onClick={()=>{setForm(null);setEditandoId(null);setMsg("");}} style={S.btn(T.bg3,T.text2)}>Cancelar</button>
       </div>
     </div>}
@@ -122,7 +122,7 @@ export function AdminCategorias(){
             </p>
           </div>
           <button onClick={()=>editar(c)} style={{...S.btn(T.bg3,T.text2),padding:"0.3rem 0.6rem",fontSize:"0.76rem",flexShrink:0}}>Editar</button>
-          <button onClick={()=>eliminar(c)} style={{background:"none",border:"none",color:"#ff6e40",cursor:"pointer",fontSize:"0.95rem",padding:"0.3rem",flexShrink:0}}>🗑</button>
+          <button onClick={()=>eliminar(c)} style={{background:"none",border:"none",color:T.danger,cursor:"pointer",fontSize:"0.95rem",padding:"0.3rem",flexShrink:0}}>🗑</button>
         </div>))}
     </div>
   </div>);

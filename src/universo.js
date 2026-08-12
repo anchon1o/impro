@@ -219,3 +219,33 @@ export async function borrarCategoria(id) {
   const { error } = await supabase.from('universo_categorias').delete().eq('id', id);
   return { ok: !error, motivo: error?.message };
 }
+
+// ─────────────────────────────────────────────
+// EDICIÓN MASIVA (M09)
+// ─────────────────────────────────────────────
+// Gárdase todo dunha vez, pero fila a fila: se unha falla, as demais
+// aplícanse igual e devólvese o detalle do que fallou. Un upsert en bloque
+// abortaría o lote enteiro por un só erro, que é peor cando estás pegando
+// 40 filas dunha folla de cálculo.
+export async function gardarLoteUniverso(filas) {
+  const resultado = { gardadas: 0, creadas: 0, erros: [] };
+  for (const f of filas) {
+    const base = aFila(f);
+    if (f.id) {
+      const patch = { ...base };
+      if (f.estado !== undefined) patch.estado = f.estado;
+      const { error } = await supabase.from('universo').update(patch).eq('id', f.id);
+      if (error) resultado.erros.push({ nome: f.nome, msg: error.message });
+      else resultado.gardadas++;
+    } else {
+      const { error } = await supabase.from('universo').insert({
+        ...base,
+        estado: f.estado || 'publicada',
+        user_id: null,
+      });
+      if (error) resultado.erros.push({ nome: f.nome, msg: error.message });
+      else resultado.creadas++;
+    }
+  }
+  return resultado;
+}

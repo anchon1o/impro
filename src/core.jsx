@@ -6,7 +6,10 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { cargarEstimulos, cargarCategorias } from './estimulos.js';
 
-export const TIPO_COLOR = {calentamiento:"#ffd740",entrenamiento:"#40c4ff",juego:"#69f0ae",formato:"#e040fb",musical:"#ff80ab",pausa:"#78909c",cierre:"#ff6e40"};
+// Antes eran cores fixas; agora son nomes de token, para que cada tema
+// as repinte. `colorTipo(T,tipo)` resolve contra o tema activo.
+export const TIPO_TOKEN = {calentamiento:"warn",entrenamiento:"info",juego:"ok",formato:"accent",musical:"alt",pausa:"muted",cierre:"danger"};
+export const colorTipo = (T,tipo) => T[TIPO_TOKEN[tipo]] || T.accent;
 
 export const ThemeCtx = createContext(null);
 
@@ -45,23 +48,182 @@ export const useGrupo = () => useContext(GrupoCtx);
 
 export const useTheme = () => useContext(ThemeCtx);
 
+// ═══════════════════════════════════════════════════════════════
+// TEMAS
+//
+// Cada tema define un par día/noite. Os catro tokens semánticos
+// (ok/warn/info/danger) tamén forman parte do tema: antes estaban
+// escritos a man en 194 sitios, o que impedía que un tema de fondo
+// azul e letras amarelas se vise ben.
+// ═══════════════════════════════════════════════════════════════
+
+// Contraste WCAG 2.1. Devolve a proporción entre dúas cores (1–21).
+export function contraste(c1, c2) {
+  const lum = hex => {
+    const h = String(hex).replace('#', '').slice(0, 6);
+    const v = h.length === 3 ? h.split('').map(x => x + x).join('') : h.padEnd(6, '0');
+    const [r, g, b] = [0, 2, 4].map(i => {
+      const n = parseInt(v.slice(i, i + 2), 16) / 255;
+      return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const a = lum(c1), b = lum(c2);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+// AA esixe 4.5 para texto normal e 3 para texto grande ou elementos de UI.
+export const CONTRASTE_MIN = 4.5;
+export const CONTRASTE_MIN_UI = 3;
+
+const NEUTRO_ESCURO = {
+  bg:"#0d0d0d",bg2:"#161616",bg3:"#1e1e1e",bg4:"#252525",
+  border:"#252525",border2:"#2a2a2a",
+  text:"#fff",text2:"#aaa",text3:"#666",text4:"#444",
+  nav:"#0d0d0d",navBorder:"#1a1a1a",input:"#0d0d0d",inputBorder:"#2a2a2a",
+};
+const NEUTRO_CLARO = {
+  bg:"#f0f0f4",bg2:"#fff",bg3:"#f5f5f8",bg4:"#e8e8ec",
+  border:"#ddd",border2:"#ccc",
+  text:"#111",text2:"#444",text3:"#777",text4:"#999",
+  nav:"#fff",navBorder:"#e0e0e0",input:"#fff",inputBorder:"#ccc",
+};
+// Acentos por defecto. Un tema pode substituír os que queira.
+// Os acentos neón só son lexibles sobre fondo escuro. Sobre branco,
+// #69f0ae dá 1.4:1 fronte ao mínimo de 3:1 — o tema claro orixinal xa
+// tiña este problema. Por iso hai dous xogos.
+const ACENTOS_ESCUROS = {ok:"#69f0ae",warn:"#ffd740",info:"#40c4ff",danger:"#ff6e40",alt:"#ff80ab",muted:"#90a4ae"};
+const ACENTOS_CLAROS  = {ok:"#0E7A52",warn:"#8A6500",info:"#0069A8",danger:"#C4441A",alt:"#A8447A",muted:"#546E7A"};
+const ACENTOS = ACENTOS_ESCUROS;
+
+export const TEMAS = [
+  {
+    id:"impro", nome:"ImproApp", emoji:"🎭",
+    desc:"O de sempre. Magenta sobre gris.",
+    escuro:{...NEUTRO_ESCURO,...ACENTOS_ESCUROS,accent:"#e040fb"},
+    claro: {...NEUTRO_CLARO, ...ACENTOS_CLAROS, accent:"#9c27b0"},
+  },
+  {
+    id:"fit", nome:"FIT", emoji:"💛",
+    desc:"Formación Específica en Improvisación Teatral. Azul e amarelo.",
+    // Cores tomadas do logo: fondo #0199DC, letras #FEFB4E.
+    escuro:{
+      // O azul do logo (#0199DC) é cor de marca, non de panel: usalo como
+      // fondo deixaba todo o texto por baixo de 3:1. Vai como acento.
+      bg:"#00263B",bg2:"#003A57",bg3:"#004B70",bg4:"#005C88",
+      border:"#005C88",border2:"#0176AB",
+      text:"#FEFB4E",text2:"#DCEEF9",text3:"#9BD0EC",text4:"#5E9EC4",
+      nav:"#00263B",navBorder:"#004B70",input:"#00263B",inputBorder:"#005C88",
+      accent:"#FEFB4E",
+      // O verde menta e o laranxa orixinais quedaban chillóns sobre azul.
+      ok:"#7BE8A8",warn:"#FEFB4E",info:"#7FC9EE",danger:"#FF9E7A",alt:"#FFB3D1",muted:"#9BD0EC",
+    },
+    claro:{
+      bg:"#E8F6FD",bg2:"#fff",bg3:"#D5EEFB",bg4:"#BEE7F7",
+      border:"#9BD9F2",border2:"#7FC9EE",
+      text:"#003D5C",text2:"#00588A",text3:"#0176AB",text4:"#4FB3E8",
+      nav:"#fff",navBorder:"#BEE7F7",input:"#fff",inputBorder:"#9BD9F2",
+      accent:"#0199DC",
+      // O amarelo do logo é ilexible sobre branco: en claro úsase o azul
+      // como acento e resérvase o amarelo para fondos.
+      ok:"#0E8A5F",warn:"#A87900",info:"#0176AB",danger:"#C4441A",alt:"#B03A6E",muted:"#5A7A8A",
+    },
+  },
+  {
+    id:"aescola", nome:"aescoladeimpro", emoji:"🟢",
+    desc:"Verde augamariña sobre branco.",
+    // Cor tomada do logo: #3A8C86.
+    escuro:{
+      bg:"#0B1A19",bg2:"#122927",bg3:"#183532",bg4:"#1F423E",
+      border:"#1F423E",border2:"#2A5A55",
+      text:"#F2FAF9",text2:"#A8CFCB",text3:"#6FA5A0",text4:"#4A7A75",
+      nav:"#0B1A19",navBorder:"#183532",input:"#0B1A19",inputBorder:"#2A5A55",
+      accent:"#5CBFB7",
+      ok:"#6FE3A8",warn:"#E8C766",info:"#6FC8E0",danger:"#F08A6A",alt:"#D98FB0",muted:"#6FA5A0",
+    },
+    claro:{
+      bg:"#F4FAF9",bg2:"#fff",bg3:"#E8F3F2",bg4:"#D7E9E7",
+      border:"#C4DEDB",border2:"#A8CFCB",
+      text:"#0B1A19",text2:"#2A5A55",text3:"#4A7A75",text4:"#7FA8A4",
+      nav:"#fff",navBorder:"#D7E9E7",input:"#fff",inputBorder:"#C4DEDB",
+      accent:"#3A8C86",
+      ok:"#0E7A52",warn:"#96700A",info:"#1A6E88",danger:"#C4441A",alt:"#A8447A",muted:"#5A7A78",
+    },
+  },
+  {
+    id:"escenario", nome:"Escenario", emoji:"🌑",
+    desc:"Alto contraste para salas escuras. Pensado para shows.",
+    escuro:{
+      bg:"#000",bg2:"#0a0a0a",bg3:"#141414",bg4:"#1f1f1f",
+      border:"#333",border2:"#444",
+      text:"#fff",text2:"#e0e0e0",text3:"#b0b0b0",text4:"#808080",
+      nav:"#000",navBorder:"#222",input:"#000",inputBorder:"#444",
+      accent:"#00E5FF",ok:"#00E676",warn:"#FFEA00",info:"#40C4FF",danger:"#FF3D00",alt:"#FF4081",muted:"#90A4AE",
+    },
+    claro:{
+      bg:"#fff",bg2:"#fff",bg3:"#f0f0f0",bg4:"#e0e0e0",
+      border:"#999",border2:"#666",
+      text:"#000",text2:"#222",text3:"#444",text4:"#666",
+      nav:"#fff",navBorder:"#ccc",input:"#fff",inputBorder:"#999",
+      accent:"#0066CC",ok:"#00703C",warn:"#8A6500",info:"#005B8A",danger:"#B3200A",alt:"#96005A",muted:"#4A5A62",
+    },
+  },
+];
+
+// Tokens que un tema personalizado pode axustar desde Axustes.
+export const TOKENS_EDITABLES = [
+  {id:"bg",    label:"Fondo",        sobre:null},
+  {id:"bg2",   label:"Panel",        sobre:null},
+  {id:"text",  label:"Texto",        sobre:"bg"},
+  {id:"text2", label:"Texto suave",  sobre:"bg2"},
+  {id:"accent",label:"Acento",       sobre:"bg2"},
+  {id:"ok",    label:"Éxito",        sobre:"bg2"},
+  {id:"warn",  label:"Aviso",        sobre:"bg2"},
+  {id:"info",  label:"Info",         sobre:"bg2"},
+  {id:"danger",label:"Erro",         sobre:"bg2"},
+];
+
+// Deriva os tokens que non se editan a man, para que un tema propio non
+// obrigue a escoller 20 cores.
+export function completarTema(base, modo) {
+  const neutro = modo === "claro" ? NEUTRO_CLARO : NEUTRO_ESCURO;
+  const acc = modo === "claro" ? ACENTOS_CLAROS : ACENTOS_ESCUROS;
+  return {...neutro, ...acc, ...base};
+}
+
+export function avisosContraste(tema) {
+  return TOKENS_EDITABLES.filter(t => t.sobre).map(t => {
+    const r = contraste(tema[t.id], tema[t.sobre]);
+    const min = (t.id === "text" || t.id === "text2") ? CONTRASTE_MIN : CONTRASTE_MIN_UI;
+    return {id:t.id, label:t.label, ratio:r, ok:r >= min, min};
+  }).filter(x => !x.ok);
+}
+
 export function useThemeProvider() {
   const [dark, setDark] = useState(() => localStorage.getItem("impro_theme") !== "light");
-  const toggle = () => setDark(d => { localStorage.setItem("impro_theme", d?"light":"dark"); return !d; });
-  const T = dark ? {
-    bg:"#0d0d0d",bg2:"#161616",bg3:"#1e1e1e",bg4:"#252525",
-    border:"#252525",border2:"#2a2a2a",
-    text:"#fff",text2:"#aaa",text3:"#666",text4:"#444",
-    accent:"#e040fb",nav:"#0d0d0d",navBorder:"#1a1a1a",
-    input:"#0d0d0d",inputBorder:"#2a2a2a",
-  } : {
-    bg:"#f0f0f4",bg2:"#fff",bg3:"#f5f5f8",bg4:"#e8e8ec",
-    border:"#ddd",border2:"#ccc",
-    text:"#111",text2:"#444",text3:"#777",text4:"#999",
-    accent:"#9c27b0",nav:"#fff",navBorder:"#e0e0e0",
-    input:"#fff",inputBorder:"#ccc",
+  const [temaId, setTemaId] = useState(() => localStorage.getItem("impro_tema") || "impro");
+  const [propio, setPropio] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("impro_tema_propio") || "null"); } catch { return null; }
+  });
+
+  const toggle = () => setDark(d => { localStorage.setItem("impro_theme", d ? "light" : "dark"); return !d; });
+  const escollerTema = id => { localStorage.setItem("impro_tema", id); setTemaId(id); };
+  const gardarPropio = t => {
+    if (t) localStorage.setItem("impro_tema_propio", JSON.stringify(t));
+    else localStorage.removeItem("impro_tema_propio");
+    setPropio(t);
   };
-  return { dark, toggle, T };
+
+  const modo = dark ? "escuro" : "claro";
+  let T;
+  if (temaId === "propio" && propio) {
+    T = completarTema(propio[modo] || {}, dark ? "escuro" : "claro");
+  } else {
+    const tema = TEMAS.find(t => t.id === temaId) || TEMAS[0];
+    T = tema[modo];
+  }
+
+  return { dark, toggle, T, temaId, escollerTema, propio, gardarPropio };
 }
 
 export const FALLBACK_ESTIMULOS = {

@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, TIPO_COLOR, EditorDinamica, useViewport } from '../core.jsx';
+import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, colorTipo, EditorDinamica, useViewport } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
 import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
@@ -32,6 +32,7 @@ export function TabAdmin(){
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"universo",emoji:"🌍",label:"Universo"},
     {id:"categorias",emoji:"🏷",label:"Categorías"},
+    {id:"masiva",emoji:"🧮",label:"Táboa"},
     {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
     {id:"config",emoji:"⚙️",label:"Config"},
@@ -39,7 +40,7 @@ export function TabAdmin(){
 
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:"0.5rem"}}>
-      <p style={S.ptitle("#ffd740")}>Admin Panel</p>
+      <p style={S.ptitle(T.warn)}>Admin Panel</p>
       <span style={{color:T.text4,fontSize:"0.75rem"}}>{perfil?.email}</span>
     </div>
 
@@ -57,6 +58,7 @@ export function TabAdmin(){
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
     {adminTab==="categorias"&&<AdminCategorias/>}
+    {adminTab==="masiva"&&<AdminTablaMasiva/>}
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
@@ -126,7 +128,7 @@ export function AdminEstimulos({T,S}){
       <span style={{color:T.text4,fontSize:"0.72rem",fontFamily:"monospace",letterSpacing:"0.1em"}}>IDIOMA</span>
       {IDIOMAS.map(l=>
         <button key={l.id} onClick={()=>setLangCol(l.id)} style={{background:langCol===l.id?T.accent:T.bg3,color:langCol===l.id?"#fff":T.text3,border:"none",borderRadius:16,padding:"0.22rem 0.6rem",fontSize:"0.72rem",fontWeight:langCol===l.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l.id.toUpperCase()}</button>)}
-      {langCol!=="es"&&<span style={{color:traducidos===items.length?"#69f0ae":"#ffd740",fontSize:"0.75rem",marginLeft:"auto"}}>{traducidos}/{items.length} traducidos</span>}
+      {langCol!=="es"&&<span style={{color:traducidos===items.length?T.ok:T.warn,fontSize:"0.75rem",marginLeft:"auto"}}>{traducidos}/{items.length} traducidos</span>}
     </div>
 
     <div style={{...S.panel,marginBottom:"0.85rem",padding:"0.5rem 1rem",display:"flex",gap:"1.25rem",flexWrap:"wrap"}}>
@@ -149,7 +151,7 @@ export function AdminEstimulos({T,S}){
           const editando=editId===it.id;
           const val=textoDe(it);
           const falta=langCol!=="es"&&!val;
-          return(<div key={it.id} style={{...S.panel,padding:"0.55rem 0.8rem",display:"flex",gap:"0.6rem",alignItems:"center",border:`1.5px solid ${falta?"#ffd74033":T.border}`}}>
+          return(<div key={it.id} style={{...S.panel,padding:"0.55rem 0.8rem",display:"flex",gap:"0.6rem",alignItems:"center",border:`1.5px solid ${falta?T.warn+"33":T.border}`}}>
             {editando?(<>
               <input value={editText} onChange={e=>setEditText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveEdit(it)} style={{...S.input,flex:1,fontSize:"0.86rem"}} autoFocus/>
               <button onClick={()=>saveEdit(it)} style={{...S.btn(T.accent),padding:"0.3rem 0.6rem"}}>✓</button>
@@ -160,7 +162,7 @@ export function AdminEstimulos({T,S}){
                 {langCol!=="es"&&<p style={{color:T.text4,fontSize:"0.74rem",margin:"0.1rem 0 0"}}>{it.texto_es}</p>}
               </div>
               <button onClick={()=>{setEditId(it.id);setEditText(val);}} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
-              {langCol==="es"&&<button onClick={()=>moveNivel(it)} title={nivel==="simple"?"Mover a Plus":"Mover a Simple"} style={{...S.btn(T.bg3,nivel==="simple"?"#e040fb":"#40c4ff"),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>{nivel==="simple"?"⭐→":"◆→"}</button>}
+              {langCol==="es"&&<button onClick={()=>moveNivel(it)} title={nivel==="simple"?"Mover a Plus":"Mover a Simple"} style={{...S.btn(T.bg3,nivel==="simple"?"#e040fb":T.info),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>{nivel==="simple"?"⭐→":"◆→"}</button>}
               {langCol==="es"&&<button onClick={()=>delItem(it)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.9rem"}}>×</button>}
             </>)}
           </div>);
@@ -226,7 +228,7 @@ export function AdminTraducions({T,S}){
           <div key={l.id} style={{display:"flex",gap:"0.6rem",alignItems:"center"}}>
             <span style={{color:T.text3,fontSize:"0.8rem",width:78,flexShrink:0}}>{l.label}</span>
             <div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${pct(l.id)}%`,background:pct(l.id)===100?"#69f0ae":T.accent,borderRadius:4,transition:"width 0.5s"}}/>
+              <div style={{height:"100%",width:`${pct(l.id)}%`,background:pct(l.id)===100?T.ok:T.accent,borderRadius:4,transition:"width 0.5s"}}/>
             </div>
             <span style={{color:T.text,fontSize:"0.78rem",fontWeight:700,width:58,textAlign:"right"}}>{tot[l.id]}/{tot.total}</span>
           </div>
@@ -235,25 +237,25 @@ export function AdminTraducions({T,S}){
     </div>
 
     <div style={S.panel}>
-      <p style={S.ptitle("#40c4ff")}>Exportar para traducir</p>
+      <p style={S.ptitle(T.info)}>Exportar para traducir</p>
       <p style={{color:T.text3,fontSize:"0.82rem",lineHeight:1.6,marginBottom:"0.85rem"}}>
         Descarga un JSON coas entradas a traducir, pásallo a Claude e volve importalo aquí.
       </p>
       <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
         {IDIOMAS.filter(l=>l.id!=="es").map(l=>
-          <button key={l.id} onClick={()=>setLang(l.id)} style={{background:lang===l.id?"#40c4ff":T.bg3,color:lang===l.id?"#000":T.text3,border:"none",borderRadius:16,padding:"0.25rem 0.7rem",fontSize:"0.76rem",fontWeight:lang===l.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l.label}</button>)}
+          <button key={l.id} onClick={()=>setLang(l.id)} style={{background:lang===l.id?T.info:T.bg3,color:lang===l.id?"#000":T.text3,border:"none",borderRadius:16,padding:"0.25rem 0.7rem",fontSize:"0.76rem",fontWeight:lang===l.id?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l.label}</button>)}
       </div>
       <label style={{display:"flex",gap:"0.45rem",alignItems:"center",marginBottom:"0.85rem",cursor:"pointer"}}>
         <input type="checkbox" checked={soloPendentes} onChange={e=>setSoloPendentes(e.target.checked)} style={{accentColor:T.accent}}/>
         <span style={{color:T.text2,fontSize:"0.82rem"}}>Só as entradas sen traducir</span>
       </label>
       <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
-        <button onClick={exportar} disabled={traballando} style={{...S.btn("#40c4ff","#000"),opacity:traballando?0.5:1}}>⬇ Exportar JSON</button>
-        <button onClick={()=>fileRef.current?.click()} disabled={traballando} style={{...S.btn("#69f0ae","#000"),opacity:traballando?0.5:1}}>⬆ Importar traducido</button>
+        <button onClick={exportar} disabled={traballando} style={{...S.btn(T.info,"#000"),opacity:traballando?0.5:1}}>⬇ Exportar JSON</button>
+        <button onClick={()=>fileRef.current?.click()} disabled={traballando} style={{...S.btn(T.ok,"#000"),opacity:traballando?0.5:1}}>⬆ Importar traducido</button>
         <input ref={fileRef} type="file" accept=".json,application/json" onChange={importar} style={{display:"none"}}/>
       </div>
-      {msg&&<div style={{marginTop:"0.75rem",background:msg.t==="ok"?"#69f0ae15":"#ff6e4015",border:`1px solid ${msg.t==="ok"?"#69f0ae44":"#ff6e4044"}`,borderRadius:9,padding:"0.6rem 0.85rem"}}>
-        <p style={{color:msg.t==="ok"?"#69f0ae":"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
+      {msg&&<div style={{marginTop:"0.75rem",background:msg.t==="ok"?T.ok+"15":T.danger+"15",border:`1px solid ${msg.t==="ok"?T.ok+"44":T.danger+"44"}`,borderRadius:9,padding:"0.6rem 0.85rem"}}>
+        <p style={{color:msg.t==="ok"?T.ok:T.danger,fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{msg.m}</p>
       </div>}
     </div>
 
@@ -319,7 +321,7 @@ export function AdminDinamicas({T,S}){
 
     {showForm&&<div style={{marginBottom:"1rem"}}>
       <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
-        editando={!!editId} tiposDisponibles={Object.keys(TIPO_COLOR)}/>
+        editando={!!editId} tiposDisponibles={Object.keys(colorTipo)}/>
     </div>}
 
 
@@ -331,16 +333,16 @@ export function AdminDinamicas({T,S}){
         <option value="tipo">Ordenar: Tipo</option>
       </select>
       <span style={{color:T.text4,fontSize:"0.78rem"}}>{lista.length}/{dinamicas.length}</span>
-      <button onClick={restoreAll} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.75rem"}}>↺ Restaurar</button>
+      <button onClick={restoreAll} style={{...S.btn(T.bg3,T.danger),fontSize:"0.75rem"}}>↺ Restaurar</button>
     </div>
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"0.85rem",flexWrap:"wrap"}}>
-      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(TIPO_COLOR[t]||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.25rem 0.7rem",fontSize:"0.72rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
+      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(colorTipo(T,t)||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.25rem 0.7rem",fontSize:"0.72rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:"0.4rem",maxHeight:520,overflowY:"auto"}}>
-      {lista.map(d=>(<div key={d.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COLOR[d.tipo]||T.accent}`}}>
+      {lista.map(d=>(<div key={d.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${colorTipo(T,d.tipo)||T.accent}`}}>
         <div style={{flex:1,minWidth:0}}>
           <span style={{fontWeight:700,color:T.text,fontSize:"0.88rem"}}>{d.nombre}</span>
-          <span style={{...S.tag(TIPO_COLOR[d.tipo]||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
+          <span style={{...S.tag(colorTipo(T,d.tipo)||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
           <span style={{color:T.text4,fontSize:"0.75rem",marginLeft:"0.4rem"}}>⏱{d.duracion}min</span>
         </div>
         <button onClick={()=>openEdit(d)} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
@@ -394,7 +396,7 @@ export function AdminUniverso({T,S}){
     setShowForm(false);cargar();
   };
 
-  const TIPO_COL={"compañía":"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
+  const TIPO_COL={"compañía":"#e040fb",festival:T.warn,escola:T.info,persoa:T.ok,proxecto:T.danger};
 
   if(loading)return<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>;
 
@@ -450,7 +452,7 @@ export function AdminUniverso({T,S}){
 
               {Object.keys(lig).length>0&&<p style={{margin:"0.35rem 0 0",display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
                 {Object.entries(lig).filter(([k])=>k!=="outras").map(([k,v])=>
-                  <a key={k} href={String(v).startsWith("http")?v:`https://${v}`} target="_blank" rel="noopener noreferrer" style={{color:"#40c4ff",fontSize:"0.73rem"}}>{k} ↗</a>)}
+                  <a key={k} href={String(v).startsWith("http")?v:`https://${v}`} target="_blank" rel="noopener noreferrer" style={{color:T.info,fontSize:"0.73rem"}}>{k} ↗</a>)}
               </p>}
 
               <p style={{color:T.text4,fontSize:"0.72rem",margin:"0.45rem 0 0"}}>
@@ -468,7 +470,7 @@ export function AdminUniverso({T,S}){
               placeholder="Nota de revisión (opcional)" style={{...S.input,marginBottom:"0.5rem",fontSize:"0.78rem"}}/>
 
             <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
-              <button onClick={()=>decidir(p.id,"publicada")} style={{...S.btn("#69f0ae","#000"),fontSize:"0.78rem"}}>✓ Publicar</button>
+              <button onClick={()=>decidir(p.id,"publicada")} style={{...S.btn(T.ok,"#000"),fontSize:"0.78rem"}}>✓ Publicar</button>
               <button onClick={()=>decidir(p.id,"rexeitada")} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>✕ Rexeitar</button>
               <button onClick={()=>decidir(p.id,"borrador")} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>◷ Deixar en borrador</button>
             </div>
@@ -482,7 +484,7 @@ export function AdminUniverso({T,S}){
         <div style={{flex:1,minWidth:0}}>
           <span style={{fontWeight:700,color:T.text,fontSize:"0.88rem"}}>{item.pais} {item.nome}</span>
           <span style={{...S.tag(TIPO_COL[item.tipo]||T.accent),marginLeft:"0.4rem"}}>{item.tipo}</span>
-          {!item.verificado&&<span style={{...S.tag("#ffd740"),marginLeft:"0.4rem"}}>sen verificar</span>}
+          {!item.verificado&&<span style={{...S.tag(T.warn),marginLeft:"0.4rem"}}>sen verificar</span>}
           {item.achegadoPor&&<p style={{color:T.text4,fontSize:"0.72rem",margin:"0.2rem 0 0"}}>por {item.achegadoPor}</p>}
         </div>
         <button onClick={()=>openEdit(item)} style={{...S.btn(T.bg3,T.text3),padding:"0.28rem 0.5rem",fontSize:"0.76rem"}}>✏️</button>
@@ -572,17 +574,17 @@ export function AdminConfig({T,S}){
   const clearAll=()=>{if(!confirm("¿Borrar TODOS os datos locais? Esta acción non se pode desfacer."))return;localStorage.clear();sessionStorage.clear();window.location.reload();};
   return(<div style={{display:"flex",flexDirection:"column",gap:"0.85rem"}}>
     <div style={S.panel}>
-      <p style={S.ptitle("#ffd740")}>Cambiar PIN de Admin</p>
+      <p style={S.ptitle(T.warn)}>Cambiar PIN de Admin</p>
       <div style={{display:"flex",gap:"0.5rem"}}>
         <input type="password" value={adminPin} onChange={e=>setAdminPin(e.target.value)} style={{...S.input,flex:1,letterSpacing:"0.2em"}} placeholder="Novo PIN..."/>
         <button onClick={savePin} style={S.btn(T.accent)}>Gardar</button>
       </div>
-      {msg&&<p style={{color:"#69f0ae",fontSize:"0.82rem",marginTop:"0.5rem"}}>{msg}</p>}
+      {msg&&<p style={{color:T.ok,fontSize:"0.82rem",marginTop:"0.5rem"}}>{msg}</p>}
     </div>
-    <div style={{...S.panel,border:"1.5px solid #ff6e4033"}}>
-      <p style={S.ptitle("#ff6e40")}>Zona de perigo</p>
+    <div style={{...S.panel,border:`1.5px solid ${T.danger}33`}}>
+      <p style={S.ptitle(T.danger)}>Zona de perigo</p>
       <p style={{color:T.text3,fontSize:"0.83rem",marginBottom:"0.85rem"}}>Borra todos os datos gardados localmente (favoritos, historial, configuracións). Os datos en Supabase non se borran.</p>
-      <button onClick={clearAll} style={{...S.btn("#ff6e40"),width:"100%"}}>🗑 Borrar datos locais</button>
+      <button onClick={clearAll} style={{...S.btn(T.danger),width:"100%"}}>🗑 Borrar datos locais</button>
     </div>
     <div style={S.panel}>
       <p style={S.ptitle(T.text3)}>Información</p>
@@ -639,29 +641,29 @@ export function AdminUsuarios({T,S}){
   if(loading)return<p style={{color:T.text3}}>Cargando...</p>;
 
   return(<div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
-    {pendentes>0&&<div style={{...S.panel,border:"1.5px solid #ffd74044",background:"#ffd74008"}}>
-      <p style={{color:"#ffd740",fontWeight:700,margin:0,fontSize:"0.88rem"}}>⏳ {pendentes} usuario{pendentes>1?"s":""} pendente{pendentes>1?"s":""} de aprobación</p>
+    {pendentes>0&&<div style={{...S.panel,border:`1.5px solid ${T.warn}44`,background:T.warn+"08"}}>
+      <p style={{color:T.warn,fontWeight:700,margin:0,fontSize:"0.88rem"}}>⏳ {pendentes} usuario{pendentes>1?"s":""} pendente{pendentes>1?"s":""} de aprobación</p>
     </div>}
 
     {propostas.length>0&&<div style={S.panel}>
-      <p style={S.ptitle("#69f0ae")}>Dinámicas propostas para compartir ({propostas.length})</p>
+      <p style={S.ptitle(T.ok)}>Dinámicas propostas para compartir ({propostas.length})</p>
       <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
         {propostas.map(d=>(<div key={d.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem"}}>
           <div style={{marginBottom:"0.5rem"}}>
             <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{d.nombre}</span>
-            <span style={{...S.tag(TIPO_COLOR[d.tipo]||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
+            <span style={{...S.tag(colorTipo(T,d.tipo)||T.accent),marginLeft:"0.4rem"}}>{d.tipo}</span>
             <p style={{color:T.text3,fontSize:"0.78rem",margin:"0.3rem 0 0"}}>Por {d.perfis?.nome||d.perfis?.email||"?"}</p>
           </div>
           <div style={{display:"flex",gap:"0.4rem"}}>
-            <button onClick={()=>decidirCompartir(d,true)} style={{...S.btn("#69f0ae","#000"),fontSize:"0.78rem"}}>✓ Compartir con todos</button>
+            <button onClick={()=>decidirCompartir(d,true)} style={{...S.btn(T.ok,"#000"),fontSize:"0.78rem"}}>✓ Compartir con todos</button>
             <button onClick={()=>decidirCompartir(d,false)} style={{...S.btn(T.bg4,T.text3),fontSize:"0.78rem"}}>✕ Rexeitar</button>
           </div>
         </div>))}
       </div>
     </div>}
 
-    <div style={{...S.panel,border:"1.5px solid #40c4ff33",background:"#40c4ff08"}}>
-      <p style={{color:"#40c4ff",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>ℹ️ Por seguridade, as contas créanse por auto-rexistro (Entrar → Crear conta) e ti apróbaas aquí. Non é posible crear contas con contrasinal directamente dende este panel sen un servidor propio.</p>
+    <div style={{...S.panel,border:`1.5px solid ${T.info}33`,background:T.info+"08"}}>
+      <p style={{color:T.info,fontSize:"0.82rem",margin:0,lineHeight:1.5}}>ℹ️ Por seguridade, as contas créanse por auto-rexistro (Entrar → Crear conta) e ti apróbaas aquí. Non é posible crear contas con contrasinal directamente dende este panel sen un servidor propio.</p>
     </div>
 
     <div style={S.panel}>
@@ -675,7 +677,7 @@ export function AdminUsuarios({T,S}){
         )}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:"0.45rem"}}>
-        {lista.map(u=>(<div key={u.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",flexWrap:"wrap",borderLeft:`3px solid ${u.aprobado?"#69f0ae":"#ffd740"}`}}>
+        {lista.map(u=>(<div key={u.id} style={{background:T.bg3,borderRadius:10,padding:"0.7rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",flexWrap:"wrap",borderLeft:`3px solid ${u.aprobado?T.ok:T.warn}`}}>
           <div style={{flex:1,minWidth:150}}>
             {editId===u.id?(
               <div style={{display:"flex",gap:"0.35rem"}}>
@@ -687,14 +689,14 @@ export function AdminUsuarios({T,S}){
               <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexWrap:"wrap"}}>
                 <span style={{color:T.text,fontWeight:700,fontSize:"0.88rem"}}>{u.nome||u.email.split("@")[0]}</span>
                 {u.rol==="admin"&&<span style={S.tag("#e040fb")}>admin</span>}
-                {!u.aprobado&&<span style={S.tag("#ffd740")}>pendente</span>}
+                {!u.aprobado&&<span style={S.tag(T.warn)}>pendente</span>}
                 <button onClick={()=>{setEditId(u.id);setEditNome(u.nome||"");}} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.75rem"}}>✏️</button>
               </div>
               <p style={{color:T.text4,fontSize:"0.75rem",margin:"0.15rem 0 0"}}>{u.email}</p>
             </>)}
           </div>
           <div style={{display:"flex",gap:"0.35rem"}}>
-            <button onClick={()=>toggleAprobado(u)} style={{...S.btn(u.aprobado?T.bg4:"#69f0ae",u.aprobado?T.text3:"#000"),fontSize:"0.75rem",padding:"0.3rem 0.6rem"}}>{u.aprobado?"Desactivar":"✓ Aprobar"}</button>
+            <button onClick={()=>toggleAprobado(u)} style={{...S.btn(u.aprobado?T.bg4:T.ok,u.aprobado?T.text3:"#000"),fontSize:"0.75rem",padding:"0.3rem 0.6rem"}}>{u.aprobado?"Desactivar":"✓ Aprobar"}</button>
             <button onClick={()=>toggleRol(u)} style={{...S.btn(T.bg4,u.rol==="admin"?"#e040fb":T.text3),fontSize:"0.75rem",padding:"0.3rem 0.6rem"}}>{u.rol==="admin"?"↓ user":"↑ admin"}</button>
           </div>
         </div>))}

@@ -177,11 +177,11 @@ export function TabQR(){
       <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.4rem"}}>
         <textarea value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribe aquí tu respuesta..." style={{...S.input,flex:1,minHeight:120,resize:"none",fontSize:"1rem"}} autoFocus/>
       </div>
-      {error&&<p style={{color:"#ff6e40",fontSize:"0.85rem",margin:0}}>{error}</p>}
+      {error&&<p style={{color:T.danger,fontSize:"0.85rem",margin:0}}>{error}</p>}
       <button onClick={enviarPropuesta} disabled={loading||!texto.trim()} style={{...S.btn(T.accent),width:"100%",padding:"0.85rem",fontSize:"1rem",opacity:loading||!texto.trim()?0.5:1,borderRadius:12}}>{loading?"Enviando...":"✓ Enviar"}</button>
     </div>):(<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"2rem",textAlign:"center",gap:"1rem"}}>
       <div style={{fontSize:"4rem"}}>✓</div>
-      <h2 style={{color:"#69f0ae",fontWeight:900,margin:0}}>¡Enviada!</h2>
+      <h2 style={{color:T.ok,fontWeight:900,margin:0}}>¡Enviada!</h2>
       <p style={{color:T.text3,margin:0}}>{salaConfig[preguntaSel]?.pregunta}</p>
       {salaConfig.length>1&&<div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap",justifyContent:"center",marginTop:"0.5rem"}}>
         {salaConfig.map((p,i)=>i!==preguntaSel&&<button key={p.id} onClick={()=>{setPreguntaSel(i);setEnviado(false);setTexto("");}} style={{...S.btn(T.bg3,T.text2),fontSize:"0.82rem"}}>Responder: {p.pregunta.slice(0,20)}...</button>)}
@@ -194,7 +194,7 @@ export function TabQR(){
   if(mode==="open")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem",alignItems:"center",flexWrap:"wrap"}}>
       <h2 style={{margin:0,fontWeight:900,fontSize:"0.95rem",flex:1,color:T.text}}>Sala <span style={{color:T.accent,letterSpacing:"0.1em"}}>{salaCode}</span></h2>
-      <button onClick={cerrarSalaQR} style={S.btn("#ff6e40")}>⏹ Cerrar sala</button>
+      <button onClick={cerrarSalaQR} style={S.btn(T.danger)}>⏹ Cerrar sala</button>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"1.25rem",marginBottom:"1rem",alignItems:"start"}}>
       <div style={{...S.panel,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.65rem",padding:"1rem"}}>
@@ -205,7 +205,7 @@ export function TabQR(){
         </div>
       </div>
       <div style={S.panel}>
-        <p style={S.ptitle("#69f0ae")}>Propuestas ({propuestas.length})</p>
+        <p style={S.ptitle(T.ok)}>Propuestas ({propuestas.length})</p>
         {propuestas.length===0?<p style={{color:T.text4,fontSize:"0.83rem"}}>Esperando...</p>:(
           <div style={{display:"flex",flexDirection:"column",gap:"0.45rem",maxHeight:300,overflowY:"auto"}}>
             {[...propuestas].reverse().map((p,i)=>(<div key={i} style={{background:T.bg3,borderRadius:9,padding:"0.6rem 0.85rem",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"0.5rem"}}>
@@ -213,7 +213,7 @@ export function TabQR(){
                 <span style={{...S.tag(T.accent),marginRight:"0.4rem",fontSize:"0.66rem"}}>{(p.cat||"").slice(0,30)}</span>
                 <span style={{color:T.text,fontSize:"0.88rem"}}>{p.texto}</span>
               </div>
-              <button onClick={()=>aceptarPropuesta(p)} title="Añadir a ideas" style={{...S.btn("#69f0ae","#000"),padding:"0.22rem 0.5rem",fontSize:"0.72rem",flexShrink:0}}>+ Ideas</button>
+              <button onClick={()=>aceptarPropuesta(p)} title="Añadir a ideas" style={{...S.btn(T.ok,"#000"),padding:"0.22rem 0.5rem",fontSize:"0.72rem",flexShrink:0}}>+ Ideas</button>
             </div>))}
           </div>
         )}
@@ -246,7 +246,7 @@ export function TabQR(){
         {preguntas.length===0&&<p style={{color:T.text4,fontSize:"0.82rem"}}>Engade polo menos unha pregunta.</p>}
       </div>
     </div>
-    {error&&<p style={{color:"#ff6e40",fontSize:"0.85rem",margin:"0 0 0.6rem"}}>{error}</p>}
+    {error&&<p style={{color:T.danger,fontSize:"0.85rem",margin:"0 0 0.6rem"}}>{error}</p>}
     <button onClick={abrirSalaQR} disabled={preguntas.length===0} style={{...S.btn(T.accent),width:"100%",padding:"0.75rem",opacity:preguntas.length===0?0.4:1}}>📺 Abrir sala con estas preguntas</button>
   </div>);
 
@@ -258,15 +258,15 @@ export function TabQR(){
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"1rem"}}>Configura as preguntas e abre a sala. O público escanea o QR e responde dende o seu móbil.</p>
         <button onClick={()=>{if(!logueado){pedirLogin();return;}setMode("config");}} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>⚙️ Configurar e abrir sala</button>
       </div>
-      <div style={{...S.panel,border:"1.5px solid #69f0ae33"}}>
-        <p style={S.ptitle("#69f0ae")}>👥 Soy del público</p>
+      <div style={{...S.panel,border:`1.5px solid ${T.ok}33`}}>
+        <p style={S.ptitle(T.ok)}>👥 Soy del público</p>
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Introduce el código de 4 letras que te dieron.</p>
-        <div style={{display:"flex",gap:"0.45rem"}}><input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&unirseASala()} placeholder="XXXX" maxLength={4} style={{...S.input,flex:1,fontSize:"1.4rem",fontWeight:900,letterSpacing:"0.2em",textAlign:"center"}}/><button onClick={unirseASala} disabled={loading||joinCode.length<4} style={{...S.btn("#69f0ae","#000"),opacity:joinCode.length<4?0.4:1}}>{loading?"...":"Entrar"}</button></div>
-        {error&&<p style={{color:"#ff6e40",fontSize:"0.8rem",marginTop:"0.45rem"}}>{error}</p>}
+        <div style={{display:"flex",gap:"0.45rem"}}><input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&unirseASala()} placeholder="XXXX" maxLength={4} style={{...S.input,flex:1,fontSize:"1.4rem",fontWeight:900,letterSpacing:"0.2em",textAlign:"center"}}/><button onClick={unirseASala} disabled={loading||joinCode.length<4} style={{...S.btn(T.ok,"#000"),opacity:joinCode.length<4?0.4:1}}>{loading?"...":"Entrar"}</button></div>
+        {error&&<p style={{color:T.danger,fontSize:"0.8rem",marginTop:"0.45rem"}}>{error}</p>}
       </div>
     </div>
     <div style={S.panel}>
-      <p style={S.ptitle("#ffd740")}>📋 Historial</p>
+      <p style={S.ptitle(T.warn)}>📋 Historial</p>
       {historial.length===0?<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen sesiones gardadas.</p>:(
         <div style={{display:"flex",flexDirection:"column",gap:"0.55rem"}}>
           {historial.map((entry,i)=>(<div key={i} style={{background:T.bg3,borderRadius:10,padding:"0.75rem 1rem"}}>

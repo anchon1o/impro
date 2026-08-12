@@ -4,9 +4,13 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
+import { useTheme } from './core.jsx';
 import { FMT, FONT_UI, FONT_MONO } from './core.jsx';
 
 export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onClose}){
+  // A proxección tamén segue o tema activo: antes tiña a súa paleta fixa,
+  // así que un tema FIT ou aescoladeimpro non chegaba ao proxector.
+  const {T}=useTheme();
   const [td,setTd]=useState(timerDisplay||0);
   const [notif,setNotif]=useState(null);
   const [prevActive,setPrevActive]=useState(null);
@@ -21,9 +25,9 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
 
   useEffect(()=>{
     if(!timerRunning)return;
-    if(td===30)showNotif("⏱ 30 segundos","#ffd740");
-    else if(td===10)showNotif("⚠️ 10 segundos","#ff6e40");
-    else if(td===0&&timerDisplay>0)showNotif("⏹ Tiempo agotado","#ff6e40");
+    if(td===30)showNotif("⏱ 30 segundos",T.warn);
+    else if(td===10)showNotif("⚠️ 10 segundos",T.danger);
+    else if(td===0&&timerDisplay>0)showNotif("⏹ Tiempo agotado",T.danger);
   },[td,timerRunning]);
 
   const activeAct=rundown?.find(a=>a.activa);
@@ -40,7 +44,7 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
   };
 
   const urgent=td>0&&td<10,warning=td>0&&td<30;
-  const timerColor=urgent?"#ff6e40":warning?"#ffd740":"#e040fb";
+  const timerColor=urgent?T.danger:warning?T.warn:"#e040fb";
 
   return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:FONT_UI}}>
     <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Cerrar</button>
@@ -78,12 +82,12 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
       {/* Actuación activa */}
       {activeAct&&<div style={{flex:1}}>
         <p style={{color:"#555",fontSize:"0.65rem",letterSpacing:"0.15em",margin:"0 0 0.15rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums"}}>EN ESCENA</p>
-        <p style={{color:"#40c4ff",fontWeight:900,fontSize:"clamp(0.9rem,2.5vw,1.3rem)",margin:0}}>{activeAct.nombre}{activeAct.formato&&<span style={{color:"#40c4ff88",fontWeight:400,fontSize:"0.8em",marginLeft:"0.5rem"}}>{activeAct.formato}</span>}</p>
+        <p style={{color:T.info,fontWeight:900,fontSize:"clamp(0.9rem,2.5vw,1.3rem)",margin:0}}>{activeAct.nombre}{activeAct.formato&&<span style={{color:T.info+"88",fontWeight:400,fontSize:"0.8em",marginLeft:"0.5rem"}}>{activeAct.formato}</span>}</p>
       </div>}
 
       {/* Rundown mini */}
       {rundown&&rundown.length>0&&<div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",maxWidth:"40vw"}}>
-        {rundown.map((act,i)=><div key={act.id} style={{background:act.activa?"#40c4ff22":act.hecho?"#1a1a1a":"#111",border:`1px solid ${act.activa?"#40c4ff":act.hecho?"#222":"#1a1a1a"}`,borderRadius:6,padding:"0.2rem 0.55rem",fontSize:"0.7rem",color:act.activa?"#40c4ff":act.hecho?"#333":"#444",textDecoration:act.hecho?"line-through":"none",transition:"all 0.3s"}}>{i+1}. {act.nombre.slice(0,12)}{act.nombre.length>12?"...":""}</div>)}
+        {rundown.map((act,i)=><div key={act.id} style={{background:act.activa?T.info+"22":act.hecho?"#1a1a1a":"#111",border:`1px solid ${act.activa?T.info:act.hecho?"#222":"#1a1a1a"}`,borderRadius:6,padding:"0.2rem 0.55rem",fontSize:"0.7rem",color:act.activa?T.info:act.hecho?"#333":"#444",textDecoration:act.hecho?"line-through":"none",transition:"all 0.3s"}}>{i+1}. {act.nombre.slice(0,12)}{act.nombre.length>12?"...":""}</div>)}
       </div>}
     </div>
   </div>);

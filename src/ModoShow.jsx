@@ -117,14 +117,14 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   const activar=id=>setRundown(rundown.map(a=>({...a,activa:a.id===id})));
 
   const urx=restante>0&&restante<10, avi=restante>0&&restante<30;
-  const colT=urx?"#ff6e40":avi?"#ffd740":T.accent;
+  const colT=urx?T.danger:avi?T.warn:T.accent;
 
   return(<div style={{position:"fixed",inset:0,zIndex:1500,background:T.bg,display:"flex",flexDirection:"column",fontFamily:FONT_UI,overflow:"hidden"}}>
 
     {/* Cabeceira */}
     <div style={{background:T.bg2,borderBottom:`1px solid ${T.border}`,padding:"0.5rem 0.9rem",display:"flex",alignItems:"center",gap:"0.75rem",flexShrink:0}}>
       <span style={{fontWeight:900,fontSize:"0.9rem",color:T.text}}>🎭 Modo show</span>
-      {activa&&<span style={{color:"#40c4ff",fontWeight:700,fontSize:"0.85rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>▶ {activa.nombre}</span>}
+      {activa&&<span style={{color:T.info,fontWeight:700,fontSize:"0.85rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>▶ {activa.nombre}</span>}
       {!activa&&<span style={{flex:1}}/>}
       <button onClick={onClose} style={{...S.btn(T.bg3,T.text3),fontSize:"0.78rem",padding:"0.3rem 0.7rem"}}>✕ Saír</button>
     </div>
@@ -160,9 +160,9 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         </div>
 
         {/* Timer */}
-        <div style={{background:T.bg2,border:`1.5px solid ${urx?"#ff6e4055":T.border}`,borderRadius:12,padding:"0.7rem",display:"flex",alignItems:"center",gap:"0.85rem",flexWrap:"wrap"}}>
+        <div style={{background:T.bg2,border:`1.5px solid ${urx?T.danger+"55":T.border}`,borderRadius:12,padding:"0.7rem",display:"flex",alignItems:"center",gap:"0.85rem",flexWrap:"wrap"}}>
           <div style={{fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontWeight:900,fontSize:"2.1rem",color:colT,lineHeight:1,minWidth:"3.6ch",textShadow:urx?`0 0 20px ${colT}`:"none",animation:urx&&corre?"urgentPulse 0.5s ease infinite alternate":"none"}}>{FMT(restante)}</div>
-          <button onClick={()=>setCorre(v=>!v)} style={{...S.btn(corre?"#ff6e40":"#69f0ae","#000"),padding:"0.4rem 0.9rem"}}>{corre?"⏸":"▶"}</button>
+          <button onClick={()=>setCorre(v=>!v)} style={{...S.btn(corre?T.danger:T.ok,"#000"),padding:"0.4rem 0.9rem"}}>{corre?"⏸":"▶"}</button>
           <button onClick={()=>{setRestante(seg);setCorre(false);}} style={{...S.btn(T.bg3,T.text3),padding:"0.4rem 0.7rem",fontSize:"0.78rem"}}>↺</button>
           <div style={{display:"flex",gap:"0.25rem",flexWrap:"wrap"}}>
             {[60,120,180,300].map(s=>(<button key={s} onClick={()=>{setSeg(s);setRestante(s);setCorre(false);}} style={{background:seg===s?T.accent+"22":T.bg3,border:`1px solid ${seg===s?T.accent:T.border}`,color:seg===s?T.accent:T.text3,borderRadius:6,padding:"0.2rem 0.45rem",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit"}}>{s/60}′</button>))}
@@ -183,7 +183,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         <div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem"}}>
             <span style={{color:T.text3,fontSize:"0.7rem",letterSpacing:"0.1em",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums"}}>AUDIO</span>
-            {pistas.length>0&&<button onClick={pararTodo} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.72rem",padding:"0.2rem 0.5rem"}}>⏹ Todas</button>}
+            {pistas.length>0&&<button onClick={pararTodo} style={{...S.btn(T.bg3,T.danger),fontSize:"0.72rem",padding:"0.2rem 0.5rem"}}>⏹ Todas</button>}
           </div>
           {pistas.map(p=>(<div key={p.id} style={{background:T.bg3,borderRadius:8,padding:"0.45rem 0.6rem",marginBottom:"0.35rem"}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.45rem"}}>
@@ -211,13 +211,13 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         </div>
 
         {panel==="rundown"&&<div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem",flex:1,overflowY:"auto",minHeight:0}}>
-          {seguinte&&<button onClick={avanzar} style={{...S.btn("#40c4ff","#000"),width:"100%",marginBottom:"0.6rem",padding:"0.5rem"}}>⏭ Seguinte: {seguinte.nombre}</button>}
+          {seguinte&&<button onClick={avanzar} style={{...S.btn(T.info,"#000"),width:"100%",marginBottom:"0.6rem",padding:"0.5rem"}}>⏭ Seguinte: {seguinte.nombre}</button>}
           {(!rundown||rundown.length===0)&&<p style={{color:T.text4,fontSize:"0.8rem",textAlign:"center",padding:"1.5rem 0"}}>Crea o rundown en Show → Rundown</p>}
           <div style={{display:"flex",flexDirection:"column",gap:"0.3rem"}}>
-            {(rundown||[]).map((a,i)=>(<button key={a.id} onClick={()=>activar(a.id)} style={{background:a.activa?"#40c4ff18":T.bg3,border:`1px solid ${a.activa?"#40c4ff":T.border}`,borderRadius:8,padding:"0.45rem 0.6rem",cursor:"pointer",textAlign:"left",display:"flex",gap:"0.45rem",alignItems:"center",fontFamily:"inherit"}}>
+            {(rundown||[]).map((a,i)=>(<button key={a.id} onClick={()=>activar(a.id)} style={{background:a.activa?T.info+"18":T.bg3,border:`1px solid ${a.activa?T.info:T.border}`,borderRadius:8,padding:"0.45rem 0.6rem",cursor:"pointer",textAlign:"left",display:"flex",gap:"0.45rem",alignItems:"center",fontFamily:"inherit"}}>
               <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{i+1}</span>
-              <span style={{flex:1,color:a.hecho?T.text4:a.activa?"#40c4ff":T.text2,fontSize:"0.8rem",textDecoration:a.hecho?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.nombre}</span>
-              {a.activa&&<span style={{color:"#40c4ff",fontSize:"0.7rem"}}>▶</span>}
+              <span style={{flex:1,color:a.hecho?T.text4:a.activa?T.info:T.text2,fontSize:"0.8rem",textDecoration:a.hecho?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.nombre}</span>
+              {a.activa&&<span style={{color:T.info,fontSize:"0.7rem"}}>▶</span>}
             </button>))}
           </div>
         </div>}
@@ -231,7 +231,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
             <div style={{textAlign:"center",marginBottom:"0.7rem"}}>
               <p style={{color:T.accent,fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",fontWeight:900,fontSize:"1.5rem",letterSpacing:"0.2em",margin:"0 0 0.4rem"}}>{salaCode}</p>
               <QRCode value={`${window.location.href.split("?")[0]}?sala=${salaCode}`} size={110}/>
-              <button onClick={pechar} style={{...S.btn(T.bg3,"#ff6e40"),fontSize:"0.74rem",padding:"0.25rem 0.7rem",marginTop:"0.5rem"}}>⏹ Pechar</button>
+              <button onClick={pechar} style={{...S.btn(T.bg3,T.danger),fontSize:"0.74rem",padding:"0.25rem 0.7rem",marginTop:"0.5rem"}}>⏹ Pechar</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"0.3rem"}}>
               {[...propostas].reverse().map((p,i)=>(<button key={i} onClick={()=>setEstimulo({cat:p.cat||"PÚBLICO",word:p.texto})} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.6rem",cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>

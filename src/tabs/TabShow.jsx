@@ -45,7 +45,8 @@ export function ShowNameWidget({T,S}){
   </div>);
 }
 
-export const TEAM_COLS=["#e040fb","#40c4ff","#69f0ae","#ffd740","#ff6e40","#f48fb1"];
+export const TEAM_TOK=["accent","info","ok","warn","danger","alt"];
+export const teamCol=(T,i)=>T[TEAM_TOK[i%TEAM_TOK.length]]||T.accent;
 
 export function TeamSorter({T,S}){
   const [mode,setMode]=useState("parejas");
@@ -74,9 +75,9 @@ export function TeamSorter({T,S}){
     <button onClick={sort} disabled={!getNames().length} style={{...S.btn(T.accent),width:"100%",opacity:!getNames().length?0.4:1,marginBottom:result?"0.75rem":"0"}}>🎲 Sortear</button>
     {result&&(<div style={{...S.panel,border:`1.5px solid ${T.accent}33`,animation:"fadeIn 0.3s ease"}}>
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:"0.65rem"}}><span style={{color:T.accent,fontSize:"0.72rem",fontFamily:"monospace"}}>RESULTADO</span><button onClick={sort} style={S.btn(T.bg3,T.text2)}>🎲</button></div>
-      {result.type==="parejas"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,100%),1fr))",gap:"0.4rem"}}>{result.data.map((pair,i)=>(<div key={i} style={{background:T.bg3,borderRadius:9,padding:"0.55rem 0.75rem",borderLeft:`3px solid ${TEAM_COLS[i%TEAM_COLS.length]}`}}><div style={{color:T.text3,fontSize:"0.65rem",fontFamily:"monospace",marginBottom:"0.2rem"}}>PARELLA {i+1}</div>{pair.map((p,j)=><div key={j} style={{color:T.text,fontSize:"0.85rem"}}>👤 {p}</div>)}</div>))}</div>}
-      {result.type==="equipos"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(150px,100%),1fr))",gap:"0.4rem"}}>{result.data.map((team,i)=>(<div key={i} style={{background:T.bg3,borderRadius:9,padding:"0.55rem 0.75rem",borderLeft:`3px solid ${TEAM_COLS[i%TEAM_COLS.length]}`}}><div style={{color:TEAM_COLS[i%TEAM_COLS.length],fontSize:"0.75rem",fontWeight:700,marginBottom:"0.3rem"}}>Equipo {i+1}</div>{team.map((p,j)=><div key={j} style={{color:T.text,fontSize:"0.85rem"}}>👤 {p}</div>)}</div>))}</div>}
-      {result.type==="roles"&&<div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>{result.data.map((item,i)=>(<div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"center",background:T.bg3,borderRadius:9,padding:"0.45rem 0.75rem"}}><span style={{background:TEAM_COLS[i%TEAM_COLS.length]+"22",color:TEAM_COLS[i%TEAM_COLS.length],borderRadius:5,padding:"0.1rem 0.45rem",fontSize:"0.72rem",fontWeight:700,flexShrink:0}}>{item.role}</span><span style={{color:T.text,fontSize:"0.85rem"}}>👤 {item.person}</span></div>))}</div>}
+      {result.type==="parejas"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(180px,100%),1fr))",gap:"0.4rem"}}>{result.data.map((pair,i)=>(<div key={i} style={{background:T.bg3,borderRadius:9,padding:"0.55rem 0.75rem",borderLeft:`3px solid ${teamCol(T,i%TEAM_TOK.length)}`}}><div style={{color:T.text3,fontSize:"0.65rem",fontFamily:"monospace",marginBottom:"0.2rem"}}>PARELLA {i+1}</div>{pair.map((p,j)=><div key={j} style={{color:T.text,fontSize:"0.85rem"}}>👤 {p}</div>)}</div>))}</div>}
+      {result.type==="equipos"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(150px,100%),1fr))",gap:"0.4rem"}}>{result.data.map((team,i)=>(<div key={i} style={{background:T.bg3,borderRadius:9,padding:"0.55rem 0.75rem",borderLeft:`3px solid ${teamCol(T,i%TEAM_TOK.length)}`}}><div style={{color:teamCol(T,i%TEAM_TOK.length),fontSize:"0.75rem",fontWeight:700,marginBottom:"0.3rem"}}>Equipo {i+1}</div>{team.map((p,j)=><div key={j} style={{color:T.text,fontSize:"0.85rem"}}>👤 {p}</div>)}</div>))}</div>}
+      {result.type==="roles"&&<div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>{result.data.map((item,i)=>(<div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"center",background:T.bg3,borderRadius:9,padding:"0.45rem 0.75rem"}}><span style={{background:teamCol(T,i%TEAM_TOK.length)+"22",color:teamCol(T,i%TEAM_TOK.length),borderRadius:5,padding:"0.1rem 0.45rem",fontSize:"0.72rem",fontWeight:700,flexShrink:0}}>{item.role}</span><span style={{color:T.text,fontSize:"0.85rem"}}>👤 {item.person}</span></div>))}</div>}
     </div>)}
   </div>);
 }
@@ -216,7 +217,7 @@ export function TabShow({audio,onRundownChange}){
               <div style={{display:"flex",alignItems:"center",gap:"0.6rem",marginBottom:p.isYt?"0.5rem":"0.4rem"}}>
                 <div style={{width:10,height:10,borderRadius:"50%",background:p.playing?p.color:"#444",flexShrink:0,boxShadow:p.playing?`0 0 8px ${p.color}`:"none",transition:"all 0.3s"}}/>
                 <span style={{flex:1,color:T.text,fontSize:"0.88rem",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.label}</span>
-                <button onClick={()=>togglePista(p.id)} style={{...S.btn(p.playing?"#ff6e40":T.accent,"#000"),padding:"0.25rem 0.6rem",fontSize:"0.78rem"}}>{p.playing?"⏸":"▶"}</button>
+                <button onClick={()=>togglePista(p.id)} style={{...S.btn(p.playing?T.danger:T.accent,"#000"),padding:"0.25rem 0.6rem",fontSize:"0.78rem"}}>{p.playing?"⏸":"▶"}</button>
                 <button onClick={()=>removePista(p.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"1rem"}}>×</button>
               </div>
               {!p.isYt&&<div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
@@ -228,7 +229,7 @@ export function TabShow({audio,onRundownChange}){
             </div>
           ))}
         </div>
-        <button onClick={()=>setPistas(prev=>{prev.forEach(p=>{try{p.audioEl?.pause();}catch{}});return[];})} style={{...S.btn(T.bg3,"#ff6e40"),width:"100%",marginTop:"0.5rem",fontSize:"0.8rem"}}>⏹ Parar todas</button>
+        <button onClick={()=>setPistas(prev=>{prev.forEach(p=>{try{p.audioEl?.pause();}catch{}});return[];})} style={{...S.btn(T.bg3,T.danger),width:"100%",marginTop:"0.5rem",fontSize:"0.8rem"}}>⏹ Parar todas</button>
       </div>}
 
       {/* Biblioteca de playlists */}
@@ -279,7 +280,7 @@ export function TabShow({audio,onRundownChange}){
           <button key={ef.id} onClick={()=>playEfecto(ef)} style={{background:T.bg3,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.9rem 0.4rem",color:T.text,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:"0.35rem",transition:"transform 0.1s",active:{transform:"scale(0.95)"}}}>
             <span style={{fontSize:"1.8rem",lineHeight:1}}>{ef.emoji}</span>
             <span style={{fontSize:"0.76rem",fontWeight:600,color:T.text2,textAlign:"center"}}>{ef.nombre}</span>
-            {ef.url&&<span style={{fontSize:"0.6rem",color:"#69f0ae"}}>MP3</span>}
+            {ef.url&&<span style={{fontSize:"0.6rem",color:T.ok}}>MP3</span>}
           </button>
         ))}
       </div>
@@ -305,24 +306,24 @@ export function TabShow({audio,onRundownChange}){
 
     {/* ── METRÓNOMO ── */}
     {showTab==="metro"&&<div style={S.panel}>
-      <p style={S.ptitle("#40c4ff")}>Metrónomo</p>
+      <p style={S.ptitle(T.info)}>Metrónomo</p>
       <div style={{display:"flex",gap:"1rem",flexWrap:"wrap",alignItems:"flex-start"}}>
         <div style={{flex:1,minWidth:200,textAlign:"center"}}>
-          <div style={{fontSize:"4rem",fontWeight:900,fontFamily:"monospace",color:metroFlash?"#40c4ff":T.text,textShadow:metroFlash?"0 0 30px #40c4ff":"none",transition:"color 0.05s",lineHeight:1,cursor:"pointer",marginBottom:"0.2rem"}} onClick={()=>setMetroOn(!metroOn)}>{bpm}</div>
+          <div style={{fontSize:"4rem",fontWeight:900,fontFamily:"monospace",color:metroFlash?T.info:T.text,textShadow:metroFlash?`0 0 30px ${T.info}`:"none",transition:"color 0.05s",lineHeight:1,cursor:"pointer",marginBottom:"0.2rem"}} onClick={()=>setMetroOn(!metroOn)}>{bpm}</div>
           <div style={{color:T.text3,fontSize:"0.72rem",marginBottom:"0.7rem"}}>{Math.round(60/bpm*10)/10}s/pulso</div>
           <div style={{display:"flex",gap:"0.3rem",justifyContent:"center",marginBottom:"0.6rem",flexWrap:"wrap"}}>
-            {Array.from({length:beats}).map((_,i)=><div key={i} style={{width:i===0?14:10,height:i===0?14:10,borderRadius:"50%",background:(beatCount%beats)===i&&metroOn?"#40c4ff":i===0?"#1a3a5a":T.bg4,transition:"background 0.05s",border:i===0?"1px solid #40c4ff44":"none"}}/>)}
+            {Array.from({length:beats}).map((_,i)=><div key={i} style={{width:i===0?14:10,height:i===0?14:10,borderRadius:"50%",background:(beatCount%beats)===i&&metroOn?T.info:i===0?"#1a3a5a":T.bg4,transition:"background 0.05s",border:i===0?`1px solid ${T.info}44`:"none"}}/>)}
           </div>
-          <input type="range" min={30} max={240} value={bpm} onChange={e=>{setBpm(Number(e.target.value));if(metroOn){clearInterval(metroRef.current);setMetroOn(false);setTimeout(()=>setMetroOn(true),50);}}} style={{width:"100%",accentColor:"#40c4ff",marginBottom:"0.5rem"}}/>
+          <input type="range" min={30} max={240} value={bpm} onChange={e=>{setBpm(Number(e.target.value));if(metroOn){clearInterval(metroRef.current);setMetroOn(false);setTimeout(()=>setMetroOn(true),50);}}} style={{width:"100%",accentColor:T.info,marginBottom:"0.5rem"}}/>
           <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap",justifyContent:"center",marginBottom:"0.75rem"}}>
-            {PRESETS_BPM.map(b=><button key={b} onClick={()=>setBpm(b)} style={{background:bpm===b?"#40c4ff22":T.bg3,border:`1px solid ${bpm===b?"#40c4ff":T.border}`,color:bpm===b?"#40c4ff":T.text3,borderRadius:7,padding:"0.18rem 0.42rem",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}
+            {PRESETS_BPM.map(b=><button key={b} onClick={()=>setBpm(b)} style={{background:bpm===b?T.info+"22":T.bg3,border:`1px solid ${bpm===b?T.info:T.border}`,color:bpm===b?T.info:T.text3,borderRadius:7,padding:"0.18rem 0.42rem",fontSize:"0.72rem",cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}
           </div>
-          <button onClick={()=>setMetroOn(!metroOn)} style={{...S.btn(metroOn?"#ff6e40":"#40c4ff","#000"),width:"100%",padding:"0.6rem"}}>{metroOn?"⏹ Parar":"▶ Iniciar"}</button>
+          <button onClick={()=>setMetroOn(!metroOn)} style={{...S.btn(metroOn?T.danger:T.info,"#000"),width:"100%",padding:"0.6rem"}}>{metroOn?"⏹ Parar":"▶ Iniciar"}</button>
         </div>
         <div style={{minWidth:130}}>
           <p style={{color:T.text3,fontSize:"0.72rem",margin:"0 0 0.4rem",letterSpacing:"0.1em",fontFamily:"monospace"}}>PULSOS</p>
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"0.3rem"}}>
-            {[1,2,3,4,5,6,7,8].map(n=><button key={n} onClick={()=>{setBeats(n);stopMetro();}} style={{background:beats===n?"#40c4ff22":T.bg3,border:`1.5px solid ${beats===n?"#40c4ff":T.border}`,color:beats===n?"#40c4ff":T.text3,borderRadius:7,padding:"0.35rem",fontSize:"0.9rem",fontWeight:beats===n?700:400,cursor:"pointer",fontFamily:"monospace"}}>{n}</button>)}
+            {[1,2,3,4,5,6,7,8].map(n=><button key={n} onClick={()=>{setBeats(n);stopMetro();}} style={{background:beats===n?T.info+"22":T.bg3,border:`1.5px solid ${beats===n?T.info:T.border}`,color:beats===n?T.info:T.text3,borderRadius:7,padding:"0.35rem",fontSize:"0.9rem",fontWeight:beats===n?700:400,cursor:"pointer",fontFamily:"monospace"}}>{n}</button>)}
           </div>
         </div>
       </div>
@@ -334,22 +335,22 @@ export function TabShow({audio,onRundownChange}){
       <div style={{display:"flex",gap:"0.45rem",marginBottom:"0.75rem",flexWrap:"wrap"}}>
         <input value={newActName} onChange={e=>setNewActName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addAct()} placeholder="Nome da actuación..." style={{...S.input,flex:2,minWidth:120}}/>
         <input value={newActFmt} onChange={e=>setNewActFmt(e.target.value)} placeholder="Formato..." style={{...S.input,flex:1,minWidth:80}}/>
-        <button onClick={addAct} style={{...S.btn("#40c4ff","#000"),flexShrink:0}}>+</button>
+        <button onClick={addAct} style={{...S.btn(T.info,"#000"),flexShrink:0}}>+</button>
       </div>
       {rundown.length===0&&<p style={{color:T.text4,fontSize:"0.82rem"}}>Engade actuacións ao rundown.</p>}
       <div style={{display:"flex",flexDirection:"column",gap:"0.45rem"}}>
         {rundown.map((act,i)=>(
-          <div key={act.id} style={{background:act.activa?T.accent+"11":T.bg3,border:`1.5px solid ${act.activa?"#40c4ff":T.border}`,borderRadius:10,padding:"0.7rem 0.9rem",display:"flex",gap:"0.55rem",alignItems:"center",transition:"all 0.2s"}}>
+          <div key={act.id} style={{background:act.activa?T.accent+"11":T.bg3,border:`1.5px solid ${act.activa?T.info:T.border}`,borderRadius:10,padding:"0.7rem 0.9rem",display:"flex",gap:"0.55rem",alignItems:"center",transition:"all 0.2s"}}>
             <span style={{color:T.text4,fontSize:"0.78rem",fontFamily:"monospace",width:18,flexShrink:0}}>{i+1}</span>
             <div style={{flex:1}}>
-              <span style={{fontWeight:700,color:act.hecho?T.text3:act.activa?"#40c4ff":T.text,fontSize:"0.88rem",textDecoration:act.hecho?"line-through":"none"}}>{act.nombre}</span>
-              {act.formato&&<span style={{...S.tag("#40c4ff"),marginLeft:"0.4rem"}}>{act.formato}</span>}
+              <span style={{fontWeight:700,color:act.hecho?T.text3:act.activa?T.info:T.text,fontSize:"0.88rem",textDecoration:act.hecho?"line-through":"none"}}>{act.nombre}</span>
+              {act.formato&&<span style={{...S.tag(T.info),marginLeft:"0.4rem"}}>{act.formato}</span>}
             </div>
             <div style={{display:"flex",gap:"0.3rem",flexShrink:0}}>
               <button onClick={()=>moveAct(act.id,-1)} disabled={i===0} style={{background:"none",border:"none",color:i===0?T.text4:T.text3,cursor:i===0?"default":"pointer",fontSize:"0.85rem"}}>▲</button>
               <button onClick={()=>moveAct(act.id,1)} disabled={i===rundown.length-1} style={{background:"none",border:"none",color:i===rundown.length-1?T.text4:T.text3,cursor:i===rundown.length-1?"default":"pointer",fontSize:"0.85rem"}}>▼</button>
-              <button onClick={()=>setActiva(act.id)} style={{...S.btn(act.activa?"#40c4ff":T.bg4,act.activa?"#000":T.text3),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>▶</button>
-              <button onClick={()=>toggleAct(act.id)} style={{...S.btn(act.hecho?"#69f0ae22":T.bg4,act.hecho?"#69f0ae":T.text3),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>✓</button>
+              <button onClick={()=>setActiva(act.id)} style={{...S.btn(act.activa?T.info:T.bg4,act.activa?"#000":T.text3),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>▶</button>
+              <button onClick={()=>toggleAct(act.id)} style={{...S.btn(act.hecho?T.ok+"22":T.bg4,act.hecho?T.ok:T.text3),padding:"0.25rem 0.5rem",fontSize:"0.75rem"}}>✓</button>
               <button onClick={()=>removeAct(act.id)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.85rem"}}>×</button>
             </div>
           </div>
@@ -361,19 +362,19 @@ export function TabShow({audio,onRundownChange}){
     {/* ── SORTEO ── */}
     {showTab==="sorteo"&&<div style={{display:"flex",flexDirection:"column",gap:"0.75rem"}}>
       <div style={S.panel}>
-        <p style={S.ptitle("#40c4ff")}>Sorteo de parellas e equipos</p>
+        <p style={S.ptitle(T.info)}>Sorteo de parellas e equipos</p>
         <TeamSorter T={T} S={S}/>
       </div>
       <div style={S.panel}>
-        <p style={S.ptitle("#69f0ae")}>Xeradores rápidos</p>
+        <p style={S.ptitle(T.ok)}>Xeradores rápidos</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.75rem"}}>
           <div style={{textAlign:"center"}}>
-            <button onClick={()=>setNum(Math.floor(Math.random()*9)+1)} style={{...S.btn("#69f0ae","#000"),width:"100%",marginBottom:"0.4rem"}}>Núm 1–9</button>
-            {num!==null&&<div style={{fontSize:"3.5rem",fontWeight:900,color:"#69f0ae",lineHeight:1,animation:"fadeIn 0.2s ease"}}>{num}</div>}
+            <button onClick={()=>setNum(Math.floor(Math.random()*9)+1)} style={{...S.btn(T.ok,"#000"),width:"100%",marginBottom:"0.4rem"}}>Núm 1–9</button>
+            {num!==null&&<div style={{fontSize:"3.5rem",fontWeight:900,color:T.ok,lineHeight:1,animation:"fadeIn 0.2s ease"}}>{num}</div>}
           </div>
           <div style={{textAlign:"center"}}>
-            <button onClick={()=>setLetter(LETRAS[Math.floor(Math.random()*LETRAS.length)])} style={{...S.btn("#ffd740","#000"),width:"100%",marginBottom:"0.4rem"}}>Letra</button>
-            {letter&&<div style={{fontSize:"3.5rem",fontWeight:900,color:"#ffd740",lineHeight:1,animation:"fadeIn 0.2s ease"}}>{letter}</div>}
+            <button onClick={()=>setLetter(LETRAS[Math.floor(Math.random()*LETRAS.length)])} style={{...S.btn(T.warn,"#000"),width:"100%",marginBottom:"0.4rem"}}>Letra</button>
+            {letter&&<div style={{fontSize:"3.5rem",fontWeight:900,color:T.warn,lineHeight:1,animation:"fadeIn 0.2s ease"}}>{letter}</div>}
           </div>
         </div>
         <button onClick={()=>{setNum(Math.floor(Math.random()*9)+1);setLetter(LETRAS[Math.floor(Math.random()*LETRAS.length)]);}} style={{...S.btn(T.bg3,T.text2),width:"100%",marginTop:"0.5rem"}}>Ambos a la vez</button>

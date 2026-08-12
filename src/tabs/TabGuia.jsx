@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useAuth, t, useTheme, ls, mkS, TIPO_COLOR, EditorDinamica } from '../core.jsx';
+import { useAuth, t, useTheme, ls, mkS, colorTipo, EditorDinamica } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { getDinamicas, saveDinamica, deleteDinamica } from '../db.js';
 
@@ -37,27 +37,27 @@ export function TabGuia(){
   if(showForm)return(<div>
     <button onClick={()=>setShowForm(false)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button>
     <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
-      editando={!!editId} tiposDisponibles={Object.keys(TIPO_COLOR)}/>
+      editando={!!editId} tiposDisponibles={Object.keys(colorTipo)}/>
   </div>);
 
 
   if(sel)return(<div>
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap"}}>
       <button onClick={()=>setSel(null)} style={S.btn(T.bg3,T.text2)}>← Volver</button>
-      <button onClick={()=>toggleFavDin(sel.id)} style={{...S.btn(isFav(sel.id)?"#ffd740":T.bg3,isFav(sel.id)?"#000":T.text2)}}>{isFav(sel.id)?"★ Favorita":"☆ Favorita"}</button>
+      <button onClick={()=>toggleFavDin(sel.id)} style={{...S.btn(isFav(sel.id)?T.warn:T.bg3,isFav(sel.id)?"#000":T.text2)}}>{isFav(sel.id)?"★ Favorita":"☆ Favorita"}</button>
       <button onClick={()=>openEdit(sel)} style={S.btn(T.bg3,T.text2)}>✏️ Editar</button>
-      <button onClick={()=>deleteDin(sel.id)} style={{...S.btn(T.bg3),color:"#ff6e40"}}>✕ Eliminar</button>
+      <button onClick={()=>deleteDin(sel.id)} style={{...S.btn(T.bg3),color:T.danger}}>✕ Eliminar</button>
     </div>
-    <div style={{...S.panel,border:`1.5px solid ${TIPO_COLOR[sel.tipo]}33`,borderLeft:`4px solid ${TIPO_COLOR[sel.tipo]}`}}>
-      <div style={{display:"flex",gap:"0.55rem",marginBottom:"0.9rem",flexWrap:"wrap",alignItems:"center"}}><span style={S.tag(TIPO_COLOR[sel.tipo])}>{sel.tipo.toUpperCase()}</span><span style={{color:T.text3,fontSize:"0.78rem"}}>⏱ {sel.duracion}min · 👥 {sel.participantes}</span></div>
+    <div style={{...S.panel,border:`1.5px solid ${colorTipo(T,sel.tipo)}33`,borderLeft:`4px solid ${colorTipo(T,sel.tipo)}`}}>
+      <div style={{display:"flex",gap:"0.55rem",marginBottom:"0.9rem",flexWrap:"wrap",alignItems:"center"}}><span style={S.tag(colorTipo(T,sel.tipo))}>{sel.tipo.toUpperCase()}</span><span style={{color:T.text3,fontSize:"0.78rem"}}>⏱ {sel.duracion}min · 👥 {sel.participantes}</span></div>
       <h2 style={{color:T.text,fontWeight:900,fontSize:"1.4rem",margin:"0 0 0.65rem"}}>{sel.nombre}</h2>
       <p style={{color:T.text2,lineHeight:1.6,marginBottom:"1.1rem"}}>{sel.descripcion}</p>
-      <p style={S.ptitle(TIPO_COLOR[sel.tipo])}>Pasos</p>
-      {(sel.pasos||[]).map((p,i)=>(<div key={i} style={{display:"flex",gap:"0.6rem",marginBottom:"0.4rem",alignItems:"flex-start"}}><span style={{...S.tag(TIPO_COLOR[sel.tipo]),borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"0.68rem"}}>{i+1}</span><span style={{color:T.text2,fontSize:"0.86rem",lineHeight:1.5}}>{p}</span></div>))}
-      {sel.objetivo&&<div style={{background:T.bg3,borderRadius:10,padding:"0.85rem",margin:"1rem 0"}}><p style={S.ptitle("#ffd740")}>🎯 Objetivo</p><p style={{color:T.text2,fontSize:"0.86rem",margin:0}}>{sel.objetivo}</p></div>}
+      <p style={S.ptitle(colorTipo(T,sel.tipo))}>Pasos</p>
+      {(sel.pasos||[]).map((p,i)=>(<div key={i} style={{display:"flex",gap:"0.6rem",marginBottom:"0.4rem",alignItems:"flex-start"}}><span style={{...S.tag(colorTipo(T,sel.tipo)),borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"0.68rem"}}>{i+1}</span><span style={{color:T.text2,fontSize:"0.86rem",lineHeight:1.5}}>{p}</span></div>))}
+      {sel.objetivo&&<div style={{background:T.bg3,borderRadius:10,padding:"0.85rem",margin:"1rem 0"}}><p style={S.ptitle(T.warn)}>🎯 Objetivo</p><p style={{color:T.text2,fontSize:"0.86rem",margin:0}}>{sel.objetivo}</p></div>}
       {(sel.variantes||[]).length>0&&<><p style={S.ptitle(T.text4)}>Variantes</p>{sel.variantes.map((v,i)=><p key={i} style={{color:T.text3,fontSize:"0.82rem",margin:"0.18rem 0"}}>◆ {v}</p>)}</>}
-      {sel.licencia&&<div style={{background:"rgba(255,110,64,0.10)",border:"1px solid rgba(255,110,64,0.35)",borderRadius:10,padding:"0.8rem",marginTop:"1.1rem"}}>
-        <p style={{color:"#ff6e40",fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{sel.licencia}</p>
+      {sel.licencia&&<div style={{background:T.danger+"1A",border:"1px solid rgba(255,110,64,0.35)",borderRadius:10,padding:"0.8rem",marginTop:"1.1rem"}}>
+        <p style={{color:T.danger,fontSize:"0.82rem",margin:0,lineHeight:1.5}}>{sel.licencia}</p>
       </div>}
       {sel.autoria&&<p style={{color:T.text3,fontSize:"0.78rem",marginTop:"1rem",lineHeight:1.5}}><strong style={{color:T.text2}}>Autoría:</strong> {sel.autoria}</p>}
       {sel.fuente&&<p style={{color:T.text4,fontSize:"0.72rem",marginTop:sel.autoria?"0.4rem":"1.1rem",paddingTop:"0.6rem",borderTop:`1px solid ${T.border}`}}>Catalogada a partir de {sel.fuente}</p>}
@@ -72,11 +72,11 @@ export function TabGuia(){
       <button onClick={()=>{if(confirm("¿Restaurar dinámicas por defecto?")){{setDinamicas(DINAMICAS_BASE);ls.set("impro_dinamicas_v2",DINAMICAS_BASE);}}}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.72rem"}}>↺</button>
     </div>
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(TIPO_COLOR[t]||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.3rem 0.8rem",fontSize:"0.74rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
+      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(colorTipo(T,t)||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.3rem 0.8rem",fontSize:"0.74rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:"0.55rem"}}>
-      {lista.map(d=>(<button key={d.id} onClick={()=>setSel(d)} style={{...S.panel,border:`1.5px solid ${T.border}`,borderLeft:`4px solid ${TIPO_COLOR[d.tipo]}`,cursor:"pointer",textAlign:"left",width:"100%"}}>
-        <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.4rem",alignItems:"center"}}><span style={S.tag(TIPO_COLOR[d.tipo])}>{d.tipo}</span><span style={{color:T.text4,fontSize:"0.7rem"}}>⏱{d.duracion}min</span></div>
+      {lista.map(d=>(<button key={d.id} onClick={()=>setSel(d)} style={{...S.panel,borderStyle:"solid",borderWidth:"1.5px 1.5px 1.5px 4px",borderTopColor:T.border,borderRightColor:T.border,borderBottomColor:T.border,borderLeftColor:colorTipo(T,d.tipo),cursor:"pointer",textAlign:"left",width:"100%"}}>
+        <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.4rem",alignItems:"center"}}><span style={S.tag(colorTipo(T,d.tipo))}>{d.tipo}</span><span style={{color:T.text4,fontSize:"0.7rem"}}>⏱{d.duracion}min</span></div>
         <div style={{fontWeight:700,color:T.text,marginBottom:"0.22rem",fontSize:"0.9rem"}}>{d.nombre}</div>
         <div style={{color:T.text3,fontSize:"0.76rem",lineHeight:1.4}}>{d.descripcion}</div>
       </button>))}

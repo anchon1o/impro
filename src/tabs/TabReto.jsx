@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useTheme, useEstimulos, CAT_ICONS, pick, trackDin, mkS, TIPO_COLOR } from '../core.jsx';
+import { useTheme, useEstimulos, CAT_ICONS, pick, trackDin, mkS, colorTipo } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { getDinamicas } from '../db.js';
 
@@ -49,9 +49,9 @@ export function TabReto(){
       </div>
     </div>
     {reto?(<div style={{animation:"fadeIn 0.35s ease"}}>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${TIPO_COLOR[reto.din.tipo]||T.accent}44`,borderLeft:`4px solid ${TIPO_COLOR[reto.din.tipo]||T.accent}`}}>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${colorTipo(T,reto.din.tipo)||T.accent}44`,borderLeft:`4px solid ${colorTipo(T,reto.din.tipo)||T.accent}`}}>
         <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.5rem",alignItems:"center",flexWrap:"wrap"}}>
-          <span style={S.tag(TIPO_COLOR[reto.din.tipo]||T.accent)}>{reto.din.tipo}</span>
+          <span style={S.tag(colorTipo(T,reto.din.tipo)||T.accent)}>{reto.din.tipo}</span>
           <span style={{color:T.text3,fontSize:"0.78rem"}}>⏱ {reto.din.duracion} min</span>
         </div>
         <p style={{color:T.text,fontWeight:900,fontSize:"1.15rem",margin:"0 0 0.35rem"}}>{reto.din.nombre}</p>
@@ -60,7 +60,7 @@ export function TabReto(){
         {reto.din.descripcion&&<p style={{color:T.text2,fontSize:"0.85rem",margin:0,lineHeight:1.5}}>{reto.din.descripcion}</p>}
 
         {(hayInstrucciones(reto.din))&&<>
-          <button onClick={()=>setVerInstrucciones(v=>!v)} style={{background:"none",border:"none",padding:"0.55rem 0 0",margin:0,cursor:"pointer",color:TIPO_COLOR[reto.din.tipo]||T.accent,fontSize:"0.8rem",fontWeight:700,fontFamily:"inherit",display:"flex",alignItems:"center",gap:"0.35rem"}}>
+          <button onClick={()=>setVerInstrucciones(v=>!v)} style={{background:"none",border:"none",padding:"0.55rem 0 0",margin:0,cursor:"pointer",color:colorTipo(T,reto.din.tipo)||T.accent,fontSize:"0.8rem",fontWeight:700,fontFamily:"inherit",display:"flex",alignItems:"center",gap:"0.35rem"}}>
             <span style={{display:"inline-block",transform:verInstrucciones?"rotate(90deg)":"none",transition:"transform 0.2s"}}>▸</span>
             {verInstrucciones?"Ocultar instrucións":"Ver instrucións"}
           </button>
@@ -69,15 +69,15 @@ export function TabReto(){
             {reto.din.participantes&&<p style={{color:T.text3,fontSize:"0.78rem",margin:"0 0 0.75rem"}}>👥 {reto.din.participantes}</p>}
 
             {comoLista(reto.din.pasos).length>0&&<>
-              <p style={S.ptitle(TIPO_COLOR[reto.din.tipo]||T.accent)}>Pasos</p>
+              <p style={S.ptitle(colorTipo(T,reto.din.tipo)||T.accent)}>Pasos</p>
               {comoLista(reto.din.pasos).map((p,i)=>(<div key={i} style={{display:"flex",gap:"0.6rem",marginBottom:"0.4rem",alignItems:"flex-start"}}>
-                <span style={{...S.tag(TIPO_COLOR[reto.din.tipo]||T.accent),borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"0.68rem"}}>{i+1}</span>
+                <span style={{...S.tag(colorTipo(T,reto.din.tipo)||T.accent),borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:"0.68rem"}}>{i+1}</span>
                 <span style={{color:T.text2,fontSize:"0.86rem",lineHeight:1.5}}>{p}</span>
               </div>))}
             </>}
 
             {reto.din.objetivo&&<div style={{background:T.bg3,borderRadius:10,padding:"0.85rem",margin:"1rem 0 0"}}>
-              <p style={S.ptitle("#ffd740")}>🎯 Objetivo</p>
+              <p style={S.ptitle(T.warn)}>🎯 Objetivo</p>
               <p style={{color:T.text2,fontSize:"0.86rem",margin:0}}>{reto.din.objetivo}</p>
             </div>}
 
@@ -87,8 +87,8 @@ export function TabReto(){
             </div>}
 
             {reto.din.notas&&<p style={{color:T.text3,fontSize:"0.82rem",margin:"1rem 0 0",lineHeight:1.5,fontStyle:"italic"}}>{reto.din.notas}</p>}
-            {reto.din.licencia&&<div style={{background:"rgba(255,110,64,0.10)",border:"1px solid rgba(255,110,64,0.35)",borderRadius:10,padding:"0.8rem",margin:"1rem 0 0"}}>
-              <p style={{color:"#ff6e40",fontSize:"0.8rem",margin:0,lineHeight:1.5}}>{reto.din.licencia}</p>
+            {reto.din.licencia&&<div style={{background:T.danger+"1A",border:"1px solid rgba(255,110,64,0.35)",borderRadius:10,padding:"0.8rem",margin:"1rem 0 0"}}>
+              <p style={{color:T.danger,fontSize:"0.8rem",margin:0,lineHeight:1.5}}>{reto.din.licencia}</p>
             </div>}
             {reto.din.autoria&&<p style={{color:T.text3,fontSize:"0.78rem",margin:"1rem 0 0",lineHeight:1.5}}><strong style={{color:T.text2}}>Autoría:</strong> {reto.din.autoria}</p>}
             {reto.din.fuente&&<p style={{color:T.text4,fontSize:"0.72rem",margin:"0.4rem 0 0"}}>Catalogada a partir de {reto.din.fuente}</p>}

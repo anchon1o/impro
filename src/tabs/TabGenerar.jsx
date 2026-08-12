@@ -156,8 +156,8 @@ export function TabGenerar({onStimulus}){
         <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginBottom:"0.75rem"}}>
           {PLANTILLAS_BASE.map(t=>(<button key={t.label} onClick={()=>setSceneCats(t.cats)} style={{background:mesmaCombinacion(t.cats)?T.accent+"22":T.bg3,border:`1.5px solid ${mesmaCombinacion(t.cats)?T.accent:T.border}`,color:mesmaCombinacion(t.cats)?T.accent:T.text3,borderRadius:8,padding:"0.28rem 0.65rem",fontSize:"0.76rem",cursor:"pointer",fontFamily:"inherit"}}>{t.label}</button>))}
 
-          {plantillas.map(p=>(<span key={p.id} style={{display:"inline-flex",alignItems:"center",background:mesmaCombinacion(p.cats)?"#69f0ae22":T.bg3,border:`1.5px solid ${mesmaCombinacion(p.cats)?"#69f0ae":T.border}`,borderRadius:8,overflow:"hidden"}}>
-            <button onClick={()=>setSceneCats(p.cats)} title={p.cats.join(" + ")} style={{background:"none",border:"none",color:mesmaCombinacion(p.cats)?"#69f0ae":T.text3,padding:"0.28rem 0.5rem 0.28rem 0.65rem",fontSize:"0.76rem",cursor:"pointer",fontFamily:"inherit"}}>★ {p.nome}</button>
+          {plantillas.map(p=>(<span key={p.id} style={{display:"inline-flex",alignItems:"center",background:mesmaCombinacion(p.cats)?T.ok+"22":T.bg3,border:`1.5px solid ${mesmaCombinacion(p.cats)?T.ok:T.border}`,borderRadius:8,overflow:"hidden"}}>
+            <button onClick={()=>setSceneCats(p.cats)} title={p.cats.join(" + ")} style={{background:"none",border:"none",color:mesmaCombinacion(p.cats)?T.ok:T.text3,padding:"0.28rem 0.5rem 0.28rem 0.65rem",fontSize:"0.76rem",cursor:"pointer",fontFamily:"inherit"}}>★ {p.nome}</button>
             <button onClick={()=>borrarPlantilla(p.id)} style={{background:"none",border:"none",color:T.text4,padding:"0.28rem 0.5rem 0.28rem 0.2rem",cursor:"pointer",fontSize:"0.8rem"}}>×</button>
           </span>))}
 
@@ -218,7 +218,7 @@ export function TabGenerar({onStimulus}){
       {sel&&!spotlight&&(<div style={{marginTop:"1.25rem",...S.panel,border:`1.5px solid ${T.accent}22`,textAlign:"center"}}>
         <div style={{display:"flex",justifyContent:"center",gap:"0.5rem",marginBottom:"0.4rem",alignItems:"center"}}>
           <p style={{color:T.accent,fontSize:"0.7rem",letterSpacing:"0.25em",margin:0}}>{sel.cat}</p>
-          {sel.isIdea&&<span style={S.tag("#69f0ae")}>👥 GRUPO</span>}
+          {sel.isIdea&&<span style={S.tag(T.ok)}>👥 GRUPO</span>}
         </div>
         <p style={{color:T.text,fontSize:"1.8rem",fontWeight:800,margin:"0 0 0.75rem",cursor:"pointer"}} onClick={()=>setSpotlight(sel)}>{sel.word}</p>
         <div style={{display:"flex",gap:"0.5rem",justifyContent:"center"}}>

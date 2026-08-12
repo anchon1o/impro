@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
 
 // IM-M02 — Pantalla de inicio tipo botonera.
@@ -11,24 +12,28 @@ import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
 // Dentro dunha sección mantense o menú horizontal de sempre.
 
 export const AREAS=[
-  {id:"generar",  emoji:"🎲",  cor:"#e040fb", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
-  {id:"reto",     emoji:"⚡", cor:"#ffd740", desc:"Unha dinámica ao chou con estímulos, coas súas instrucións."},
-  {id:"show",     emoji:"🎭", cor:"#ff6e40", desc:"Audio multipista, efectos, metrónomo, rundown e sorteos."},
-  {id:"guia",     emoji:"📖", cor:"#69f0ae", desc:"Catálogo de dinámicas con pasos, obxectivos e variantes."},
-  {id:"sesiones", emoji:"📋", cor:"#40c4ff", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
-  {id:"grupos",   emoji:"👥", cor:"#40c4ff", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
-  {id:"qr",       emoji:"📱", cor:"#69f0ae", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
-  {id:"universo", emoji:"🌍", cor:"#e040fb", desc:"Compañías, escolas, festivais e formatos verificados."},
-  {id:"manual",   emoji:"📘", cor:"#40c4ff", desc:"Como funciona cada parte da aplicación."},
-  {id:"ajustes",  emoji:"⚙️", cor:"#78909c", desc:"Idioma, tema e preferencias."},
-  {id:"admin",    emoji:"🔐", cor:"#ff6e40", desc:"Usuarios, estímulos, dinámicas e estatísticas.", soAdmin:true},
+  {id:"generar",  emoji:"🎲",  cor:"accent", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
+  {id:"reto",     emoji:"⚡", cor:"warn", desc:"Unha dinámica ao chou con estímulos, coas súas instrucións."},
+  {id:"show",     emoji:"🎭", cor:"danger", desc:"Audio multipista, efectos, metrónomo, rundown e sorteos."},
+  {id:"guia",     emoji:"📖", cor:"ok", desc:"Catálogo de dinámicas con pasos, obxectivos e variantes."},
+  {id:"sesiones", emoji:"📋", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
+  {id:"grupos",   emoji:"👥", cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
+  {id:"qr",       emoji:"📱", cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
+  {id:"universo", emoji:"🌍", cor:"accent", desc:"Compañías, escolas, festivais e formatos verificados."},
+  {id:"manual",   emoji:"📘", cor:"info", desc:"Como funciona cada parte da aplicación."},
+  {id:"ajustes",  emoji:"⚙️", cor:"muted", desc:"Idioma, tema e preferencias."},
+  {id:"admin",    emoji:"🔐", cor:"danger", desc:"Usuarios, estímulos, dinámicas e estatísticas.", soAdmin:true},
 ];
 
 export function Inicio({onIr,lang}){
   const {T}=useTheme();const S=mkS(T);
+  // O hover pasa por estado de React en vez de escribir no DOM: se React e
+  // o DOM discrepan sobre o estilo, gañan cousas raras ao redebuxar.
+  const [hover,setHover]=useState(null);
   const {logueado,esAdmin}=useAuth();
   const {w,esMovil}=useViewport();
 
+  const corDe=a=>T[corDe(a)]||T.accent;
   const visibles=AREAS.filter(a=>!a.soAdmin||esAdmin);
   // Columnas fixadas en vez de auto-fit. Con auto-fit e un minmax por
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
@@ -50,8 +55,20 @@ export function Inicio({onIr,lang}){
             <button key={a.id} onClick={()=>onIr(a.id)}
               style={{
                 background:T.bg2,
-                border:`1px solid ${T.border}`,
-                borderTop:`3px solid ${a.cor}`,
+                // ⚠️ Antes: border:`1px solid ${T.border}` + borderTop:`3px solid ${corDe(a)}`.
+                // Mesturar a abreviatura `border` cunha propiedade longa
+                // (`borderTop`) rompe ao cambiar de tema: React só reescribe
+                // as propiedades que mudaron, e como `corDe(a)` non muda pero
+                // `T.border` si, aplicaba `border` (que en CSS reinicia os
+                // catro lados) sen volver aplicar `borderTop`. Resultado: a
+                // franxa de cor desaparecía ata recargar.
+                // Solución: só propiedades longas, sen abreviaturas.
+                borderStyle:"solid",
+                borderWidth:"3px 1px 1px 1px",
+                borderRightColor:hover===a.id?corDe(a):T.border,
+                borderBottomColor:hover===a.id?corDe(a):T.border,
+                borderLeftColor:hover===a.id?corDe(a):T.border,
+                borderTopColor:corDe(a),
                 borderRadius:14,
                 padding:esMovil?"0.9rem 0.8rem":"1.15rem 1rem",
                 cursor:"pointer",
@@ -61,10 +78,11 @@ export function Inicio({onIr,lang}){
                 flexDirection:"column",
                 gap:"0.4rem",
                 minHeight:esMovil?116:148,
+                transform:hover===a.id?"translateY(-2px)":"none",
                 transition:"transform 0.15s, border-color 0.15s, background 0.15s",
               }}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor=a.cor;e.currentTarget.style.borderTopColor=a.cor;}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.borderColor=T.border;e.currentTarget.style.borderTopColor=a.cor;}}
+              onMouseEnter={()=>setHover(a.id)}
+              onMouseLeave={()=>setHover(null)}
             >
               <div style={{display:"flex",alignItems:"center",gap:"0.5rem",minWidth:0}}>
                 <span style={{fontSize:esMovil?"1.4rem":"1.7rem",lineHeight:1,flexShrink:0}}>{a.emoji}</span>

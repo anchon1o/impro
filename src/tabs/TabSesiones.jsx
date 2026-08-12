@@ -4,11 +4,12 @@
 // ============================================================
 
 import { useState, useEffect, useRef } from 'react';
-import { t, useTheme, UID, FMT, ls, mkS, TIPO_COLOR } from '../core.jsx';
+import { t, useTheme, UID, FMT, ls, mkS, colorTipo } from '../core.jsx';
 import { POMO_PRESETS, PLANTILLAS } from '../datos.js';
 import { getSesiones, saveSesion, trackMinsSupa } from '../db.js';
 
-export const BCOLS={trabajo:"#e040fb",descanso:"#69f0ae",longo:"#40c4ff",trabalho:"#e040fb"};
+export const BTOK={trabajo:"accent",descanso:"ok",longo:"info",trabalho:"accent"};
+export const bcol=(T,k)=>T[BTOK[k]]||T.accent;
 
 export function ModoPomodoroImpro({onClose,audio}){
   const {T}=useTheme();const S=mkS(T);
@@ -20,7 +21,7 @@ export function ModoPomodoroImpro({onClose,audio}){
   const [done,setDone]=useState(false);
   const ref=useRef(null);
   const cb=bloques[ci];
-  const col=BCOLS[cb?.t]||T.accent;
+  const col=bcol(T,cb?.t)||T.accent;
   const urgent=display>0&&display<10,warning=display>0&&display<30;
 
   useEffect(()=>{
@@ -53,10 +54,10 @@ export function ModoPomodoroImpro({onClose,audio}){
           <p style={{color:T.text,fontWeight:900,fontSize:"clamp(1.1rem,4vw,1.8rem)",margin:"0 0 0.2rem"}}>{cb?.n}</p>
           <p style={{color:T.text3,fontSize:"0.78rem",margin:0}}>Bloque {ci+1}/{bloques.length} · {total}min total</p>
         </div>
-        <div style={{fontSize:"clamp(4rem,16vw,9rem)",fontWeight:900,fontFamily:"monospace",color:urgent?"#ff6e40":warning?"#ffd740":col,lineHeight:1,animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",transition:"color 0.3s",cursor:"pointer"}} onClick={()=>setRunning(!running)}>{FMT(display)}</div>
+        <div style={{fontSize:"clamp(4rem,16vw,9rem)",fontWeight:900,fontFamily:"monospace",color:urgent?T.danger:warning?T.warn:col,lineHeight:1,animation:urgent?"urgentPulse 0.5s ease infinite alternate":"none",transition:"color 0.3s",cursor:"pointer"}} onClick={()=>setRunning(!running)}>{FMT(display)}</div>
         <div style={{width:"100%",maxWidth:400,height:5,background:T.bg3,borderRadius:3}}><div style={{height:"100%",width:`${pct}%`,background:col,borderRadius:3,transition:"width 1s linear"}}/></div>
         <div style={{display:"flex",gap:"0.6rem"}}>
-          <button onClick={()=>setRunning(!running)} style={{...S.btn(running?"#ff6e40":col,"#000"),padding:"0.6rem 1.5rem",fontSize:"0.95rem"}}>{running?"⏸ Pausa":"▶ Iniciar"}</button>
+          <button onClick={()=>setRunning(!running)} style={{...S.btn(running?T.danger:col,"#000"),padding:"0.6rem 1.5rem",fontSize:"0.95rem"}}>{running?"⏸ Pausa":"▶ Iniciar"}</button>
           <button onClick={skip} style={S.btn(T.bg3,T.text2)}>⏭</button>
           <button onClick={reset} style={S.btn(T.bg3,T.text2)}>↺</button>
         </div>
@@ -99,43 +100,43 @@ export function TabSesiones({onLaunchTimer}){
   if(view==="historial")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem"}}><button onClick={()=>setView("plantillas")} style={S.btn(T.bg3,T.text2)}>← Plantillas</button><span style={{fontWeight:700,color:T.text}}>Historial</span></div>
     {historial.length===0&&<p style={{color:T.text4}}>Sin sesiones guardadas.</p>}
-    {historial.map(h=>(<div key={h.id} style={{...S.panel,marginBottom:"0.6rem"}}><div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:"0.3rem",marginBottom:"0.4rem"}}><span style={{fontWeight:700,color:T.text}}>{h.nombre}</span><span style={{color:T.text3,fontSize:"0.78rem"}}>{h.fecha}</span></div><div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}><span style={S.tag("#ffd740")}>{h.minutos}min</span><span style={S.tag("#69f0ae")}>{h.completados}/{h.bloques?.length} bloques</span></div>{h.notas&&<p style={{color:T.text3,fontSize:"0.8rem",margin:"0.4rem 0 0"}}>{h.notas}</p>}</div>))}
+    {historial.map(h=>(<div key={h.id} style={{...S.panel,marginBottom:"0.6rem"}}><div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:"0.3rem",marginBottom:"0.4rem"}}><span style={{fontWeight:700,color:T.text}}>{h.nombre}</span><span style={{color:T.text3,fontSize:"0.78rem"}}>{h.fecha}</span></div><div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}><span style={S.tag(T.warn)}>{h.minutos}min</span><span style={S.tag(T.ok)}>{h.completados}/{h.bloques?.length} bloques</span></div>{h.notas&&<p style={{color:T.text3,fontSize:"0.8rem",margin:"0.4rem 0 0"}}>{h.notas}</p>}</div>))}
   </div>);
 
   if(view==="sesion"&&sesion)return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem",flexWrap:"wrap",alignItems:"center"}}>
       <button onClick={()=>{setSesion(null);setView("plantillas");}} style={S.btn(T.bg3,T.text2)}>←</button>
       <span style={{fontWeight:700,flex:1,color:T.text}}>{sesion.nombre}</span>
-      <button onClick={()=>setEditMode(!editMode)} style={S.btn(editMode?"#ffd740":T.bg3,editMode?"#000":T.text2)}>{editMode?"✓":"✏️"}</button>
-      <button onClick={guardar} style={S.btn("#69f0ae","#000")}>💾</button>
+      <button onClick={()=>setEditMode(!editMode)} style={S.btn(editMode?T.warn:T.bg3,editMode?"#000":T.text2)}>{editMode?"✓":"✏️"}</button>
+      <button onClick={guardar} style={S.btn(T.ok,"#000")}>💾</button>
     </div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem",flexWrap:"wrap",alignItems:"center"}}>
-      <div style={{...S.panel,padding:"0.45rem 0.85rem",fontSize:"0.82rem"}}><span style={{color:T.text3}}>Total </span><span style={{color:"#ffd740",fontWeight:700}}>{total}min</span></div>
-      <div style={{...S.panel,padding:"0.45rem 0.85rem",fontSize:"0.82rem"}}><span style={{color:T.text3}}>Hechos </span><span style={{color:"#69f0ae",fontWeight:700}}>{done}/{sesion.bloques.length}</span></div>
-      {sesion.bloques.length>0&&<div style={{...S.panel,padding:"0.55rem 0.85rem",flex:1,minWidth:80}}><div style={{height:4,background:T.bg4,borderRadius:2}}><div style={{height:"100%",width:`${(done/sesion.bloques.length)*100}%`,background:"#69f0ae",borderRadius:2,transition:"width 0.3s"}}/></div></div>}
+      <div style={{...S.panel,padding:"0.45rem 0.85rem",fontSize:"0.82rem"}}><span style={{color:T.text3}}>Total </span><span style={{color:T.warn,fontWeight:700}}>{total}min</span></div>
+      <div style={{...S.panel,padding:"0.45rem 0.85rem",fontSize:"0.82rem"}}><span style={{color:T.text3}}>Hechos </span><span style={{color:T.ok,fontWeight:700}}>{done}/{sesion.bloques.length}</span></div>
+      {sesion.bloques.length>0&&<div style={{...S.panel,padding:"0.55rem 0.85rem",flex:1,minWidth:80}}><div style={{height:4,background:T.bg4,borderRadius:2}}><div style={{height:"100%",width:`${(done/sesion.bloques.length)*100}%`,background:T.ok,borderRadius:2,transition:"width 0.3s"}}/></div></div>}
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:"0.5rem",marginBottom:"1rem"}}>
       {sesion.bloques.map(b=>(
         <div key={b.id} style={{
           background:b.completado?T.bg3:T.bg2,
           border:`1.5px solid ${T.border}`,
-          borderLeft:`4px solid ${TIPO_COLOR[b.tipo]||"#555"}`,  // ← SIEMPRE visible
+          borderLeft:`4px solid ${colorTipo(T,b.tipo)||"#555"}`,  // ← SIEMPRE visible
           borderRadius:10,padding:"0.78rem 1rem",
           opacity:b.completado?0.55:1,transition:"opacity 0.2s"
         }}>
           {editMode?(<div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
             <input value={b.titulo} onChange={e=>upd(b.id,"titulo",e.target.value)} style={{...S.input,flex:"2 1 110px",width:"auto"}}/>
             <select value={b.tipo} onChange={e=>upd(b.id,"tipo",e.target.value)} style={{...S.input,flex:"1 1 90px",width:"auto",padding:"0.45rem 0.6rem"}}>
-              {Object.keys(TIPO_COLOR).map(t=><option key={t} value={t}>{t}</option>)}
+              {Object.keys(colorTipo).map(t=><option key={t} value={t}>{t}</option>)}
             </select>
             <input type="number" value={b.duracion} onChange={e=>upd(b.id,"duracion",e.target.value)} style={{...S.input,width:55}}/>
-            <button onClick={()=>del(b.id)} style={{...S.btn("#1a0000"),color:"#ff6e40",padding:"0.38rem 0.55rem"}}>✕</button>
+            <button onClick={()=>del(b.id)} style={{...S.btn("#1a0000"),color:T.danger,padding:"0.38rem 0.55rem"}}>✕</button>
           </div>):(<div style={{display:"flex",alignItems:"center",gap:"0.6rem"}}>
-            <button onClick={()=>toggle(b.id)} style={{background:b.completado?"#69f0ae22":T.bg3,border:`1.5px solid ${b.completado?"#69f0ae":T.border2}`,borderRadius:"50%",width:25,height:25,cursor:"pointer",color:b.completado?"#69f0ae":T.text4,fontSize:"0.72rem",flexShrink:0}}>✓</button>
+            <button onClick={()=>toggle(b.id)} style={{background:b.completado?T.ok+"22":T.bg3,border:`1.5px solid ${b.completado?T.ok:T.border2}`,borderRadius:"50%",width:25,height:25,cursor:"pointer",color:b.completado?T.ok:T.text4,fontSize:"0.72rem",flexShrink:0}}>✓</button>
             <div style={{flex:1}}>
               <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
                 <span style={{fontWeight:700,color:b.completado?T.text3:T.text,fontSize:"0.88rem",textDecoration:b.completado?"line-through":"none"}}>{b.titulo}</span>
-                <span style={S.tag(TIPO_COLOR[b.tipo]||"#888")}>{b.tipo}</span>
+                <span style={S.tag(colorTipo(T,b.tipo)||"#888")}>{b.tipo}</span>
               </div>
               {b.notas&&<p style={{color:T.text3,fontSize:"0.76rem",margin:"0.12rem 0 0"}}>{b.notas}</p>}
             </div>
@@ -162,7 +163,7 @@ export function TabSesiones({onLaunchTimer}){
       {PLANTILLAS.map(p=>(<button key={p.id} onClick={()=>load(p)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",border:`1.5px solid ${T.border}`}}>
         <div style={{fontWeight:700,marginBottom:"0.2rem",color:T.text}}>{p.nombre}</div>
         <div style={{color:T.text3,fontSize:"0.78rem",marginBottom:"0.55rem"}}>{p.descripcion}</div>
-        <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap"}}>{p.bloques.map((b,j)=><span key={j} style={S.tag(TIPO_COLOR[b.tipo]||"#888")}>{b.titulo} {b.duracion}min</span>)}</div>
+        <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap"}}>{p.bloques.map((b,j)=><span key={j} style={S.tag(colorTipo(T,b.tipo)||"#888")}>{b.titulo} {b.duracion}min</span>)}</div>
       </button>))}
     </div>
   </div>);

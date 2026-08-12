@@ -33,7 +33,7 @@ export function TabUniverso(){
 
   const lista=datos.filter(x=>(filtro==="todos"||x.tipo===filtro)&&(!search||x.nome.toLowerCase().includes(search.toLowerCase())||x.desc.toLowerCase().includes(search.toLowerCase())||(x.tags||[]).some(t=>t.toLowerCase().includes(search.toLowerCase()))));
 
-  const TIPO_COL={"compañía":"#e040fb",festival:"#ffd740",escola:"#40c4ff",persoa:"#69f0ae",proxecto:"#ff6e40"};
+  const TIPO_COL={"compañía":"#e040fb",festival:T.warn,escola:T.info,persoa:T.ok,proxecto:T.danger};
 
   // M08: xa non se esixe conta. A política RLS acepta propostas anónimas
   // e forza estado='pendente' en todos os casos.
@@ -77,8 +77,8 @@ export function TabUniverso(){
             <div style={{display:"flex",gap:"0.5rem",alignItems:"center",flexWrap:"wrap",marginBottom:"0.3rem"}}>
               <span style={S.tag(cor)}>{cat?`${cat.emoji} ${cat.nome}`:sel.tipo}</span>
               {(sel.pais||sel.cidade)&&<span style={{color:T.text3,fontSize:"0.82rem"}}>{sel.pais} {sel.cidade}</span>}
-              {sel.estado==="pendente"&&<span style={S.tag("#ffd740")}>pendente de revisión</span>}
-              {sel.estado==="rexeitada"&&<span style={S.tag("#ff6e40")}>rexeitada</span>}
+              {sel.estado==="pendente"&&<span style={S.tag(T.warn)}>pendente de revisión</span>}
+              {sel.estado==="rexeitada"&&<span style={S.tag(T.danger)}>rexeitada</span>}
               {sel.activo===false&&<span style={{...S.tag(T.text4),background:T.bg3}}>inactiva</span>}
             </div>
             <h2 style={{color:T.text,fontWeight:900,fontSize:"1.3rem",margin:"0 0 0.5rem"}}>{sel.nome}</h2>
@@ -133,13 +133,13 @@ export function TabUniverso(){
       <button onClick={abrirForm} style={{...S.btn(T.accent),flexShrink:0}}>{logueado?"+ Engadir entrada":"🔒 Engadir entrada"}</button>
     </div>
 
-    {enviado&&!showForm&&<div style={{...S.panel,marginBottom:"1rem",border:"1.5px solid #69f0ae44",textAlign:"center",padding:"1.1rem"}}>
+    {enviado&&!showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.ok}44`,textAlign:"center",padding:"1.1rem"}}>
       <p style={{fontSize:"1.8rem",margin:"0 0 0.35rem"}}>✓</p>
-      <p style={{color:"#69f0ae",fontWeight:700,margin:0}}>Grazas! Queda pendente de revisión antes de ser visible.</p>
+      <p style={{color:T.ok,fontWeight:700,margin:0}}>Grazas! Queda pendente de revisión antes de ser visible.</p>
       <button onClick={()=>setEnviado(false)} style={{...S.btn(T.bg3,T.text2),marginTop:"0.8rem"}}>Pechar</button>
     </div>}
 
-    {erroEnvio&&<p style={{color:"#ff6e40",fontSize:"0.83rem",marginBottom:"0.8rem"}}>{erroEnvio}</p>}
+    {erroEnvio&&<p style={{color:T.danger,fontSize:"0.83rem",marginBottom:"0.8rem"}}>{erroEnvio}</p>}
 
     {showForm&&<UniversoForm cats={cats} logueado={logueado} onEnviar={enviarEntrada} onCancelar={()=>{setShowForm(false);setErroEnvio("");}}/>}
 
@@ -149,14 +149,14 @@ export function TabUniverso(){
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(260px,100%),1fr))",gap:"0.6rem"}}>
-      {lista.map(item=>(<button key={item.id} onClick={()=>setSel(item)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",border:`1.5px solid ${T.border}`,borderTop:`3px solid ${TIPO_COL[item.tipo]||T.accent}`,transition:"all 0.15s"}}>
+      {lista.map(item=>(<button key={item.id} onClick={()=>setSel(item)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",borderStyle:"solid",borderWidth:"3px 1.5px 1.5px 1.5px",borderTopColor:TIPO_COL[item.tipo]||T.accent,borderRightColor:T.border,borderBottomColor:T.border,borderLeftColor:T.border,transition:"all 0.15s"}}>
         <div style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
           <span style={{fontSize:"1.6rem",lineHeight:1,flexShrink:0}}>{item.logo}</span>
           <div style={{flex:1,minWidth:0}}>
             <div style={{display:"flex",gap:"0.4rem",alignItems:"center",marginBottom:"0.2rem",flexWrap:"wrap"}}>
               <span style={S.tag(TIPO_COL[item.tipo]||T.accent)}>{item.tipo}</span>
               <span style={{color:T.text3,fontSize:"0.72rem"}}>{item.pais}</span>
-              {item.verificado===false&&<span style={S.tag("#ffd740")}>sen verificar</span>}
+              {item.verificado===false&&<span style={S.tag(T.warn)}>sen verificar</span>}
             </div>
             <p style={{color:T.text,fontWeight:700,margin:"0 0 0.2rem",fontSize:"0.9rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.nome}</p>
             <p style={{color:T.text3,fontSize:"0.78rem",margin:0,lineHeight:1.4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{item.desc}</p>

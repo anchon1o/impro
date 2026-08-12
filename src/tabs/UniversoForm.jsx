@@ -58,8 +58,8 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
   };
 
   const erroDe=id=>erros.find(x=>x.campo===id)?.msg;
-  const campoStyle=id=>({...S.input,marginBottom:erroDe(id)?"0.15rem":"0.5rem",borderColor:erroDe(id)?"#ff6e40":undefined});
-  const Erro=({id})=>erroDe(id)?<p style={{color:"#ff6e40",fontSize:"0.72rem",margin:"0 0 0.5rem"}}>{erroDe(id)}</p>:null;
+  const campoStyle=id=>({...S.input,marginBottom:erroDe(id)?"0.15rem":"0.5rem",borderColor:erroDe(id)?T.danger:undefined});
+  const Erro=({id})=>erroDe(id)?<p style={{color:T.danger,fontSize:"0.72rem",margin:"0 0 0.5rem"}}>{erroDe(id)}</p>:null;
 
   // Editor por tipo de campo. Unha soa función: se engadimos un tipo novo
   // á plantilla, só hai que tocalo aquí.
@@ -133,8 +133,8 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
     <input value={trampa} onChange={e=>setTrampa(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true"
       style={{position:"absolute",left:"-9999px",width:1,height:1,opacity:0}}/>
 
-    {avisoSpam&&<p style={{color:"#ffd740",fontSize:"0.8rem",margin:"0.8rem 0 0"}}>{avisoSpam}</p>}
-    {erros.length>0&&<p style={{color:"#ff6e40",fontSize:"0.8rem",margin:"0.8rem 0 0"}}>Revisa {erros.length} {erros.length===1?"campo":"campos"}.</p>}
+    {avisoSpam&&<p style={{color:T.warn,fontSize:"0.8rem",margin:"0.8rem 0 0"}}>{avisoSpam}</p>}
+    {erros.length>0&&<p style={{color:T.danger,fontSize:"0.8rem",margin:"0.8rem 0 0"}}>Revisa {erros.length} {erros.length===1?"campo":"campos"}.</p>}
 
     <div style={{display:"flex",gap:"0.4rem",marginTop:"1rem",flexWrap:"wrap"}}>
       <button onClick={enviar} disabled={enviando} style={{...S.btn(T.accent),opacity:enviando?0.6:1}}>{enviando?"Enviando…":"Enviar proposta"}</button>
