@@ -35,7 +35,7 @@ export function TabManual(){
   return(<div>
     <div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}22`,background:T.accent+"08"}}>
       <p style={{color:T.text,fontWeight:700,margin:"0 0 0.3rem",fontSize:"0.95rem"}}>📘 Manual de ImproApp</p>
-      <p style={{color:T.text3,fontSize:"0.83rem",margin:0,lineHeight:1.5}}>Guía completa de todas las funciones. Toca una sección para ver los detalles.</p>
+      <p style={{color:T.text3,fontSize:"0.83rem",margin:0,lineHeight:1.5}}>Guía completa de todas as funcións. Toca unha sección para ver os detalles.</p>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:"0.55rem"}}>
       {MANUAL_SECCIONES.map(sec=>(

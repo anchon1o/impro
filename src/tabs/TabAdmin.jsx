@@ -22,7 +22,7 @@ export function TabAdmin(){
   if(perfil?.rol!=="admin")return(<div style={{maxWidth:360,margin:"0 auto",paddingTop:"3rem",textAlign:"center"}}>
     <p style={{fontSize:"2.5rem",margin:"0 0 0.75rem"}}>🔐</p>
     <p style={S.ptitle(T.accent)}>Acceso restrinxido</p>
-    <p style={{color:T.text3,fontSize:"0.88rem",lineHeight:1.6}}>Esta sección só está dispoñible para administradores. Se necesitas acceso, contacta cun admin.</p>
+    <p style={{color:T.text3,fontSize:"0.88rem",lineHeight:1.6}}>Esta sección só está dispoñible para administradores. Se precisas acceso, contacta cun admin.</p>
   </div>);
 
   const ADMIN_TABS=[

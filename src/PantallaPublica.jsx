@@ -47,7 +47,7 @@ export function PantallaPublica({stimulus,timerDisplay,timerRunning,rundown,onCl
   const timerColor=urgent?T.danger:warning?T.warn:"#e040fb";
 
   return(<div style={{position:"fixed",inset:0,zIndex:2000,background:"#050505",display:"flex",flexDirection:"column",fontFamily:FONT_UI}}>
-    <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Cerrar</button>
+    <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"#1a1a1a",border:"1px solid #333",color:"#555",borderRadius:8,padding:"0.3rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",zIndex:10}}>✕ Pechar</button>
 
     {/* Notificación flotante */}
     {notif&&<div key={notif.id} style={{position:"absolute",top:60,left:"50%",transform:"translateX(-50%)",background:notif.col+"22",border:`1.5px solid ${notif.col}`,borderRadius:12,padding:"0.65rem 1.5rem",zIndex:20,animation:"pubIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",backdropFilter:"blur(12px)",whiteSpace:"nowrap"}}>

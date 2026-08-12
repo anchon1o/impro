@@ -25,7 +25,7 @@ export function TabGrupos({grupoActivo,setGrupoActivo}){
   const addMiembro=gid=>{if(!miembro.trim())return;const u=grupos.map(g=>g.id===gid?{...g,miembros:[...(g.miembros||[]),miembro.trim()]}:g);save(u);setMiembro("");setEditGrupo(u.find(g=>g.id===gid));};
   const removeMiembro=(gid,mi)=>{const u=grupos.map(g=>g.id===gid?{...g,miembros:(g.miembros||[]).filter((_,j)=>j!==mi)}:g);save(u);setEditGrupo(u.find(g=>g.id===gid));};
   const sesDeGrupo=n=>sesiones.filter(s=>s.grupo===n);
-  if(view==="nuevo")return(<div><button onClick={()=>setView("lista")} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button><div style={S.panel}><p style={S.ptitle(T.accent)}>Nuevo grupo</p><input value={nombre} onChange={e=>setNombre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&crear()} placeholder="Nombre del grupo..." style={{...S.input,marginBottom:"0.75rem"}}/><button onClick={crear} style={{...S.btn(T.accent),width:"100%"}}>Crear grupo</button></div></div>);
+  if(view==="nuevo")return(<div><button onClick={()=>setView("lista")} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button><div style={S.panel}><p style={S.ptitle(T.accent)}>Nuevo grupo</p><input value={nombre} onChange={e=>setNombre(e.target.value)} onKeyDown={e=>e.key==="Enter"&&crear()} placeholder="Nome do grupo..." style={{...S.input,marginBottom:"0.75rem"}}/><button onClick={crear} style={{...S.btn(T.accent),width:"100%"}}>Crear grupo</button></div></div>);
   if(view==="detalle"&&editGrupo){
     const gSes=sesDeGrupo(editGrupo.nombre);
     const totalMins=gSes.reduce((a,s)=>a+(s.minutos||0),0);
@@ -44,7 +44,7 @@ export function TabGrupos({grupoActivo,setGrupoActivo}){
         </div>
         {}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1rem"}}>
-          {[{l:"SESIONES",v:gSes.length,c:editGrupo.color},{l:"MINUTOS",v:totalMins,c:T.warn},{l:"MIEMBROS",v:editGrupo.miembros?.length||0,c:T.ok}].map((s,i)=>(
+          {[{l:"SESIÓNS",v:gSes.length,c:editGrupo.color},{l:"MINUTOS",v:totalMins,c:T.warn},{l:"MIEMBROS",v:editGrupo.miembros?.length||0,c:T.ok}].map((s,i)=>(
             <div key={i} style={{...S.panel,textAlign:"center",padding:"0.55rem",border:`1px solid ${s.c}33`}}>
               <div style={{color:s.c,fontWeight:900,fontSize:"1.3rem",lineHeight:1}}>{s.v}</div>
               <div style={{color:T.text3,fontSize:"0.65rem",marginTop:"0.15rem",letterSpacing:"0.08em"}}>{s.l}</div>
@@ -53,7 +53,7 @@ export function TabGrupos({grupoActivo,setGrupoActivo}){
         </div>
         {}
         {mesEntries.length>0&&(<div style={{marginBottom:"1rem"}}>
-          <p style={S.ptitle(T.text3)}>Sesiones por mes</p>
+          <p style={S.ptitle(T.text3)}>Sesións por mes</p>
           <div style={{display:"flex",gap:"0.5rem",alignItems:"flex-end",height:50}}>
             {mesEntries.map(([mes,n])=>{const maxN=Math.max(...mesEntries.map(e=>e[1]));const h=Math.max(8,(n/maxN)*44);return(<div key={mes} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.2rem"}}>
               <span style={{color:T.accent,fontSize:"0.68rem",fontWeight:700}}>{n}</span>
@@ -71,17 +71,17 @@ export function TabGrupos({grupoActivo,setGrupoActivo}){
             <span style={{color:editGrupo.color,fontWeight:700,fontSize:"0.75rem",width:20,textAlign:"right",flexShrink:0}}>{n}</span>
           </div>))}
         </div>)}
-        {topCats.length===0&&gSes.length===0&&<p style={{color:T.text4,fontSize:"0.8rem",marginBottom:"0.75rem"}}>Activa este grupo y empieza a generar para ver estadísticas.</p>}
+        {topCats.length===0&&gSes.length===0&&<p style={{color:T.text4,fontSize:"0.8rem",marginBottom:"0.75rem"}}>Activa este grupo e empeza a xerar para ver estatísticas.</p>}
       </div>
       {}
       <div style={S.panel}>
-        <p style={S.ptitle(editGrupo.color)}>Miembros</p>
+        <p style={S.ptitle(editGrupo.color)}>Membros</p>
         <div style={{display:"flex",gap:"0.45rem",marginBottom:"0.65rem"}}>
           <input value={miembro} onChange={e=>setMiembro(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addMiembro(editGrupo.id)} placeholder="Nombre..." style={S.input}/>
           <button onClick={()=>addMiembro(editGrupo.id)} style={{...S.btn(editGrupo.color,"#000"),flexShrink:0}}>+</button>
         </div>
         <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
-          {(editGrupo.miembros||[]).length===0&&<p style={{color:T.text4,fontSize:"0.82rem",margin:0}}>Sin miembros.</p>}
+          {(editGrupo.miembros||[]).length===0&&<p style={{color:T.text4,fontSize:"0.82rem",margin:0}}>Sin membros.</p>}
           {(editGrupo.miembros||[]).map((m,i)=>(<div key={i} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.28rem 0.7rem",display:"flex",gap:"0.35rem",alignItems:"center"}}>
             <span style={{color:T.text2,fontSize:"0.83rem"}}>👤 {m}</span>
             <button onClick={()=>removeMiembro(editGrupo.id,i)} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",padding:0,fontSize:"0.83rem"}}>×</button>
@@ -90,5 +90,5 @@ export function TabGrupos({grupoActivo,setGrupoActivo}){
       </div>
     </div>);
   }
-  return(<div><div style={{display:"flex",gap:"0.6rem",marginBottom:"1.25rem",alignItems:"center",flexWrap:"wrap"}}><button onClick={()=>setView("nuevo")} style={S.btn(T.accent)}>+ Nuevo grupo</button>{grupoActivo&&<span style={{color:T.ok,fontSize:"0.82rem"}}>✓ Activo: <strong>{grupoActivo.nombre}</strong></span>}</div>{grupos.length===0&&<div style={{...S.panel,textAlign:"center",padding:"2.5rem 1rem"}}><p style={{color:T.text4}}>Crea tu primer grupo de impro</p><button onClick={()=>setView("nuevo")} style={S.btn(T.accent)}>+ Crear grupo</button></div>}<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(220px,100%),1fr))",gap:"0.65rem"}}>{grupos.map(g=>(<div key={g.id} style={{...S.panel,borderStyle:"solid",borderWidth:"1.5px 1.5px 1.5px 4px",borderTopColor:g.id===grupoActivo?.id?g.color:T.border,borderRightColor:g.id===grupoActivo?.id?g.color:T.border,borderBottomColor:g.id===grupoActivo?.id?g.color:T.border,borderLeftColor:g.color}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"0.65rem"}}><span style={{fontWeight:900,color:g.color,fontSize:"1.05rem"}}>{g.nombre}</span>{g.id===grupoActivo?.id&&<span style={S.tag(T.ok)}>ACTIVO</span>}</div><div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap"}}><span style={S.tag(g.color)}>{g.miembros?.length||0} miembros</span><span style={S.tag(T.warn)}>{sesDeGrupo(g.nombre).length} sesiones</span></div><div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}><button onClick={()=>{setEditGrupo(g);setView("detalle");}} style={{...S.btn(T.bg3,T.text2),flex:1}}>Ver</button><button onClick={()=>activar(g)} style={{...S.btn(g.id===grupoActivo?.id?T.ok:T.bg3,g.id===grupoActivo?.id?"#000":T.text2),flex:1}}>{g.id===grupoActivo?.id?"✓":"Activar"}</button><button onClick={()=>eliminar(g.id)} style={{...S.btn(T.bg3),color:T.danger,padding:"0.5rem 0.55rem"}}>✕</button></div></div>))}</div></div>);
+  return(<div><div style={{display:"flex",gap:"0.6rem",marginBottom:"1.25rem",alignItems:"center",flexWrap:"wrap"}}><button onClick={()=>setView("nuevo")} style={S.btn(T.accent)}>+ Nuevo grupo</button>{grupoActivo&&<span style={{color:T.ok,fontSize:"0.82rem"}}>✓ Activo: <strong>{grupoActivo.nombre}</strong></span>}</div>{grupos.length===0&&<div style={{...S.panel,textAlign:"center",padding:"2.5rem 1rem"}}><p style={{color:T.text4}}>Crea o teu primeiro grupo de impro</p><button onClick={()=>setView("nuevo")} style={S.btn(T.accent)}>+ Crear grupo</button></div>}<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(220px,100%),1fr))",gap:"0.65rem"}}>{grupos.map(g=>(<div key={g.id} style={{...S.panel,borderStyle:"solid",borderWidth:"1.5px 1.5px 1.5px 4px",borderTopColor:g.id===grupoActivo?.id?g.color:T.border,borderRightColor:g.id===grupoActivo?.id?g.color:T.border,borderBottomColor:g.id===grupoActivo?.id?g.color:T.border,borderLeftColor:g.color}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"0.65rem"}}><span style={{fontWeight:900,color:g.color,fontSize:"1.05rem"}}>{g.nombre}</span>{g.id===grupoActivo?.id&&<span style={S.tag(T.ok)}>ACTIVO</span>}</div><div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap"}}><span style={S.tag(g.color)}>{g.miembros?.length||0} membros</span><span style={S.tag(T.warn)}>{sesDeGrupo(g.nombre).length} sesiones</span></div><div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}><button onClick={()=>{setEditGrupo(g);setView("detalle");}} style={{...S.btn(T.bg3,T.text2),flex:1}}>Ver</button><button onClick={()=>activar(g)} style={{...S.btn(g.id===grupoActivo?.id?T.ok:T.bg3,g.id===grupoActivo?.id?"#000":T.text2),flex:1}}>{g.id===grupoActivo?.id?"✓":"Activar"}</button><button onClick={()=>eliminar(g.id)} style={{...S.btn(T.bg3),color:T.danger,padding:"0.5rem 0.55rem"}}>✕</button></div></div>))}</div></div>);
 }

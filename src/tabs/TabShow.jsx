@@ -377,7 +377,7 @@ export function TabShow({audio,onRundownChange}){
             {letter&&<div style={{fontSize:"3.5rem",fontWeight:900,color:T.warn,lineHeight:1,animation:"fadeIn 0.2s ease"}}>{letter}</div>}
           </div>
         </div>
-        <button onClick={()=>{setNum(Math.floor(Math.random()*9)+1);setLetter(LETRAS[Math.floor(Math.random()*LETRAS.length)]);}} style={{...S.btn(T.bg3,T.text2),width:"100%",marginTop:"0.5rem"}}>Ambos a la vez</button>
+        <button onClick={()=>{setNum(Math.floor(Math.random()*9)+1);setLetter(LETRAS[Math.floor(Math.random()*LETRAS.length)]);}} style={{...S.btn(T.bg3,T.text2),width:"100%",marginTop:"0.5rem"}}>Ambos á vez</button>
       </div>
     </div>}
 

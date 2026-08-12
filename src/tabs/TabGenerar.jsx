@@ -87,11 +87,11 @@ export function TabGenerar({onStimulus}){
           <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(v==="plus"&&nivel==="plus"?T.accent:v==="simple"&&nivel==="simple"?T.bg2:"transparent",v===nivel?(v==="plus"?"#fff":T.text):T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>
         ))}
       </div>
-      {view==="cats"&&<button onClick={generateRandom} style={S.btn(T.accent)}>🎲 Al azar</button>}
+      {view==="cats"&&<button onClick={generateRandom} style={S.btn(T.accent)}>🎲 Ao chou</button>}
     </div>
 
     {view==="favs"&&(<div>
-      {favoritos.length===0?<div style={{...S.panel,textAlign:"center",padding:"2rem"}}><p style={{color:T.text4}}>Aún no has guardado ningún estímulo. Genera uno y pulsa ♡.</p></div>
+      {favoritos.length===0?<div style={{...S.panel,textAlign:"center",padding:"2rem"}}><p style={{color:T.text4}}>Aínda non gardaches ningún estímulo. Xera un e preme ♡.</p></div>
       :<div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
         {favoritos.map(f=>(<div key={f.id} style={{...S.panel,display:"flex",alignItems:"center",gap:"0.75rem"}}>
           <span>{CAT_ICONS[f.cat]||"◆"}</span>
@@ -112,7 +112,7 @@ export function TabGenerar({onStimulus}){
 
       {sceneSubview==="hist"&&(<div>
         {histEscenas.length===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem",color:T.text4}}>
-          <p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📜</p><p style={{margin:0}}>Genera escenas para verlas aquí.</p>
+          <p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📜</p><p style={{margin:0}}>Xera escenas para velas aquí.</p>
         </div>}
         <div style={{display:"flex",flexDirection:"column",gap:"0.55rem"}}>
           {histEscenas.map((entry,i)=>(<div key={entry.id} style={{...S.panel,border:`1.5px solid ${T.border}`}}>
@@ -163,13 +163,13 @@ export function TabGenerar({onStimulus}){
 
           {!logueado&&<button onClick={pedirLogin} style={{background:"none",border:`1.5px dashed ${T.border}`,color:T.text4,borderRadius:8,padding:"0.28rem 0.65rem",fontSize:"0.74rem",cursor:"pointer",fontFamily:"inherit"}}>🔒 Gardar as túas</button>}
         </div>
-        <button onClick={generateScene} disabled={!sceneCats.length} style={{...S.btn(T.accent),width:"100%",opacity:!sceneCats.length?0.4:1}}>🎬 Generar escena</button>
+        <button onClick={generateScene} disabled={!sceneCats.length} style={{...S.btn(T.accent),width:"100%",opacity:!sceneCats.length?0.4:1}}>🎬 Xerar escena</button>
       </div>
       {scene&&(<div style={{...S.panel,border:`1.5px solid ${T.accent}44`,animation:"fadeIn 0.35s ease"}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
           <span style={{color:T.accent,fontSize:"0.72rem",fontFamily:"monospace",letterSpacing:"0.15em"}}>ESCENA GENERADA</span>
           <div style={{display:"flex",gap:"0.5rem"}}>
-            <button onClick={()=>scene.forEach(i=>saveFav(i))} style={S.btn(T.bg3,T.text2)}>♡ Guardar</button>
+            <button onClick={()=>scene.forEach(i=>saveFav(i))} style={S.btn(T.bg3,T.text2)}>♡ Gardar</button>
             <button onClick={generateScene} style={S.btn(T.accent)}>🎲 Nueva</button>
           </div>
         </div>
@@ -183,7 +183,7 @@ export function TabGenerar({onStimulus}){
             {scene.find(s=>s.cat==="ACCIÓN")&&` mientras ${scene.find(s=>s.cat==="ACCIÓN").word.toLowerCase()}`}
             {scene.find(s=>s.cat==="ESTILO")&&` — estilo ${scene.find(s=>s.cat==="ESTILO").word}`}
             {scene.find(s=>s.cat==="FRASE")&&`. "${scene.find(s=>s.cat==="FRASE").word}"`}
-            {scene.find(s=>s.cat==="DUDA")&&` Y la gran pregunta: ${scene.find(s=>s.cat==="DUDA").word}`}
+            {scene.find(s=>s.cat==="DUDA")&&` E a gran pregunta: ${scene.find(s=>s.cat==="DUDA").word}`}
             {scene.find(s=>s.cat==="CONFESIÓN")&&` Confesión: "${scene.find(s=>s.cat==="CONFESIÓN").word}"`}
           </p>
         </div>)}
@@ -223,7 +223,7 @@ export function TabGenerar({onStimulus}){
         <p style={{color:T.text,fontSize:"1.8rem",fontWeight:800,margin:"0 0 0.75rem",cursor:"pointer"}} onClick={()=>setSpotlight(sel)}>{sel.word}</p>
         <div style={{display:"flex",gap:"0.5rem",justifyContent:"center"}}>
           <button onClick={()=>setSpotlight(sel)} style={S.btn(T.bg3,T.text2)}>⛶ Pantalla completa</button>
-          <button onClick={()=>saveFav(sel)} style={S.btn(T.bg3,T.text2)}>♡ Guardar</button>
+          <button onClick={()=>saveFav(sel)} style={S.btn(T.bg3,T.text2)}>♡ Gardar</button>
         </div>
       </div>)}
     </>)}

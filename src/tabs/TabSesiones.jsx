@@ -99,7 +99,7 @@ export function TabSesiones({onLaunchTimer}){
   if(showPomodoro)return(<ModoPomodoroImpro onClose={()=>setShowPomodoro(false)} audio={{playBell:()=>{try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.5,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.5);o.start();o.stop(ctx.currentTime+1.5);}catch(e){}}}}/>);
   if(view==="historial")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem"}}><button onClick={()=>setView("plantillas")} style={S.btn(T.bg3,T.text2)}>← Plantillas</button><span style={{fontWeight:700,color:T.text}}>Historial</span></div>
-    {historial.length===0&&<p style={{color:T.text4}}>Sin sesiones guardadas.</p>}
+    {historial.length===0&&<p style={{color:T.text4}}>Sen sesións gardadas.</p>}
     {historial.map(h=>(<div key={h.id} style={{...S.panel,marginBottom:"0.6rem"}}><div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:"0.3rem",marginBottom:"0.4rem"}}><span style={{fontWeight:700,color:T.text}}>{h.nombre}</span><span style={{color:T.text3,fontSize:"0.78rem"}}>{h.fecha}</span></div><div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}><span style={S.tag(T.warn)}>{h.minutos}min</span><span style={S.tag(T.ok)}>{h.completados}/{h.bloques?.length} bloques</span></div>{h.notas&&<p style={{color:T.text3,fontSize:"0.8rem",margin:"0.4rem 0 0"}}>{h.notas}</p>}</div>))}
   </div>);
 
@@ -148,8 +148,8 @@ export function TabSesiones({onLaunchTimer}){
         </div>
       ))}
     </div>
-    {editMode&&<button onClick={add} style={{...S.btn(T.bg3,T.text2),width:"100%",marginBottom:"1rem"}}>+ Añadir bloque</button>}
-    <textarea value={notas} onChange={e=>setNotas(e.target.value)} placeholder="Notas de la sesión..." style={{...S.input,height:70,resize:"none"}}/>
+    {editMode&&<button onClick={add} style={{...S.btn(T.bg3,T.text2),width:"100%",marginBottom:"1rem"}}>+ Engadir bloque</button>}
+    <textarea value={notas} onChange={e=>setNotas(e.target.value)} placeholder="Notas da sesión..." style={{...S.input,height:70,resize:"none"}}/>
   </div>);
 
   return(<div>

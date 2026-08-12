@@ -26,15 +26,15 @@ export function TabAjustes(){
     const file=e.target.files?.[0];if(!file)return;
     const reader=new FileReader();
     reader.onload=ev=>{try{
-      const data=JSON.parse(ev.target.result);if(!data.version){setMsg("❌ Archivo no válido");return;}
+      const data=JSON.parse(ev.target.result);if(!data.version){setMsg("❌ Ficheiro non válido");return;}
       const keys=["impro_dinamicas_v2","impro_sesiones","impro_grupos","impro_ideas_v2","impro_favoritos","impro_playlists_v2","impro_efectos_v2","impro_stats","impro_historial","impro_grupo_activo"];
       let count=0;keys.forEach(k=>{if(data[k]!==undefined){ls.set(k,data[k]);count++;}});
       setMsg(`✓ Importado: ${count} secciones. Recarga para aplicar.`);
       setStats(ls.get("impro_stats",{cats:{},dins:{},total:0,mins:0}));
-    }catch{setMsg("❌ Error al leer el archivo");}};
+    }catch{setMsg("❌ Erro ao ler o ficheiro");}};
     reader.readAsText(file);e.target.value="";
   };
-  const resetStats=()=>{if(!confirm("¿Borrar todas las estadísticas?"))return;ls.set("impro_stats",{cats:{},dins:{},total:0,mins:0});setStats({cats:{},dins:{},total:0,mins:0});};
+  const resetStats=()=>{if(!confirm("Borrar todas as estatísticas?"))return;ls.set("impro_stats",{cats:{},dins:{},total:0,mins:0});setStats({cats:{},dins:{},total:0,mins:0});};
   const topCats=Object.entries(stats.cats||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const topDins=Object.entries(stats.dins||{}).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const maxCat=topCats[0]?.[1]||1;const maxDin=topDins[0]?.[1]||1;
@@ -49,19 +49,19 @@ export function TabAjustes(){
           <div key={i} style={{...S.panel,textAlign:"center",border:`1.5px solid ${s.col}44`}}><div style={{color:s.col,fontWeight:900,fontSize:"1.6rem",lineHeight:1}}>{s.val}</div><div style={{color:T.text3,fontSize:"0.7rem",marginTop:"0.25rem"}}>{s.label}</div></div>
         ))}
       </div>
-      {(stats.total||0)===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem",color:T.text4}}><p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📊</p><p style={{margin:0}}>Genera estímulos y usa dinámicas para ver estadísticas aquí.</p></div>}
-      {topCats.length>0&&<><p style={S.ptitle(T.accent)}>Categorías más generadas</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1.25rem"}}>
+      {(stats.total||0)===0&&<div style={{...S.panel,textAlign:"center",padding:"2rem",color:T.text4}}><p style={{fontSize:"1.5rem",margin:"0 0 0.5rem"}}>📊</p><p style={{margin:0}}>Xera estímulos e usa dinámicas para ver estatísticas aquí.</p></div>}
+      {topCats.length>0&&<><p style={S.ptitle(T.accent)}>Categorías máis xeradas</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1.25rem"}}>
         {topCats.map(([cat,n])=>(<div key={cat} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",width:90,flexShrink:0}}>{CAT_ICONS[cat]||"◆"} {cat}</span><div style={{flex:1,height:8,background:T.bg3,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${(n/maxCat)*100}%`,background:T.accent,borderRadius:4,transition:"width 0.5s"}}/></div><span style={{color:T.accent,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
       </div></>}
-      {topDins.length>0&&<><p style={S.ptitle(T.warn)}>Dinámicas más usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
+      {topDins.length>0&&<><p style={S.ptitle(T.warn)}>Dinámicas máis usadas (Reto)</p><div style={{display:"flex",flexDirection:"column",gap:"0.45rem",marginBottom:"1rem"}}>
         {topDins.map(([din,n])=>(<div key={din} style={{display:"flex",alignItems:"center",gap:"0.65rem"}}><span style={{color:T.text2,fontSize:"0.8rem",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{din}</span><div style={{width:80,height:8,background:T.bg3,borderRadius:4,overflow:"hidden",flexShrink:0}}><div style={{height:"100%",width:`${(n/maxDin)*100}%`,background:T.warn,borderRadius:4}}/></div><span style={{color:T.warn,fontWeight:700,fontSize:"0.8rem",width:22,textAlign:"right",flexShrink:0}}>{n}</span></div>))}
       </div></>}
-      {(stats.total||0)>0&&<button onClick={resetStats} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem"}}>↺ Borrar estadísticas</button>}
+      {(stats.total||0)>0&&<button onClick={resetStats} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem"}}>↺ Borrar estatísticas</button>}
     </div>}
     {view==="idioma"&&<TabIdioma/>}
     {view==="backup"&&<div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.ok}33`}}><p style={S.ptitle(T.ok)}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos tus datos: sesiones, grupos, dinámicas, ideas, favoritos, playlists y estadísticas.</p><button onClick={exportAll} style={{...S.btn(T.ok,"#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
-      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.info}33`}}><p style={S.ptitle(T.info)}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un archivo exportado anteriormente. Recarga la página tras importar.</p><label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.ok}33`}}><p style={S.ptitle(T.ok)}>Exportar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Descarga un JSON con todos os teus datos: sesións, grupos, dinámicas, ideas, favoritos, playlists e estatísticas.</p><button onClick={exportAll} style={{...S.btn(T.ok,"#000"),width:"100%"}}>⬇ Exportar todo (.json)</button></div>
+      <div style={{...S.panel,marginBottom:"0.75rem",border:`1.5px solid ${T.info}33`}}><p style={S.ptitle(T.info)}>Importar</p><p style={{color:T.text2,fontSize:"0.85rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga un ficheiro exportado anteriormente. Recarga a páxina tras importar.</p><label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar .json<input type="file" accept=".json" onChange={importAll} style={{display:"none"}}/></label></div>
       {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?T.ok+"44":T.danger+"44"}`,color:msg.startsWith("✓")?T.ok:T.danger,fontSize:"0.85rem",marginBottom:"0.75rem"}}>{msg}</div>}
 
     </div>}
@@ -80,14 +80,14 @@ export function TabIdioma(){
     const url=URL.createObjectURL(blob);const a=document.createElement("a");
     a.href=url;a.download=`improapp_traduccion_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;
     a.click();URL.revokeObjectURL(url);
-    setMsg("✓ Exportado. Pásalo a Claude para traducir los campos vacíos.");
+    setMsg("✓ Exportado. Pásallo a Claude para traducir os campos baleiros.");
     setTimeout(()=>setMsg(""),5000);
   };
 
   const importTranslation=(e)=>{
     const file=e.target.files?.[0];if(!file)return;
     const reader=new FileReader();
-    reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(!data.meta){setMsg("❌ Archivo no válido");return;}importTranslations(data);setMsg("✓ Traducciones importadas correctamente.");}catch{setMsg("❌ Error al leer el archivo");}};
+    reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(!data.meta){setMsg("❌ Ficheiro non válido");return;}importTranslations(data);setMsg("✓ Traducións importadas correctamente.");}catch{setMsg("❌ Erro ao ler o ficheiro");}};
     reader.readAsText(file);e.target.value="";
   };
 
@@ -112,6 +112,6 @@ export function TabIdioma(){
       <label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
     </div>
     {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?T.ok+"44":T.danger+"44"}`,color:msg.startsWith("✓")?T.ok:T.danger,fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
-    {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducciones borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducciones</button>}
+    {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducións borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducións</button>}
   </div>);
 }

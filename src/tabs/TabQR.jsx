@@ -125,13 +125,13 @@ export function TabQR(){
       // sen entender por que. O índice único parcial xa o impide, pero non
       // convén depender dunha soa capa.
       const {data,error:err}=await sb.from('salas').select('open,config,expira_en').eq('code',cod).maybeSingle();
-      if(err){setError("Error al conectar.");setLoading(false);return;}
-      if(!data){setError("Sala no encontrada. Revisa el código.");setLoading(false);return;}
-      if(!data.open){setError("Esta sala ya está cerrada.");setLoading(false);return;}
-      if(data.expira_en&&new Date(data.expira_en)<=new Date()){setError("Esta sala ha caducado.");setLoading(false);return;}
+      if(err){setError("Erro ao conectar.");setLoading(false);return;}
+      if(!data){setError("Sala non atopada. Revisa o código.");setLoading(false);return;}
+      if(!data.open){setError("Esta sala xa está pechada.");setLoading(false);return;}
+      if(data.expira_en&&new Date(data.expira_en)<=new Date()){setError("Esta sala caducou.");setLoading(false);return;}
       setSalaConfig(data.config||[{id:"p1",pregunta:"Escribe tu propuesta",tipo:"libre"}]);
       setSalaCode(cod);setMode("send");
-    }catch(e){setError("Error al conectar.");}
+    }catch(e){setError("Erro ao conectar.");}
     setLoading(false);
   };
 
@@ -141,7 +141,7 @@ export function TabQR(){
     const pregActual=salaConfig[preguntaSel]||salaConfig[0];
     const ok=await enviarProposta(salaCode,texto.trim(),pregActual?.pregunta||"Propuesta",preguntaSel===0?"simple":"plus");
     if(ok){setEnviado(true);setTexto("");}
-    else setError("Error al enviar.");
+    else setError("Erro ao enviar.");
     setLoading(false);
   };
 
@@ -175,7 +175,7 @@ export function TabQR(){
         <p style={{color:T.text,fontWeight:900,fontSize:"1.15rem",margin:0,lineHeight:1.4}}>{salaConfig[preguntaSel]?.pregunta||"Escribe tu propuesta"}</p>
       </div>
       <div style={{flex:1,display:"flex",flexDirection:"column",gap:"0.4rem"}}>
-        <textarea value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribe aquí tu respuesta..." style={{...S.input,flex:1,minHeight:120,resize:"none",fontSize:"1rem"}} autoFocus/>
+        <textarea value={texto} onChange={e=>setTexto(e.target.value)} placeholder="Escribe aquí a túa resposta..." style={{...S.input,flex:1,minHeight:120,resize:"none",fontSize:"1rem"}} autoFocus/>
       </div>
       {error&&<p style={{color:T.danger,fontSize:"0.85rem",margin:0}}>{error}</p>}
       <button onClick={enviarPropuesta} disabled={loading||!texto.trim()} style={{...S.btn(T.accent),width:"100%",padding:"0.85rem",fontSize:"1rem",opacity:loading||!texto.trim()?0.5:1,borderRadius:12}}>{loading?"Enviando...":"✓ Enviar"}</button>
@@ -186,7 +186,7 @@ export function TabQR(){
       {salaConfig.length>1&&<div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap",justifyContent:"center",marginTop:"0.5rem"}}>
         {salaConfig.map((p,i)=>i!==preguntaSel&&<button key={p.id} onClick={()=>{setPreguntaSel(i);setEnviado(false);setTexto("");}} style={{...S.btn(T.bg3,T.text2),fontSize:"0.82rem"}}>Responder: {p.pregunta.slice(0,20)}...</button>)}
       </div>}
-      <button onClick={()=>{setEnviado(false);setTexto("");}} style={{...S.btn(T.accent),padding:"0.65rem 2rem",marginTop:"0.5rem"}}>Enviar otra respuesta</button>
+      <button onClick={()=>{setEnviado(false);setTexto("");}} style={{...S.btn(T.accent),padding:"0.65rem 2rem",marginTop:"0.5rem"}}>Enviar outra resposta</button>
     </div>)}
   </div>);
 
@@ -194,7 +194,7 @@ export function TabQR(){
   if(mode==="open")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem",alignItems:"center",flexWrap:"wrap"}}>
       <h2 style={{margin:0,fontWeight:900,fontSize:"0.95rem",flex:1,color:T.text}}>Sala <span style={{color:T.accent,letterSpacing:"0.1em"}}>{salaCode}</span></h2>
-      <button onClick={cerrarSalaQR} style={S.btn(T.danger)}>⏹ Cerrar sala</button>
+      <button onClick={cerrarSalaQR} style={S.btn(T.danger)}>⏹ Pechar sala</button>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"1.25rem",marginBottom:"1rem",alignItems:"start"}}>
       <div style={{...S.panel,display:"flex",flexDirection:"column",alignItems:"center",gap:"0.65rem",padding:"1rem"}}>
@@ -213,7 +213,7 @@ export function TabQR(){
                 <span style={{...S.tag(T.accent),marginRight:"0.4rem",fontSize:"0.66rem"}}>{(p.cat||"").slice(0,30)}</span>
                 <span style={{color:T.text,fontSize:"0.88rem"}}>{p.texto}</span>
               </div>
-              <button onClick={()=>aceptarPropuesta(p)} title="Añadir a ideas" style={{...S.btn(T.ok,"#000"),padding:"0.22rem 0.5rem",fontSize:"0.72rem",flexShrink:0}}>+ Ideas</button>
+              <button onClick={()=>aceptarPropuesta(p)} title="Engadir a ideas" style={{...S.btn(T.ok,"#000"),padding:"0.22rem 0.5rem",fontSize:"0.72rem",flexShrink:0}}>+ Ideas</button>
             </div>))}
           </div>
         )}
@@ -254,20 +254,20 @@ export function TabQR(){
   return(<div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(260px,100%),1fr))",gap:"1rem",marginBottom:"1.25rem"}}>
       <div style={{...S.panel,border:`1.5px solid ${T.accent}33`}}>
-        <p style={S.ptitle(T.accent)}>🎭 Soy el facilitador</p>
+        <p style={S.ptitle(T.accent)}>🎭 Son o facilitador</p>
         <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"1rem"}}>Configura as preguntas e abre a sala. O público escanea o QR e responde dende o seu móbil.</p>
         <button onClick={()=>{if(!logueado){pedirLogin();return;}setMode("config");}} style={{...S.btn(T.accent),width:"100%",padding:"0.65rem"}}>⚙️ Configurar e abrir sala</button>
       </div>
       <div style={{...S.panel,border:`1.5px solid ${T.ok}33`}}>
-        <p style={S.ptitle(T.ok)}>👥 Soy del público</p>
-        <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Introduce el código de 4 letras que te dieron.</p>
+        <p style={S.ptitle(T.ok)}>👥 Son do público</p>
+        <p style={{color:T.text2,fontSize:"0.83rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Introduce o código de 4 letras que che deron.</p>
         <div style={{display:"flex",gap:"0.45rem"}}><input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&unirseASala()} placeholder="XXXX" maxLength={4} style={{...S.input,flex:1,fontSize:"1.4rem",fontWeight:900,letterSpacing:"0.2em",textAlign:"center"}}/><button onClick={unirseASala} disabled={loading||joinCode.length<4} style={{...S.btn(T.ok,"#000"),opacity:joinCode.length<4?0.4:1}}>{loading?"...":"Entrar"}</button></div>
         {error&&<p style={{color:T.danger,fontSize:"0.8rem",marginTop:"0.45rem"}}>{error}</p>}
       </div>
     </div>
     <div style={S.panel}>
       <p style={S.ptitle(T.warn)}>📋 Historial</p>
-      {historial.length===0?<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen sesiones gardadas.</p>:(
+      {historial.length===0?<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen sesións gardadas.</p>:(
         <div style={{display:"flex",flexDirection:"column",gap:"0.55rem"}}>
           {historial.map((entry,i)=>(<div key={i} style={{background:T.bg3,borderRadius:10,padding:"0.75rem 1rem"}}>
             <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:"0.25rem",marginBottom:"0.4rem"}}><span style={{fontWeight:700,color:T.accent,letterSpacing:"0.1em"}}>{entry.sala_code}</span><span style={{color:T.text3,fontSize:"0.76rem"}}>{entry.fecha} · {entry.propostas?.length||0} propuestas</span></div>

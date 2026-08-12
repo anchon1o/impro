@@ -45,7 +45,7 @@ export function TabReto(){
             <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(v==="plus"&&nivel==="plus"?T.accent:v==="simple"&&nivel==="simple"?T.bg2:"transparent",v===nivel?(v==="plus"?"#fff":T.text):T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>
           ))}
         </div>
-        <button onClick={genReto} style={{...S.btn(T.accent),flex:1}}>⚡ Generar reto</button>
+        <button onClick={genReto} style={{...S.btn(T.accent),flex:1}}>⚡ Xerar reto</button>
       </div>
     </div>
     {reto?(<div style={{animation:"fadeIn 0.35s ease"}}>
@@ -105,14 +105,14 @@ export function TabReto(){
         </div>
       </div>
       <div style={{...S.panel,background:T.accent+"11",border:`1.5px solid ${T.accent}33`,textAlign:"center"}}>
-        <p style={{color:T.accent,fontWeight:700,fontSize:"0.88rem",margin:"0 0 0.25rem"}}>🎯 El reto</p>
-        <p style={{color:T.text2,fontSize:"0.82rem",margin:"0 0 1rem",lineHeight:1.5}}>Haz <strong style={{color:T.text}}>{reto.din.nombre}</strong> usando {reto.estimulos.map(e=>e.word).join(", ")} en máximo <strong style={{color:T.text}}>{reto.din.duracion} minutos</strong>.</p>
-        <button onClick={genReto} style={{...S.btn(T.accent),width:"100%"}}>⚡ Otro reto</button>
+        <p style={{color:T.accent,fontWeight:700,fontSize:"0.88rem",margin:"0 0 0.25rem"}}>🎯 O reto</p>
+        <p style={{color:T.text2,fontSize:"0.82rem",margin:"0 0 1rem",lineHeight:1.5}}>Fai <strong style={{color:T.text}}>{reto.din.nombre}</strong> usando {reto.estimulos.map(e=>e.word).join(", ")} en máximo <strong style={{color:T.text}}>{reto.din.duracion} minutos</strong>.</p>
+        <button onClick={genReto} style={{...S.btn(T.accent),width:"100%"}}>⚡ Outro reto</button>
       </div>
     </div>):(<div style={{...S.panel,textAlign:"center",padding:"3rem 1rem"}}>
       <p style={{fontSize:"2.5rem",margin:"0 0 0.75rem"}}>⚡</p>
       <p style={{color:T.text2,margin:"0 0 0.5rem",fontSize:"0.95rem",fontWeight:700}}>Generador de retos</p>
-      <p style={{color:T.text3,fontSize:"0.82rem",margin:0}}>Pulsa el botón para obtener un ejercicio completo listo para usar.</p>
+      <p style={{color:T.text3,fontSize:"0.82rem",margin:0}}>Preme o botón para obter un exercicio completo listo para usar.</p>
     </div>)}
   </div>);
 }
