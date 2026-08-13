@@ -186,19 +186,34 @@ export async function verificarUniverso(id, verificar) {
 // ─────────────────────────────────────────────
 // CATEGORÍAS (M07)
 // ─────────────────────────────────────────────
-// Devolve {cats, erro}. Antes devolvía só o array e tragaba o erro cun
-// console.warn: cando faltaban os GRANT, a UI amosaba «non hai categorías»
-// en vez de «permission denied», e non había forma de saber que pasaba.
+// ⚠️ COMPATIBILIDADE DE VERSIÓNS.
+// Esta función devolveu nun momento un array e despois un {cats, erro}.
+// Se un ficheiro se actualiza e outro non (moi doado cando se substitúen
+// ficheiros a man), o consumidor vello fai `(r||[]).filter(...)` sobre un
+// obxecto e peta con «filter is not a function»: crash de React e pantalla
+// en branco.
+//
+// Solución: devolver un ARRAY que ademais leva as propiedades .cats e .erro.
+// Así funcionan as dúas formas de consumo:
+//     const c = await cargarCategorias();        c.filter(...)   ✔
+//     const {cats, erro} = await cargarCategorias();  cats        ✔
+function resultadoCats(lista, erro) {
+  const out = Array.isArray(lista) ? lista.slice() : [];
+  Object.defineProperty(out, 'cats', { value: out, enumerable: false });
+  Object.defineProperty(out, 'erro', { value: erro || null, enumerable: false });
+  return out;
+}
+
 export async function cargarCategorias() {
   try {
     const { data, error } = await supabase
       .from('universo_categorias').select('*').order('orde');
     if (error) throw error;
-    if (data && data.length) { ls.set('impro_universo_cats', data); return { cats: data, erro: null }; }
-    return { cats: ls.get('impro_universo_cats', []), erro: null };
+    if (data && data.length) { ls.set('impro_universo_cats', data); return resultadoCats(data, null); }
+    return resultadoCats(ls.get('impro_universo_cats', []), null);
   } catch (e) {
     console.warn('[universo] cargarCategorias:', e?.message);
-    return { cats: ls.get('impro_universo_cats', []), erro: e?.message || 'Erro descoñecido' };
+    return resultadoCats(ls.get('impro_universo_cats', []), e?.message || 'Erro descoñecido');
   }
 }
 

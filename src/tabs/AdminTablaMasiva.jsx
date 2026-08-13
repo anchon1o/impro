@@ -37,7 +37,8 @@ export function AdminTablaMasiva(){
   const foco=useRef({fila:0,col:0});
 
   useEffect(()=>{
-    Promise.all([cargarCategorias(),listarTodoUniverso()]).then(([{cats:c,erro},todo])=>{
+    Promise.all([cargarCategorias(),listarTodoUniverso()]).then(([r,todo])=>{
+      const c=Array.isArray(r)?r:(r?.cats||[]); const erro=r?.erro;
       setCats(c||[]);
       if(erro)setMsg(`Non se puideron cargar as categorías: ${erro}`);
       const t=(c&&c[0]?.id)||"";

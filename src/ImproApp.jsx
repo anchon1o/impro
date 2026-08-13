@@ -286,5 +286,14 @@ async function migrarDatosLocais(userId){
 
 export default function ImproApp(){
   const theme=useThemeProvider();
-  return <ThemeCtx.Provider value={theme}><AuthGate/></ThemeCtx.Provider>;
+  // Límite de erro na raíz: aínda que falle a cabeceira ou o propio AuthGate,
+  // nunca se ve unha pantalla en branco sen explicación. O límite de dentro
+  // (por pestana) segue capturando primeiro os fallos de sección.
+  return (
+    <ThemeCtx.Provider value={theme}>
+      <LimiteErro onde="raíz" T={theme.T}>
+        <AuthGate/>
+      </LimiteErro>
+    </ThemeCtx.Provider>
+  );
 }

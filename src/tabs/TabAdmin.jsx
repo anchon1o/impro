@@ -10,6 +10,11 @@ import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPr
 import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
 import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso, cargarCategorias } from '../universo.js';
+import { LimiteErro } from '../LimiteErro.jsx';
+import { AdminCategorias } from './AdminCategorias.jsx';
+import { AdminTablaMasiva } from './AdminTablaMasiva.jsx';
+import { AdminReportes } from './AdminReportes.jsx';
+import { UniversoForm } from './UniversoForm.jsx';
 
 export const ADMIN_PIN = "1234";
 
@@ -370,7 +375,7 @@ export function AdminUniverso({T,S}){
   const cargar=useCallback(async()=>{
     setLoading(true);
     const [p,t,c]=await Promise.all([listarPendentesUniverso(),listarTodoUniverso(),cargarCategorias()]);
-    setPendentes(p);setTodos(t);setCats((c.cats||[]).filter(x=>x.activa!==false));setLoading(false);
+    setPendentes(p);setTodos(t);setCats((Array.isArray(c)?c:(c?.cats||[])).filter(x=>x.activa!==false));setLoading(false);
   },[]);
 
   // Un só camiño de gardado, tanto para crear como para editar. O formulario

@@ -19,8 +19,11 @@ const listaDesdeTexto=t=>String(t||"").split(/[\n,]/).map(s=>s.trim()).filter(Bo
 const textoDesdeLista=v=>Array.isArray(v)?v.join(", "):(v||"");
 
 export function UniversoForm({cats,logueado,onEnviar,onCancelar,inicial=null,admin=false}){
+  // Blindaxe: se `cats` chega sen definir (mestura de versións, ou a carga
+  // aínda non rematou), o compoñente non debe tumbar a árbore de React.
+  const CATS = Array.isArray(cats) ? cats : (Array.isArray(cats?.cats) ? cats.cats : []);
   const {T}=useTheme();const S=mkS(T);
-  const [tipo,setTipo]=useState(inicial?.tipo||cats[0]?.id||"");
+  const [tipo,setTipo]=useState(inicial?.tipo||CATS[0]?.id||"");
   const [f,setF]=useState({
     nome:inicial?.nome||"", desc:inicial?.desc||"",
     pais:inicial?.pais||"", cidade:inicial?.cidade||"",
@@ -38,7 +41,7 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar,inicial=null,adm
   const [trampa,setTrampa]=useState("");
   const abertoEn=useRef(Date.now());
 
-  const cat=cats.find(c=>c.id===tipo)||cats[0];
+  const cat=CATS.find(c=>c.id===tipo)||CATS[0]||null;
   const {opcionais,plantilla}=camposDeCategoria(cat);
   const tipoInicial=useRef(inicial?.tipo||null);
   useEffect(()=>{
@@ -116,9 +119,14 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar,inicial=null,adm
       </div>
     </div>}
 
+    {CATS.length===0&&<div style={{background:T.warn+"12",borderStyle:"solid",borderWidth:1,borderColor:T.warn+"44",borderRadius:8,padding:"0.7rem",marginBottom:"0.8rem"}}>
+      <p style={{color:T.warn,fontSize:"0.8rem",margin:0,lineHeight:1.5}}>
+        Non hai categorías dispoñibles. Se es admin, comproba que se executou <code>supabase_universo_grants.sql</code>.
+      </p>
+    </div>}
     {etiqueta("Categoría")}
     <select value={tipo} onChange={e=>setTipo(e.target.value)} style={{...S.input,marginBottom:"0.3rem"}}>
-      {cats.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.nome}</option>)}
+      {CATS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.nome}</option>)}
     </select>
     <p style={{color:T.text4,fontSize:"0.74rem",margin:"0 0 0.9rem",lineHeight:1.4}}>{plantilla.axuda}</p>
 

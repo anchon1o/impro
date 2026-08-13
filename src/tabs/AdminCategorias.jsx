@@ -24,7 +24,7 @@ export function AdminCategorias(){
   const [cargando,setCargando]=useState(true);
 
   const [erroCarga,setErroCarga]=useState("");
-  const recargar=()=>cargarCategorias().then(({cats,erro})=>{setCats(cats||[]);setErroCarga(erro||"");setCargando(false);});
+  const recargar=()=>cargarCategorias().then(r=>{const l=Array.isArray(r)?r:(r?.cats||[]);setCats(l);setErroCarga(r?.erro||"");setCargando(false);});
   useEffect(()=>{recargar();},[]);
 
   const novo=()=>{setForm({...BALEIRA});setEditandoId(null);setMsg("");};
