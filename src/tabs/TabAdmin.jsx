@@ -53,6 +53,7 @@ export function TabAdmin(){
       </button>)}
     </div>
 
+    <LimiteErro onde={`admin/${adminTab}`} T={T}>
     {adminTab==="usuarios"&&<AdminUsuarios T={T} S={S}/>}
     {adminTab==="estimulos"&&<AdminEstimulos T={T} S={S}/>}
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
@@ -64,6 +65,7 @@ export function TabAdmin(){
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
     {adminTab==="config"&&<AdminConfig T={T} S={S}/>}
+    </LimiteErro>
   </div>);
 }
 

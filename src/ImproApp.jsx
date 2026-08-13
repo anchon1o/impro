@@ -34,6 +34,7 @@ import { LoginModal } from './auth/LoginModal.jsx';
 import { LoginGate } from './auth/LoginGate.jsx';
 import { Inicio } from './Inicio.jsx';
 import { BotonReporte } from './tabs/BotonReporte.jsx';
+import { LimiteErro } from './LimiteErro.jsx';
 
 const TABS=[
   {id:"generar",label:"Generar",emoji:"🎲"},
@@ -195,6 +196,7 @@ function AppInner({perfil,publico}={}){
     </div>}
     <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>
+        <LimiteErro onde={tab} T={T}>
         {tab==="inicio"&&<Inicio lang={lang} onIr={id=>changeTab(id)}/>}
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
@@ -207,6 +209,7 @@ function AppInner({perfil,publico}={}){
         {tab==="ajustes"&&<TabAjustes/>}
         {tab==="manual"&&<TabManual/>}
         {tab==="universo"&&<TabUniverso/>}
+        </LimiteErro>
       </div>
     </main>
     <BotonReporte onde={tab}/>
