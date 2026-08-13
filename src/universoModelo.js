@@ -140,10 +140,26 @@ export function camposDeCategoria(categoria){
 // Valida unha ficha. Devolve [] se está ben, ou lista de erros.
 // Compártese entre o formulario de proposta (M08) e a táboa masiva (M09):
 // unha soa fonte de verdade para as dúas.
+// ⚠️ ALIAS DE CAMPO. A columna da base de datos chámase `descricion`, pero o
+// cliente traballa con `desc` desde o principio. Ese dobre nome xa causou
+// dous fallos: unha descrición cuberta dábase por baleira na validación, e
+// TabReto amosaba `desc` onde as dinámicas gardan `descripcion`.
+// A partir de aquí resólvese nun só sitio, para que ningún consumidor teña
+// que saber cal é o nome «bo».
+export const ALIAS = { descricion: ['descricion', 'desc'] };
+
+export function valorCampo(ficha, id) {
+  for (const k of (ALIAS[id] || [id])) {
+    const v = ficha?.[k];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return ficha?.datos?.[id];
+}
+
 export function validarFicha(ficha, categoria){
   const erros=[];
   const {comuns,opcionais}=camposDeCategoria(categoria);
-  const val=id=>comuns.some(c=>c.id===id&&c.columna)?ficha[id]:ficha?.datos?.[id];
+  const val=id=>comuns.some(c=>c.id===id&&c.columna)?valorCampo(ficha,id):ficha?.datos?.[id];
 
   for(const c of comuns){
     if(c.obrigatorio && !String(val(c.id)??"").trim())
@@ -170,4 +186,25 @@ export function validarFicha(ficha, categoria){
     if(!ok) erros.push({campo:`ligazons.${k}`, msg:`A ligazón de ${k} non parece válida`});
   }
   return erros;
+}
+
+
+// ─────────────────────────────────────────────
+// CAMPOS DE LISTA
+// ─────────────────────────────────────────────
+// Compártense entre o formulario e a táboa masiva. Antes cada un tiña a súa
+// copia e comportábanse distinto: nun podíanse escribir comas e no outro non.
+export const listaDesdeTexto = t =>
+  String(t ?? '').split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+
+export const textoDesdeLista = v =>
+  Array.isArray(v) ? v.join(', ') : (v ?? '');
+
+// Normaliza unha ficha vinda de calquera orixe ao formato do cliente.
+export function normalizarFicha(f) {
+  const out = { ...f };
+  if (out.descricion !== undefined && out.desc === undefined) out.desc = out.descricion;
+  if (out.desc !== undefined && out.descricion === undefined) out.descricion = out.desc;
+  if (!Array.isArray(out.tags)) out.tags = listaDesdeTexto(out.tags);
+  return out;
 }

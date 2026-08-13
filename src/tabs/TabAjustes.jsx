@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState } from 'react';
-import { useLang, useTheme, CAT_ICONS, ls, mkS } from '../core.jsx';
+import { useLang, useTheme, CAT_ICONS, ls, mkS, LANGS } from '../core.jsx';
 import { SelectorTemas } from './SelectorTemas.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 
@@ -68,50 +68,44 @@ export function TabAjustes(){
   </div>);
 }
 
+// Selector de idioma da interface.
+//
+// ⚠️ Aquí había tamén un bloque de exportar/importar traducións que chamaba
+// a tres funcións inexistentes (buildTranslationExport, importTranslations,
+// loadTranslations): restos dunha versión anterior. Non compilaba mal, pero
+// tumbaba a app ao premer o botón. Ademais duplicaba o que xa fai
+// Admin → Idiomas, que si funciona e é onde corresponde.
 export function TabIdioma(){
   const {T}=useTheme();const S=mkS(T);
   const {lang,setLang}=useLang();
-  const [msg,setMsg]=useState("");
-  const LANGS=[["es","🇪🇸 Español"],["gl","🏴 Galego"],["en","🇬🇧 English"]];
-
-  const exportForTranslation=()=>{
-    const data=buildTranslationExport();
-    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    const url=URL.createObjectURL(blob);const a=document.createElement("a");
-    a.href=url;a.download=`improapp_traduccion_${new Date().toLocaleDateString("es-ES").replace(/\//g,"-")}.json`;
-    a.click();URL.revokeObjectURL(url);
-    setMsg("✓ Exportado. Pásallo a Claude para traducir os campos baleiros.");
-    setTimeout(()=>setMsg(""),5000);
-  };
-
-  const importTranslation=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(!data.meta){setMsg("❌ Ficheiro non válido");return;}importTranslations(data);setMsg("✓ Traducións importadas correctamente.");}catch{setMsg("❌ Erro ao ler o ficheiro");}};
-    reader.readAsText(file);e.target.value="";
-  };
 
   return(<div>
-    <div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}33`}}>
-      <p style={S.ptitle(T.accent)}>Idioma da interface</p>
-      <div style={{display:"flex",gap:"0.5rem"}}>
-        {LANGS.map(([code,label])=>(
-          <button key={code} onClick={()=>setLang(code)} style={{...S.btn(lang===code?T.accent:T.bg3,lang===code?"#fff":T.text2),flex:1}}>{label}</button>
-        ))}
-      </div>
-      <p style={{color:T.text4,fontSize:"0.75rem",marginTop:"0.6rem"}}>O galego e o inglés amósanse segundo as traducións importadas. Os campos sen traducir aparecen en español.</p>
+    <p style={S.ptitle(T.accent)}>Idioma da interface</p>
+    <p style={{...S.caption,marginBottom:"0.9rem"}}>
+      Os idiomas marcados como «só contido» aínda non teñen a interface
+      traducida: verás os menús en castelán, pero os estímulos si na lingua
+      escollida.
+    </p>
+
+    <div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>
+      {LANGS.map(L=>(
+        <button key={L.id} onClick={()=>setLang(L.id)} style={{
+          display:"flex",alignItems:"center",gap:"0.6rem",
+          background:lang===L.id?T.accent+"22":T.bg3,
+          borderStyle:"solid",borderWidth:1,
+          borderColor:lang===L.id?T.accent:T.border,
+          borderRadius:10,padding:"0.7rem 0.8rem",cursor:"pointer",
+          color:lang===L.id?T.accent:T.text2,fontSize:"0.86rem",
+          fontFamily:"inherit",textAlign:"left",minHeight:38}}>
+          <span style={{fontFamily:"monospace",fontWeight:700,fontSize:"0.72rem",opacity:0.7,width:22}}>{L.id.toUpperCase()}</span>
+          <span style={{flex:1}}>{L.nativo}</span>
+          {!L.uiCompleta&&<span style={{fontSize:"0.68rem",color:T.text4}}>só contido</span>}
+          {lang===L.id&&<span style={{color:T.accent}}>✓</span>}
+        </button>))}
     </div>
-    <div style={{...S.panel,marginBottom:"0.75rem",border:"1.5px solid #e040fb33"}}>
-      <p style={S.ptitle(T.accent)}>1. Exportar para traducir</p>
-      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Xera un JSON con todo o contido traducible. Pásallo a Claude con: <em style={{color:T.text3}}>"Traduce ao galego e inglés os campos gl e en baleiros."</em></p>
-      <button onClick={exportForTranslation} style={{...S.btn(T.accent),width:"100%"}}>⬇ Exportar para traducir</button>
-    </div>
-    <div style={{...S.panel,border:`1.5px solid ${T.info}33`}}>
-      <p style={S.ptitle(T.info)}>2. Importar tradución</p>
-      <p style={{color:T.text2,fontSize:"0.84rem",lineHeight:1.6,marginBottom:"0.85rem"}}>Carga o JSON devolto. Só enche os campos baleiros, nunca sobreescribe.</p>
-      <label style={{...S.btn(T.info,"#000"),display:"block",textAlign:"center",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>⬆ Importar tradución<input type="file" accept=".json" onChange={importTranslation} style={{display:"none"}}/></label>
-    </div>
-    {msg&&<div style={{...S.panel,background:msg.startsWith("✓")?"#0c1a0c":"#1a0c0c",border:`1px solid ${msg.startsWith("✓")?T.ok+"44":T.danger+"44"}`,color:msg.startsWith("✓")?T.ok:T.danger,fontSize:"0.84rem",marginTop:"0.75rem"}}>{msg}</div>}
-    {loadTranslations()&&<button onClick={()=>{ls.set("impro_translations",null);setMsg("↺ Traducións borradas");}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.75rem",marginTop:"0.75rem"}}>↺ Borrar traducións</button>}
+
+    <p style={{...S.caption,marginTop:"1rem"}}>
+      Para traducir os estímulos ou a interface, vai a <strong>Admin → Idiomas</strong>.
+    </p>
   </div>);
 }

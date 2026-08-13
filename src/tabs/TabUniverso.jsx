@@ -111,8 +111,8 @@ export function TabUniverso(){
         {/* Ligazóns clicables */}
         {(LIGAZONS.some(L=>lig[L.id])||(lig.outras||[]).length>0)&&<div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",borderTop:`1px solid ${T.border}`,paddingTop:"0.9rem"}}>
           {LIGAZONS.filter(L=>lig[L.id]).map(L=>(
-            <a key={L.id} href={url(lig[L.id])} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
-              <span>{L.emoji}</span><span>{L.label}</span>
+            <a key={L.id} href={urlLigazon(L.id,lig[L.id])} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
+              <span>{L.emoji}</span><span>{etiquetaLigazon(L.id,lig[L.id])}</span>
             </a>))}
           {(lig.outras||[]).map((o,i)=>(
             <a key={i} href={urlLigazon("web",o.url)} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>

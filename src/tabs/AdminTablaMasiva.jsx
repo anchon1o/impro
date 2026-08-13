@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTheme, mkS, UID } from '../core.jsx';
-import { CAMPOS_COMUNS, LIGAZONS, camposDeCategoria, validarFicha } from '../universoModelo.js';
+import { CAMPOS_COMUNS, LIGAZONS, camposDeCategoria, validarFicha, listaDesdeTexto, textoDesdeLista } from '../universoModelo.js';
 import { listarTodoUniverso, cargarCategorias, gardarLoteUniverso, borrarUniverso } from '../universo.js';
 
 // M09 — Edición masiva tipo folla de cálculo.
@@ -17,10 +17,10 @@ const estCol=(T,e)=>e==="igual"?"transparent":(T[EST_TOK[e]]||"transparent");
 
 // Valores da cela ↔ modelo. As listas escríbense separadas por comas, que
 // é como saen ao copiar de Excel ou Google Sheets.
-const aCela=v=>Array.isArray(v)?v.join(", "):(v===null||v===undefined?"":String(v));
+const aCela=v=>Array.isArray(v)?textoDesdeLista(v):(v===null||v===undefined?"":String(v));
 const desdeCela=(txt,tipo)=>{
   const t=String(txt??"").trim();
-  if(tipo==="lista")return t?t.split(",").map(s=>s.trim()).filter(Boolean):[];
+  if(tipo==="lista")return listaDesdeTexto(t);
   if(tipo==="numero")return t===""?"":Number(t);
   return t;
 };
@@ -35,6 +35,10 @@ export function AdminTablaMasiva(){
   const [msg,setMsg]=useState("");
   const [gardando,setGardando]=useState(false);
   const foco=useRef({fila:0,col:0});
+  // Texto en bruto por cela mentres se edita. Sen isto, ao escribir unha coma
+  // nun campo de lista o valor convertíase de inmediato e a coma desaparecía:
+  // era imposible separar dous elementos. Chave: "índiceFila:idCampo".
+  const [bruto,setBruto]=useState({});
 
   useEffect(()=>{
     Promise.all([cargarCategorias(),listarTodoUniverso()]).then(([r,todo])=>{
@@ -141,7 +145,7 @@ export function AdminTablaMasiva(){
     if(!f.id)return "nova";
     return orixinais[f._k]===JSON.stringify(f)?"igual":"modificada";
   };
-  const errosFila=f=>validarFicha({...f,descricion:f.desc},cat);
+  const errosFila=f=>validarFicha(f,cat);
 
   const conCambios=filas.filter(f=>estadoFila(f)!=="igual");
   const conErros=filas.filter(f=>errosFila(f).length>0);
@@ -225,8 +229,16 @@ export function AdminTablaMasiva(){
               {cols.map((c,j)=>{
                 const err=errs.find(e=>e.campo===(c.onde==="raiz"?(c.id):c.onde==="ligazons"?`ligazons.${c.id}`:c.id));
                 return(<td key={c.id+c.onde} style={{padding:0,borderRight:`1px solid ${T.border}22`,background:err?T.danger+"15":"transparent"}}>
-                  <input value={aCela(ler(f,c))}
-                    onChange={e=>escribir(i,c,e.target.value)}
+                  <input value={bruto[`${i}:${c.id}`] ?? aCela(ler(f,c))}
+                    onChange={e=>{
+                      const v=e.target.value;
+                      if(c.tipo==="lista") setBruto(b=>({...b,[`${i}:${c.id}`]:v}));
+                      else escribir(i,c,v);
+                    }}
+                    onBlur={()=>{
+                      const k=`${i}:${c.id}`;
+                      if(bruto[k]!==undefined){ escribir(i,c,bruto[k]); setBruto(b=>{const x={...b};delete x[k];return x;}); }
+                    }}
                     onFocus={()=>{foco.current={fila:i,col:j};}}
                     onPaste={e=>pegar(e,i,j)}
                     title={err?err.msg:undefined}

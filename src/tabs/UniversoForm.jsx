@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTheme, mkS } from '../core.jsx';
-import { LIGAZONS, camposDeCategoria, validarFicha } from '../universoModelo.js';
+import { LIGAZONS, camposDeCategoria, validarFicha, listaDesdeTexto as aLista, textoDesdeLista as aTexto } from '../universoModelo.js';
 import { buscarCoordenadas } from '../universo.js';
 
 // Formulario ÚNICO de Universo. Úsase na pestana pública e no panel de
@@ -12,9 +12,6 @@ import { buscarCoordenadas } from '../universo.js';
 // (por filtrar baleiros) e o campo volvía sen ela. Os espazos, igual.
 // Agora consérvase o texto tal cal se escribe e só se converte a lista ao
 // saír do campo ou ao enviar.
-
-const aLista = t => String(t || "").split(/[\n,]/).map(s => s.trim()).filter(Boolean);
-const aTexto = v => Array.isArray(v) ? v.join(", ") : (v || "");
 
 export function UniversoForm({cats, logueado, onEnviar, onCancelar, inicial=null, admin=false}){
   const {T}=useTheme(); const S=mkS(T);
