@@ -40,14 +40,37 @@ export const CAMPOS_COMUNS = [
 ];
 
 // Ligazóns: forma pechada, columna `ligazons` (jsonb).
+// Cada rede acepta o formato natural de escribila. Instagram e YouTube
+// admiten @usuario, que é como a xente os comparte; a ficha convérteos en
+// enlace completo. Quitouse Bluesky: apenas se usa no ámbito do impro.
 export const LIGAZONS = [
-  {id:"web",       label:"Web",       emoji:"🌐"},
-  {id:"instagram", label:"Instagram", emoji:"📸"},
-  {id:"youtube",   label:"YouTube",   emoji:"▶️"},
-  {id:"facebook",  label:"Facebook",  emoji:"👤"},
-  {id:"bluesky",   label:"Bluesky",   emoji:"🦋"},
+  {id:"web",       label:"Web",       emoji:"🌐", placeholder:"improapp.gal"},
+  {id:"instagram", label:"Instagram", emoji:"📸", placeholder:"@usuario", base:"https://instagram.com/"},
+  {id:"youtube",   label:"YouTube",   emoji:"▶️", placeholder:"@canal",   base:"https://youtube.com/"},
+  {id:"facebook",  label:"Facebook",  emoji:"👤", placeholder:"páxina",   base:"https://facebook.com/"},
   // `outras` é un array libre: [{etiqueta, url}]
 ];
+
+// Converte o que se escribiu nunha URL navegable.
+//   "@improapp"              → https://instagram.com/improapp
+//   "improapp.gal"           → https://improapp.gal
+//   "https://improapp.gal"   → tal cal
+export function urlLigazon(id, valor) {
+  const v = String(valor || "").trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  const def = LIGAZONS.find(l => l.id === id);
+  if (v.startsWith("@") && def?.base) return def.base + v.slice(1);
+  if (def?.base && !v.includes(".") && !v.includes("/")) return def.base + v;
+  return "https://" + v.replace(/^\/+/, "");
+}
+
+// Como amosalo na ficha: curto e lexible.
+export function etiquetaLigazon(id, valor) {
+  const v = String(valor || "").trim();
+  if (v.startsWith("@")) return v;
+  return v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+}
 
 // Campos opcionais por plantilla. Van todos en `datos` (jsonb).
 export const PLANTILLAS = {
@@ -140,8 +163,11 @@ export function validarFicha(ficha, categoria){
   }
   for(const [k,v] of Object.entries(ficha?.ligazons||{})){
     if(k==="outras"||!v) continue;
-    if(!/^https?:\/\/.+\..+/.test(String(v)))
-      erros.push({campo:`ligazons.${k}`, msg:`A ligazón de ${k} debe empezar por https://`});
+    const t=String(v).trim();
+    // Acéptase @usuario, dominio solto ou URL completa. Só se rexeita o que
+    // non pode chegar a ser un enderezo.
+    const ok = t.startsWith("@") || /^https?:\/\/.+\..+/.test(t) || /^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(t) || /^[\w.-]+$/.test(t);
+    if(!ok) erros.push({campo:`ligazons.${k}`, msg:`A ligazón de ${k} non parece válida`});
   }
   return erros;
 }

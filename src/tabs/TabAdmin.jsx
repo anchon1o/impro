@@ -37,7 +37,6 @@ export function TabAdmin(){
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"universo",emoji:"🌍",label:"Universo"},
     {id:"categorias",emoji:"🏷",label:"Categorías"},
-    {id:"masiva",emoji:"🧮",label:"Táboa"},
     {id:"reportes",emoji:"🐛",label:"Reportes"},
     {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
@@ -65,7 +64,6 @@ export function TabAdmin(){
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
     {adminTab==="categorias"&&<AdminCategorias/>}
-    {adminTab==="masiva"&&<AdminTablaMasiva/>}
     {adminTab==="reportes"&&<AdminReportes/>}
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
@@ -416,10 +414,10 @@ export function AdminUniverso({T,S}){
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
       <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3}}>
-        {[["pendentes",`Pendentes (${pendentes.length})`],["todos",`Todos (${todos.length})`]].map(([id,label])=>
+        {[["pendentes",`Pendentes (${pendentes.length})`],["todos",`Fichas (${todos.length})`],["masiva","Táboa"]].map(([id,label])=>
           <button key={id} onClick={()=>setVista(id)} style={{...S.btn(vista===id?T.bg2:"transparent",vista===id?T.text:T.text3),borderRadius:8,padding:"0.35rem 0.7rem",fontSize:"0.78rem"}}>{label}</button>)}
       </div>
-      <button onClick={openNew} style={S.btn(T.accent)}>+ Engadir verificada</button>
+      {vista!=="masiva"&&<button onClick={openNew} style={S.btn(T.accent)}>+ Nova entrada</button>}
     </div>
 
     {/* Formulario compartido coa pestana Universo. Antes había aquí outro
@@ -461,13 +459,8 @@ export function AdminUniverso({T,S}){
               </p>}
 
               <p style={{color:T.text4,fontSize:"0.72rem",margin:"0.45rem 0 0"}}>
-                {p.cidade&&`${p.cidade} · `}
-                {p.user_id
-                  ? `achegado por ${p.achegadoPor||"usuaria con conta"}`
-                  : (p.proposta_nome||p.proposta_email)
-                    ? `sen conta: ${p.proposta_nome||""}${p.proposta_email?` <${p.proposta_email}>`:""}`
-                    : "proposta anónima"}
-                {p.created_at&&` · ${new Date(p.created_at).toLocaleDateString()}`}
+                {p.cidade&&`${p.cidade}`}
+                {p.created_at&&`${p.cidade?" · ":""}${new Date(p.created_at).toLocaleDateString()}`}
               </p>
             </div>
 
@@ -483,6 +476,10 @@ export function AdminUniverso({T,S}){
         })}
       </div>
     </div>}
+
+    {/* A edición masiva vive aquí dentro, non nunha sección aparte: é outra
+        forma de ver o mesmo contido, non outra cousa. */}
+    {vista==="masiva"&&<AdminTablaMasiva/>}
 
     {vista==="todos"&&<div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
       {todos.map(item=>(<div key={item.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COL[item.tipo]||T.accent}`}}>

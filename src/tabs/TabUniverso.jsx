@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme, mkS, useAuth, UID } from '../core.jsx';
 import { UNIVERSO_DATA, UNIVERSO_TIPOS } from '../datos.js';
-import { LIGAZONS, camposDeCategoria } from '../universoModelo.js';
+import { LIGAZONS, camposDeCategoria, urlLigazon, etiquetaLigazon } from '../universoModelo.js';
 import { UniversoForm } from './UniversoForm.jsx';
 import { cargarUniverso, engadirUniverso, cargarCategorias } from '../universo.js';
 
@@ -56,7 +56,6 @@ export function TabUniverso(){
     const cat=cats.find(c=>c.id===sel.tipo);
     const {opcionais}=camposDeCategoria(cat);
     const lig=sel.ligazons||{};
-    const url=u=>String(u||"").startsWith("http")?u:`https://${u}`;
     const dat=sel.datos||{};
     const conValor=opcionais.filter(c=>{
       const v=c.columna?sel[c.id==="data_inicio"?"dataInicio":c.id==="data_fin"?"dataFin":c.id]:dat[c.id];
@@ -114,7 +113,7 @@ export function TabUniverso(){
               <span>{L.emoji}</span><span>{L.label}</span>
             </a>))}
           {(lig.outras||[]).map((o,i)=>(
-            <a key={i} href={url(o.url)} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
+            <a key={i} href={urlLigazon("web",o.url)} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:"0.35rem",background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.4rem 0.7rem",fontSize:"0.8rem",color:T.text2,textDecoration:"none",minHeight:38,boxSizing:"border-box"}}>
               <span>🔗</span><span>{o.etiqueta||o.url}</span>
             </a>))}
         </div>}
