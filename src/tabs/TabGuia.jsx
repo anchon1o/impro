@@ -4,15 +4,21 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useAuth, t, useTheme, ls, mkS, colorTipo, EditorDinamica } from '../core.jsx';
+import { useAuth, t, useTheme, ls, mkS, colorTipo, rexistrarTipos, EditorDinamica } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
-import { getDinamicas, saveDinamica, deleteDinamica } from '../db.js';
+import { getDinamicas, saveDinamica, deleteDinamica, cargarTiposDinamica } from '../db.js';
 
 export function TabGuia(){
   const {T}=useTheme();const S=mkS(T);
   const {logueado,pedirLogin}=useAuth();
   const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
   const [filtro,setFiltro]=useState("todos");
+  // Os tipos veñen da BD e son configurables desde Admin.
+  const [tipos,setTipos]=useState([]);
+  useEffect(()=>{cargarTiposDinamica().then(r=>{
+    const l=Array.isArray(r)?r:(r?.tipos||[]);
+    setTipos(l.filter(t=>t.activo!==false)); rexistrarTipos(l);
+  });},[]);
   const [search,setSearch]=useState("");
   const [sel,setSel]=useState(null);
   const [showForm,setShowForm]=useState(false);
@@ -23,7 +29,7 @@ export function TabGuia(){
   const [editId,setEditId]=useState(null);
   const FORM0={nombre:"",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"",pasos:"",objetivo:"",variantes:""};
   const [form,setForm]=useState(FORM0);
-  const tipos=["todos","★ Favoritas",...new Set(dinamicas.map(d=>d.tipo))];
+  const filtros=["todos","★ Favoritas",...new Set(dinamicas.map(d=>d.tipo))];
   const lista=dinamicas.filter(d=>(filtro==="★ Favoritas"?isFav(d.id):(filtro==="todos"||d.tipo===filtro))&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())||d.descripcion.toLowerCase().includes(search.toLowerCase())));
   const openNew=()=>{if(!logueado){pedirLogin();return;}setEditId(null);setForm(FORM0);setShowForm(true);setSel(null);};
   const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);setSel(null);};
@@ -37,7 +43,7 @@ export function TabGuia(){
   if(showForm)return(<div>
     <button onClick={()=>setShowForm(false)} style={{...S.btn(T.bg3,T.text2),marginBottom:"1rem"}}>← Volver</button>
     <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
-      editando={!!editId} tiposDisponibles={Object.keys(colorTipo)}/>
+      editando={!!editId} tiposDisponibles={tipos.map(t=>t.id)}/>
   </div>);
 
 
@@ -72,7 +78,7 @@ export function TabGuia(){
       <button onClick={()=>{if(confirm("¿Restaurar dinámicas por defecto?")){{setDinamicas(DINAMICAS_BASE);ls.set("impro_dinamicas_v2",DINAMICAS_BASE);}}}} style={{...S.btn(T.bg3,T.text4),fontSize:"0.72rem"}}>↺</button>
     </div>
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"1rem",flexWrap:"wrap"}}>
-      {tipos.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(colorTipo(T,t)||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.3rem 0.8rem",fontSize:"0.74rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
+      {filtros.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(colorTipo(T,t)||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.3rem 0.8rem",fontSize:"0.74rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:"0.55rem"}}>
       {lista.map(d=>(<button key={d.id} onClick={()=>setSel(d)} style={{...S.panel,borderStyle:"solid",borderWidth:"1.5px 1.5px 1.5px 4px",borderTopColor:T.border,borderRightColor:T.border,borderBottomColor:T.border,borderLeftColor:colorTipo(T,d.tipo),cursor:"pointer",textAlign:"left",width:"100%"}}>

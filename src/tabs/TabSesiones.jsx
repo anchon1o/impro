@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { t, useTheme, UID, FMT, ls, mkS, colorTipo } from '../core.jsx';
 import { POMO_PRESETS, PLANTILLAS } from '../datos.js';
-import { getSesiones, saveSesion, trackMinsSupa } from '../db.js';
+import { getSesiones, saveSesion, trackMinsSupa, cargarTiposDinamica } from '../db.js';
 
 export const BTOK={trabajo:"accent",descanso:"ok",longo:"info",trabalho:"accent"};
 export const bcol=(T,k)=>T[BTOK[k]]||T.accent;
@@ -72,6 +72,8 @@ export function ModoPomodoroImpro({onClose,audio}){
 }
 
 export function TabSesiones({onLaunchTimer}){
+  const [tiposSes,setTiposSes]=useState([]);
+  useEffect(()=>{cargarTiposDinamica().then(r=>setTiposSes((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));},[]);
   const {T}=useTheme();const S=mkS(T);
   if(!onLaunchTimer)onLaunchTimer=()=>{};
   const [view,setView]=useState("plantillas");
@@ -127,7 +129,7 @@ export function TabSesiones({onLaunchTimer}){
           {editMode?(<div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",alignItems:"center"}}>
             <input value={b.titulo} onChange={e=>upd(b.id,"titulo",e.target.value)} style={{...S.input,flex:"2 1 110px",width:"auto"}}/>
             <select value={b.tipo} onChange={e=>upd(b.id,"tipo",e.target.value)} style={{...S.input,flex:"1 1 90px",width:"auto",padding:"0.45rem 0.6rem"}}>
-              {Object.keys(colorTipo).map(t=><option key={t} value={t}>{t}</option>)}
+              {tiposSes.map(t=><option key={t.id} value={t.id}>{t.emoji} {t.nome}</option>)}
             </select>
             <input type="number" value={b.duracion} onChange={e=>upd(b.id,"duracion",e.target.value)} style={{...S.input,width:55}}/>
             <button onClick={()=>del(b.id)} style={{...S.btn("#1a0000"),color:T.danger,padding:"0.38rem 0.55rem"}}>✕</button>

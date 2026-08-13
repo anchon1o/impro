@@ -9,7 +9,16 @@ import { cargarEstimulos, cargarCategorias } from './estimulos.js';
 // Antes eran cores fixas; agora son nomes de token, para que cada tema
 // as repinte. `colorTipo(T,tipo)` resolve contra o tema activo.
 export const TIPO_TOKEN = {calentamiento:"warn",entrenamiento:"info",juego:"ok",formato:"accent",musical:"alt",pausa:"muted",cierre:"danger"};
-export const colorTipo = (T,tipo) => T[TIPO_TOKEN[tipo]] || T.accent;
+
+// Cache dos tipos cargados da BD, para que colorTipo siga sendo síncrona.
+// Enchese unha vez ao arrancar; se aínda non se cargou, cae a TIPO_TOKEN.
+let _tiposCache = null;
+export function rexistrarTipos(lista) {
+  if (!Array.isArray(lista) || !lista.length) return;
+  _tiposCache = Object.fromEntries(lista.map(t => [t.id, t.cor || 'accent']));
+}
+export const colorTipo = (T, tipo) =>
+  T[(_tiposCache && _tiposCache[tipo]) || TIPO_TOKEN[tipo]] || T.accent;
 
 export const ThemeCtx = createContext(null);
 

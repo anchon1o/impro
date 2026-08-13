@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTheme, mkS } from '../core.jsx';
 import { LIGAZONS, camposDeCategoria, validarFicha, listaDesdeTexto as aLista, textoDesdeLista as aTexto } from '../universoModelo.js';
-import { buscarCoordenadas } from '../universo.js';
+import { SelectorUbicacion } from './SelectorUbicacion.jsx';
 
 // Formulario ÚNICO de Universo. Úsase na pestana pública e no panel de
 // administración; a prop `admin` é a única diferenza.
@@ -25,9 +25,6 @@ export function UniversoForm({cats, logueado, onEnviar, onCancelar, inicial=null
     enderezo:inicial?.enderezo||"",
   });
   const [coords,setCoords]=useState({lat:inicial?.lat??null, lon:inicial?.lon??null});
-  const [buscando,setBuscando]=useState(false);
-  const [resultados,setResultados]=useState(null);
-  const [erroGeo,setErroGeo]=useState("");
   const [lig,setLig]=useState(inicial?.ligazons||{});
   const [dat,setDat]=useState(inicial?.datos||{});
   const [estado,setEstado]=useState(inicial?.estado||(admin?"publicada":"pendente"));
@@ -78,16 +75,6 @@ export function UniversoForm({cats, logueado, onEnviar, onCancelar, inicial=null
       lat:coords.lat, lon:coords.lon,
       ...(admin?{estado}:{}), ...(inicial?.id?{id:inicial.id}:{}),
     };
-  };
-
-  const buscarSitio=async()=>{
-    const q=[f.enderezo,f.cidade].filter(Boolean).join(", ");
-    setBuscando(true); setErroGeo(""); setResultados(null);
-    const r=await buscarCoordenadas(q);
-    setBuscando(false);
-    if(r.erro)setErroGeo(r.erro);
-    else if(r.resultados.length===1){setCoords({lat:r.resultados[0].lat,lon:r.resultados[0].lon});}
-    else setResultados(r.resultados);
   };
 
   const enviar=async()=>{
@@ -181,36 +168,18 @@ export function UniversoForm({cats, logueado, onEnviar, onCancelar, inicial=null
     <Err id="logo_url"/>
 
     {/* Campos da plantilla, en dúas columnas */}
-    {/* Ubicación: só ten sentido nas categorías de tipo lugar (espazos,
-        garitos). Sen coordenadas a ficha non aparece no mapa. */}
-    {cat?.plantilla==="lugar"&&<>
-      <Eti>Ubicación no mapa</Eti>
-      <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"0.4rem"}}>
-        <input value={f.enderezo} onChange={e=>setF(x=>({...x,enderezo:e.target.value}))}
-          onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();buscarSitio();}}}
-          placeholder="Rúa, número, cidade" style={inp("enderezo")}/>
-        <button onClick={buscarSitio} disabled={buscando}
-          style={{...S.btn(T.bg3,T.text2),whiteSpace:"nowrap",opacity:buscando?0.6:1}}>
-          {buscando?"Buscando…":"Buscar"}</button>
-      </div>
-
-      {erroGeo&&<p style={{color:T.warn,fontSize:"0.74rem",margin:"0.3rem 0 0"}}>{erroGeo}</p>}
-
-      {resultados&&resultados.length>0&&<div style={{marginTop:"0.4rem",display:"flex",flexDirection:"column",gap:"0.2rem"}}>
-        {resultados.map((r,i)=>(
-          <button key={i} onClick={()=>{setCoords({lat:r.lat,lon:r.lon});setResultados(null);setErroGeo("");}}
-            style={{background:T.bg3,borderStyle:"solid",borderWidth:1,borderColor:T.border,borderRadius:8,
-              padding:"0.45rem 0.6rem",cursor:"pointer",fontFamily:"inherit",fontSize:"0.76rem",
-              color:T.text2,textAlign:"left",lineHeight:1.4}}>{r.nome}</button>))}
-      </div>}
-
-      {coords.lat!=null
-        ?<p style={{color:T.ok,fontSize:"0.76rem",margin:"0.4rem 0 0",display:"flex",alignItems:"center",gap:"0.5rem",flexWrap:"wrap"}}>
-           <span>📍 Situado en {coords.lat.toFixed(5)}, {coords.lon.toFixed(5)}</span>
-           <button onClick={()=>setCoords({lat:null,lon:null})} style={{background:"none",border:"none",color:T.text4,cursor:"pointer",fontSize:"0.74rem",textDecoration:"underline",fontFamily:"inherit"}}>quitar</button>
-         </p>
-        :<p style={{color:T.text4,fontSize:"0.74rem",margin:"0.4rem 0 0"}}>Sen ubicación: non aparecerá no mapa.</p>}
-    </>}
+    {/* Ubicación: un campo de lugar e un pin no mapa. Antes había enderezo,
+        botón de busca, lista de resultados e coordenadas en texto: catro
+        elementos para unha soa decisión. */}
+    <Eti>Onde está · opcional</Eti>
+    <input value={f.enderezo} onChange={e=>setF(x=>({...x,enderezo:e.target.value}))}
+      placeholder={cat?.plantilla==="lugar"?"Nome do local ou enderezo":"Sede, cidade ou lugar de referencia"}
+      style={inp("enderezo",{marginBottom:"0.4rem"})}/>
+    <SelectorUbicacion
+      valor={coords}
+      onCambiar={c=>setCoords(c)}
+      emoji={f.logo||cat?.emoji||"📍"}
+      pista={f.cidade?`${f.cidade}…`:"Busca unha cidade ou enderezo"}/>
 
     {opcionais.length>0&&<>
       <Eti>{plantilla.label} · todos opcionais</Eti>

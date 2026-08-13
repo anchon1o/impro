@@ -430,3 +430,59 @@ export const getFavoritos = () => ls.get('impro_favoritos', []);
 export const saveFavoritos = (f) => ls.set('impro_favoritos', f);
 export const getFavDins = () => ls.get('impro_fav_dins', []);
 export const saveFavDins = (f) => ls.set('impro_fav_dins', f);
+
+// ─────────────────────────────────────────────
+// TIPOS DE DINÁMICA (configurables desde Admin)
+// ─────────────────────────────────────────────
+// Antes eran unha constante no código. `Object.keys(colorTipo)` devolvía
+// unha lista baleira porque colorTipo é unha función, non un obxecto, e o
+// desplegable de tipos quedaba sen opcións: non se podía asignar tipo a
+// ningunha dinámica.
+const TIPOS_FALLBACK = [
+  {id:'calentamiento',nome:'Quecemento',  emoji:'🔥',cor:'warn',  orde:10,activo:true},
+  {id:'entrenamiento',nome:'Adestramento',emoji:'💪',cor:'info',  orde:20,activo:true},
+  {id:'juego',        nome:'Xogo',        emoji:'🎲',cor:'ok',    orde:30,activo:true},
+  {id:'formato',      nome:'Formato',     emoji:'🎬',cor:'accent',orde:40,activo:true},
+  {id:'musical',      nome:'Musical',     emoji:'🎵',cor:'alt',   orde:50,activo:true},
+  {id:'pausa',        nome:'Pausa',       emoji:'☕',cor:'muted', orde:60,activo:true},
+  {id:'cierre',       nome:'Peche',       emoji:'🌙',cor:'danger',orde:70,activo:true},
+];
+
+function resultadoTipos(lista, erro) {
+  const out = (Array.isArray(lista) && lista.length) ? lista.slice() : TIPOS_FALLBACK.slice();
+  Object.defineProperty(out, 'tipos', { value: out, enumerable: false });
+  Object.defineProperty(out, 'erro', { value: erro || null, enumerable: false });
+  return out;
+}
+
+export async function cargarTiposDinamica() {
+  try {
+    const { data, error } = await supabase.from('dinamicas_tipos').select('*').order('orde');
+    if (error) throw error;
+    if (data && data.length) { ls.set('impro_tipos_din', data); return resultadoTipos(data, null); }
+    return resultadoTipos(ls.get('impro_tipos_din', []), null);
+  } catch (e) {
+    console.warn('[db] cargarTiposDinamica:', e?.message);
+    return resultadoTipos(ls.get('impro_tipos_din', []), e?.message || 'Erro descoñecido');
+  }
+}
+
+export async function gardarTipoDinamica(t) {
+  const fila = {
+    id: t.id, nome: t.nome, emoji: t.emoji || '🎯',
+    descricion: t.descricion || '', cor: t.cor || 'accent',
+    orde: Number(t.orde) || 100, activo: t.activo !== false,
+  };
+  const { error } = await supabase.from('dinamicas_tipos').upsert(fila);
+  if (error) console.error('[db] gardarTipoDinamica:', error.message);
+  return !error;
+}
+
+// Non se pode borrar un tipo en uso: deixaría dinámicas orfas.
+export async function borrarTipoDinamica(id) {
+  const { count } = await supabase
+    .from('dinamicas').select('id', { count: 'exact', head: true }).eq('tipo', id);
+  if (count > 0) return { ok: false, motivo: `Hai ${count} dinámicas deste tipo.` };
+  const { error } = await supabase.from('dinamicas_tipos').delete().eq('id', id);
+  return { ok: !error, motivo: error?.message };
+}

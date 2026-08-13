@@ -7,11 +7,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, colorTipo, EditorDinamica, useViewport } from '../core.jsx';
 import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
-import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
+import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos, cargarTiposDinamica } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
 import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso, cargarCategorias } from '../universo.js';
 import { LimiteErro } from '../LimiteErro.jsx';
 import { AdminCategorias } from './AdminCategorias.jsx';
+import { AdminTiposDinamica } from './AdminTiposDinamica.jsx';
 import { AdminTablaMasiva } from './AdminTablaMasiva.jsx';
 import { AdminReportes } from './AdminReportes.jsx';
 import { UniversoForm } from './UniversoForm.jsx';
@@ -36,7 +37,6 @@ export function TabAdmin(){
     {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"universo",emoji:"🌍",label:"Universo"},
-    {id:"categorias",emoji:"🏷",label:"Categorías"},
     {id:"reportes",emoji:"🐛",label:"Reportes"},
     {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
@@ -63,7 +63,6 @@ export function TabAdmin(){
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
-    {adminTab==="categorias"&&<AdminCategorias/>}
     {adminTab==="reportes"&&<AdminReportes/>}
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}
@@ -284,6 +283,9 @@ export function AdminTraducions({T,S}){
 }
 
 export function AdminDinamicas({T,S}){
+  const [vistaDin,setVistaDin]=useState('lista');
+  const [tiposDin,setTiposDin]=useState([]);
+  useEffect(()=>{cargarTiposDinamica().then(r=>setTiposDin((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));},[]);
   const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
   const [search,setSearch]=useState("");
   const [filtro,setFiltro]=useState("todos");
@@ -321,6 +323,12 @@ export function AdminDinamicas({T,S}){
   };
 
   return(<div>
+    <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:"0.8rem",width:"fit-content"}}>
+      {[["lista","Dinámicas"],["tipos","🎯 Tipos"]].map(([id,lab])=>(
+        <button key={id} onClick={()=>setVistaDin(id)} style={{...S.btn(vistaDin===id?T.bg2:"transparent",vistaDin===id?T.text:T.text3),borderRadius:8,padding:"0.32rem 0.8rem",fontSize:"0.78rem"}}>{lab}</button>))}
+    </div>
+    {vistaDin==="tipos"&&<AdminTiposDinamica/>}
+    {vistaDin==="lista"&&<>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.75rem"}}>
       <p style={{...S.ptitle(T.accent),margin:0}}>Dinámicas ({dinamicas.length})</p>
       <button onClick={openNew} style={S.btn(T.accent)}>+ Nova dinámica</button>
@@ -328,7 +336,7 @@ export function AdminDinamicas({T,S}){
 
     {showForm&&<div style={{marginBottom:"1rem"}}>
       <EditorDinamica form={form} setForm={setForm} onGardar={saveForm} onCancelar={()=>setShowForm(false)}
-        editando={!!editId} tiposDisponibles={Object.keys(colorTipo)}/>
+        editando={!!editId} tiposDisponibles={tiposDin.map(t=>t.id)}/>
     </div>}
 
 
@@ -357,6 +365,7 @@ export function AdminDinamicas({T,S}){
       </div>))}
       {lista.length===0&&<p style={{color:T.text4,fontSize:"0.83rem"}}>Sen resultados.</p>}
     </div>
+    </>}
   </div>);
 }
 export function AdminUniverso({T,S}){
@@ -414,10 +423,10 @@ export function AdminUniverso({T,S}){
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.85rem",flexWrap:"wrap",gap:"0.5rem"}}>
       <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3}}>
-        {[["pendentes",`Pendentes (${pendentes.length})`],["todos",`Fichas (${todos.length})`],["masiva","Táboa"]].map(([id,label])=>
+        {[["pendentes",`Pendentes (${pendentes.length})`],["todos",`Fichas (${todos.length})`],["masiva","Táboa"],["categorias","🏷 Categorías"]].map(([id,label])=>
           <button key={id} onClick={()=>setVista(id)} style={{...S.btn(vista===id?T.bg2:"transparent",vista===id?T.text:T.text3),borderRadius:8,padding:"0.35rem 0.7rem",fontSize:"0.78rem"}}>{label}</button>)}
       </div>
-      {vista!=="masiva"&&<button onClick={openNew} style={S.btn(T.accent)}>+ Nova entrada</button>}
+      {vista!=="masiva"&&vista!=="categorias"&&<button onClick={openNew} style={S.btn(T.accent)}>+ Nova entrada</button>}
     </div>
 
     {/* Formulario compartido coa pestana Universo. Antes había aquí outro
@@ -480,6 +489,7 @@ export function AdminUniverso({T,S}){
     {/* A edición masiva vive aquí dentro, non nunha sección aparte: é outra
         forma de ver o mesmo contido, non outra cousa. */}
     {vista==="masiva"&&<AdminTablaMasiva/>}
+    {vista==="categorias"&&<AdminCategorias/>}
 
     {vista==="todos"&&<div style={{display:"flex",flexDirection:"column",gap:"0.4rem"}}>
       {todos.map(item=>(<div key={item.id} style={{...S.panel,padding:"0.6rem 0.9rem",display:"flex",gap:"0.6rem",alignItems:"center",borderLeft:`3px solid ${TIPO_COL[item.tipo]||T.accent}`}}>

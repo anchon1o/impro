@@ -10,6 +10,7 @@ import { UNIVERSO_DATA, UNIVERSO_TIPOS } from '../datos.js';
 import { LIGAZONS, camposDeCategoria, urlLigazon, etiquetaLigazon } from '../universoModelo.js';
 import { UniversoForm } from './UniversoForm.jsx';
 import { UniversoMapa } from './UniversoMapa.jsx';
+import { UniversoAxenda } from './UniversoAxenda.jsx';
 import { cargarUniverso, engadirUniverso, cargarCategorias } from '../universo.js';
 
 export function TabUniverso(){
@@ -145,7 +146,7 @@ export function TabUniverso(){
     {showForm&&<UniversoForm cats={cats} logueado={logueado} onEnviar={enviarEntrada} onCancelar={()=>{setShowForm(false);setErroEnvio("");}}/>}
 
     <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:"0.7rem",width:"fit-content"}}>
-      {[["lista","Fichas"],["mapa","🗺 Mapa"]].map(([id,lab])=>(
+      {[["lista","Fichas"],["mapa","🗺 Mapa"],["axenda","📅 Axenda"]].map(([id,lab])=>(
         <button key={id} onClick={()=>setModo(id)} style={{...S.btn(modo===id?T.bg2:"transparent",modo===id?T.text:T.text3),borderRadius:8,padding:"0.32rem 0.8rem",fontSize:"0.78rem"}}>{lab}</button>))}
     </div>
 
@@ -155,6 +156,10 @@ export function TabUniverso(){
     </div>
 
     {modo==="mapa"&&<UniversoMapa entradas={lista} cats={cats} onAbrir={e=>setSel(e)}/>}
+
+    {/* A axenda recibe TODAS as entradas, non as filtradas: os selectores de
+        organizador e lugar teñen que poder apuntar a calquera ficha. */}
+    {modo==="axenda"&&<UniversoAxenda entradas={datos} cats={cats}/>}
 
     {modo==="lista"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(260px,100%),1fr))",gap:"0.6rem"}}>
       {lista.map(item=>(<button key={item.id} onClick={()=>setSel(item)} style={{...S.panel,cursor:"pointer",textAlign:"left",width:"100%",borderStyle:"solid",borderWidth:"3px 1.5px 1.5px 1.5px",borderTopColor:TIPO_COL[item.tipo]||T.accent,borderRightColor:T.border,borderBottomColor:T.border,borderLeftColor:T.border,transition:"all 0.15s"}}>
