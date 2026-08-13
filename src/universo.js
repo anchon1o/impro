@@ -21,6 +21,10 @@ function mapRow(d) {
     datos: d.datos || {},
     dataInicio: d.data_inicio || null, dataFin: d.data_fin || null,
     activo: d.activo !== false,
+    // Coordenadas para o mapa
+    lat: d.lat != null ? Number(d.lat) : null,
+    lon: d.lon != null ? Number(d.lon) : null,
+    enderezo: d.enderezo || '',
     // `web` conservábase como columna solta; agora é unha ligazón máis.
     // Mantense no obxecto para non romper nada que aínda a lea.
     web: (d.ligazons && d.ligazons.web) || d.web || '',
@@ -54,6 +58,11 @@ function aFila(entry) {
     ligazons, datos: limpar(entry.datos),
     data_inicio: entry.dataInicio || null, data_fin: entry.dataFin || null,
     activo: entry.activo !== false,
+    // As dúas ou ningunha: a BD ten unha restrición que o esixe, porque
+    // unha ficha con só latitude non se pode debuxar.
+    lat: (entry.lat != null && entry.lon != null && entry.lat !== '' && entry.lon !== '') ? Number(entry.lat) : null,
+    lon: (entry.lat != null && entry.lon != null && entry.lat !== '' && entry.lon !== '') ? Number(entry.lon) : null,
+    enderezo: entry.enderezo || null,
   };
 }
 
@@ -105,6 +114,7 @@ const MAPA_EDIT = {
   tipo:'tipo', nome:'nome', pais:'pais', cidade:'cidade', desc:'descricion',
   tags:'tags', logo:'logo', logoUrl:'logo_url', ligazons:'ligazons',
   datos:'datos', dataInicio:'data_inicio', dataFin:'data_fin', activo:'activo',
+  lat:'lat', lon:'lon', enderezo:'enderezo',
   estado:'estado', notaRevision:'nota_revision',
 };
 
@@ -266,4 +276,35 @@ export async function gardarLoteUniverso(filas) {
     }
   }
   return resultado;
+}
+
+
+// ─────────────────────────────────────────────
+// XEOCODIFICACIÓN (mapa)
+// ─────────────────────────────────────────────
+// Nominatim é o buscador de OpenStreetMap: gratuíto e sen clave. A cambio
+// pide non abusar (un pedimento por segundo) e identificarse. Por iso só se
+// chama cando o usuario preme o botón, nunca mentres escribe.
+export async function buscarCoordenadas(consulta) {
+  const q = String(consulta || '').trim();
+  if (q.length < 3) return { erro: 'Escribe polo menos tres letras.' };
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q='
+      + encodeURIComponent(q);
+    const r = await fetch(url, { headers: { 'Accept-Language': 'gl,es,en' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.length) return { resultados: [], erro: 'Sen resultados. Proba a engadir a cidade.' };
+    return {
+      resultados: data.map(x => ({
+        nome: x.display_name,
+        lat: Number(x.lat),
+        lon: Number(x.lon),
+      })),
+      erro: null,
+    };
+  } catch (e) {
+    console.warn('[universo] xeocodificación:', e?.message);
+    return { resultados: [], erro: 'Non se puido buscar. Comproba a conexión.' };
+  }
 }
