@@ -2,24 +2,34 @@ import { useState, useEffect, useRef } from 'react';
 import { useTheme, mkS } from '../core.jsx';
 import { LIGAZONS, camposDeCategoria, validarFicha } from '../universoModelo.js';
 
-// M08 — Formulario de proposta.
+// Formulario ÚNICO de Universo (M06/M08).
+//
+// Úsase en dous sitios e antes había dous formularios distintos: este e
+// outro dentro de Admin con só 8 campos, sen imaxe, sen redes e sen os
+// campos de plantilla. Toda ficha creada desde Admin nacía incompleta.
+//
+//   · Pestana Universo (público) → admin=false: envía como 'pendente'.
+//   · Admin → Universo          → admin=true: publica directo, permite
+//     editar unha ficha existente e escoller o estado.
 //
 // Adáptase á categoría escollida: os campos opcionais saen da plantilla e
-// do que o admin deixara activo en Admin → Categorías.
-//
-// Funciona con conta e sen ela. A política RLS `universo_insert` acepta
-// as tres ramas (admin / usuaria / visitante) e en todos os casos
-// obriga a estado='pendente': ninguén se pode autopublicar.
+// do que se deixara activo en Admin → Categorías.
 
 const listaDesdeTexto=t=>String(t||"").split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
 const textoDesdeLista=v=>Array.isArray(v)?v.join(", "):(v||"");
 
-export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
+export function UniversoForm({cats,logueado,onEnviar,onCancelar,inicial=null,admin=false}){
   const {T}=useTheme();const S=mkS(T);
-  const [tipo,setTipo]=useState(cats[0]?.id||"");
-  const [f,setF]=useState({nome:"",desc:"",pais:"",cidade:"",logo:"🎭",logoUrl:"",tags:""});
-  const [lig,setLig]=useState({});
-  const [dat,setDat]=useState({});
+  const [tipo,setTipo]=useState(inicial?.tipo||cats[0]?.id||"");
+  const [f,setF]=useState({
+    nome:inicial?.nome||"", desc:inicial?.desc||"",
+    pais:inicial?.pais||"", cidade:inicial?.cidade||"",
+    logo:inicial?.logo||"🎭", logoUrl:inicial?.logoUrl||"",
+    tags:Array.isArray(inicial?.tags)?inicial.tags.join(", "):(inicial?.tags||""),
+  });
+  const [lig,setLig]=useState(inicial?.ligazons||{});
+  const [dat,setDat]=useState(inicial?.datos||{});
+  const [estado,setEstado]=useState(inicial?.estado||(admin?"publicada":"pendente"));
   const [autor,setAutor]=useState({nome:"",email:""});
   const [erros,setErros]=useState([]);
   const [enviando,setEnviando]=useState(false);
@@ -30,7 +40,15 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
 
   const cat=cats.find(c=>c.id===tipo)||cats[0];
   const {opcionais,plantilla}=camposDeCategoria(cat);
-  useEffect(()=>{setDat({});setErros([]);},[tipo]);
+  const tipoInicial=useRef(inicial?.tipo||null);
+  useEffect(()=>{
+    // Ao cambiar de categoría cámbianse os campos da plantilla, así que os
+    // datos anteriores xa non teñen sentido. Excepto na primeira pasada
+    // dunha edición, onde hai que conservar o que xa había.
+    if(tipoInicial.current===tipo)return;
+    tipoInicial.current=null;
+    setDat({});setErros([]);
+  },[tipo]);
 
   const construir=()=>({
     tipo, nome:f.nome.trim(), desc:f.desc.trim(),
@@ -41,13 +59,17 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
     datos:Object.fromEntries(Object.entries(dat).filter(([,v])=>
       !(v===""||v===null||v===undefined||(Array.isArray(v)&&!v.length)))),
     propostaNome:autor.nome.trim(), propostaEmail:autor.email.trim(),
+    ...(admin?{estado}:{}),
+    ...(inicial?.id?{id:inicial.id}:{}),
   });
 
   const enviar=async()=>{
     setAvisoSpam("");
-    if(trampa){setAvisoSpam("Non se puido enviar.");return;}
-    // Un humano non enche isto en menos de 3 segundos.
-    if(Date.now()-abertoEn.current<3000){setAvisoSpam("Vai un chisco rápido. Téntao outra vez nun segundo.");return;}
+    if(!admin){
+      if(trampa){setAvisoSpam("Non se puido enviar.");return;}
+      // Un humano non enche isto en menos de 3 segundos.
+      if(Date.now()-abertoEn.current<3000){setAvisoSpam("Vai un chisco rápido. Téntao outra vez nun segundo.");return;}
+    }
     const ficha=construir();
     const e=validarFicha(ficha,cat);
     setErros(e);
@@ -77,12 +99,22 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
   const etiqueta=txt=><p style={{color:T.text4,fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 0.25rem"}}>{txt}</p>;
 
   return(<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
-    <p style={S.ptitle(T.accent)}>Propoñer unha entrada</p>
-    <p style={{...S.caption,marginBottom:"0.9rem"}}>
+    <p style={S.ptitle(T.accent)}>{admin?(inicial?`Editar «${inicial.nome}»`:"Nova entrada"):"Propoñer unha entrada"}</p>
+    {!admin&&<p style={{...S.caption,marginBottom:"0.9rem"}}>
       {logueado
-        ?"Revisarémola antes de publicala. Poderás velaas túas propostas mentres estean pendentes."
+        ?"Revisarémola antes de publicala. Poderás ver as túas propostas mentres estean pendentes."
         :"Podes propoñer sen conta. Revisarémola antes de publicala."}
-    </p>
+    </p>}
+    {admin&&<div style={{marginBottom:"0.9rem"}}>
+      <p style={{color:T.text4,fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase",margin:"0 0 0.25rem"}}>Estado</p>
+      <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap"}}>
+        {[["publicada","Publicada"],["pendente","Pendente"],["borrador","Borrador"],["rexeitada","Rexeitada"]].map(([id,lab])=>(
+          <button key={id} onClick={()=>setEstado(id)} style={{background:estado===id?T.accent+"22":T.bg3,
+            borderStyle:"solid",borderWidth:1,borderColor:estado===id?T.accent:T.border,
+            color:estado===id?T.accent:T.text3,borderRadius:20,padding:"0.3rem 0.7rem",
+            fontSize:"0.74rem",cursor:"pointer",fontFamily:"inherit"}}>{lab}</button>))}
+      </div>
+    </div>}
 
     {etiqueta("Categoría")}
     <select value={tipo} onChange={e=>setTipo(e.target.value)} style={{...S.input,marginBottom:"0.3rem"}}>
@@ -120,7 +152,7 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
       </div>))}
     </>}
 
-    {!logueado&&<>
+    {!logueado&&!admin&&<>
       {etiqueta("Quen propón (opcional)")}
       <p style={{...S.caption,marginBottom:"0.6rem"}}>Só para poder consultarche dúbidas. Non se publica.</p>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(160px,100%),1fr))",gap:"0.4rem"}}>
@@ -130,14 +162,14 @@ export function UniversoForm({cats,logueado,onEnviar,onCancelar}){
     </>}
 
     {/* Honeypot. aria-hidden + tabIndex -1 para que non o vexa nin un lector de pantalla. */}
-    <input value={trampa} onChange={e=>setTrampa(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true"
-      style={{position:"absolute",left:"-9999px",width:1,height:1,opacity:0}}/>
+    {!admin&&<input value={trampa} onChange={e=>setTrampa(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true"
+      style={{position:"absolute",left:"-9999px",width:1,height:1,opacity:0}}/>}
 
     {avisoSpam&&<p style={{color:T.warn,fontSize:"0.8rem",margin:"0.8rem 0 0"}}>{avisoSpam}</p>}
     {erros.length>0&&<p style={{color:T.danger,fontSize:"0.8rem",margin:"0.8rem 0 0"}}>Revisa {erros.length} {erros.length===1?"campo":"campos"}.</p>}
 
     <div style={{display:"flex",gap:"0.4rem",marginTop:"1rem",flexWrap:"wrap"}}>
-      <button onClick={enviar} disabled={enviando} style={{...S.btn(T.accent),opacity:enviando?0.6:1}}>{enviando?"Enviando…":"Enviar proposta"}</button>
+      <button onClick={enviar} disabled={enviando} style={{...S.btn(T.accent),opacity:enviando?0.6:1}}>{enviando?"Gardando…":(admin?(inicial?"Gardar cambios":"Crear entrada"):"Enviar proposta")}</button>
       <button onClick={onCancelar} style={S.btn(T.bg3,T.text2)}>Cancelar</button>
     </div>
   </div>);

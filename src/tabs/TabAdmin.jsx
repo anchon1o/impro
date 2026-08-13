@@ -9,7 +9,7 @@ import { DINAMICAS_BASE } from '../datos.js';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
 import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
-import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso } from '../universo.js';
+import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso, cargarCategorias } from '../universo.js';
 
 export const ADMIN_PIN = "1234";
 
@@ -362,14 +362,24 @@ export function AdminUniverso({T,S}){
   const [vista,setVista]=useState("pendentes");
   const [showForm,setShowForm]=useState(false);
   const [editId,setEditId]=useState(null);
-  const FORM0={tipo:"compañía",nome:"",pais:"🇪🇸",cidade:"",desc:"",web:"",tags:"",logo:"🎭"};
-  const [form,setForm]=useState(FORM0);
+  const [cats,setCats]=useState([]);
+  const [msgForm,setMsgForm]=useState("");
 
   const cargar=useCallback(async()=>{
     setLoading(true);
-    const [p,t]=await Promise.all([listarPendentesUniverso(),listarTodoUniverso()]);
-    setPendentes(p);setTodos(t);setLoading(false);
+    const [p,t,c]=await Promise.all([listarPendentesUniverso(),listarTodoUniverso(),cargarCategorias()]);
+    setPendentes(p);setTodos(t);setCats((c.cats||[]).filter(x=>x.activa!==false));setLoading(false);
   },[]);
+
+  // Un só camiño de gardado, tanto para crear como para editar. O formulario
+  // devolve xa a ficha no formato do modelo (ligazons, datos, logoUrl…).
+  const gardarFicha=async(ficha)=>{
+    const ok=ficha.id
+      ? await editarUniverso(ficha.id,ficha)
+      : !!(await engadirUniverso(ficha,user?.id,ficha.estado==="publicada"));
+    if(ok){setShowForm(false);setEditId(null);setMsgForm("");cargar();}
+    else setMsgForm("Non se puido gardar. Revisa a consola para o detalle.");
+  };
   useEffect(()=>{cargar();},[cargar]);
 
   const [notas,setNotas]=useState({});
@@ -384,21 +394,15 @@ export function AdminUniverso({T,S}){
     await borrarUniverso(id);cargar();
   };
 
-  const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);};
-  const openEdit=item=>{
-    setEditId(item.id);
-    setForm({tipo:item.tipo,nome:item.nome,pais:item.pais,cidade:item.cidade,desc:item.desc,web:item.web,tags:(item.tags||[]).join(", "),logo:item.logo});
-    setShowForm(true);
-  };
-  const gardar=async()=>{
-    if(!form.nome.trim()||!form.desc.trim())return;
-    const entry={tipo:form.tipo,nome:form.nome.trim(),pais:form.pais.trim(),cidade:form.cidade.trim(),desc:form.desc.trim(),web:form.web.trim(),tags:form.tags.split(",").map(t=>t.trim()).filter(Boolean),logo:form.logo};
-    if(editId){await editarUniverso(editId,entry);}
-    else{await engadirUniverso(entry,user?.id,true);} // admin engade xa verificado
-    setShowForm(false);cargar();
-  };
+  // O formulario xa xestiona os seus propios valores: aquí só se decide
+  // que ficha se lle pasa como inicial.
+  const openNew=()=>{setEditId(null);setMsgForm("");setShowForm(true);};
+  const openEdit=item=>{setEditId(item.id);setMsgForm("");setShowForm(true);};
 
-  const TIPO_COL={"compañía":"#e040fb",festival:T.warn,escola:T.info,persoa:T.ok,proxecto:T.danger};
+  // TIPO_COL: cores por categoría. A categoría xa non é unha lista fixa
+  // (créanse en Admin → Categorías), así que se resolve contra o tema e se
+  // cae ao acento se non hai correspondencia.
+  const TIPO_COL={"compañía":T.accent,festival:T.warn,escola:T.info,persoa:T.ok,proxecto:T.danger,colectivo:T.alt,espazo:T.muted};
 
   if(loading)return<p style={{color:T.text3,fontSize:"0.85rem"}}>Cargando...</p>;
 
@@ -411,25 +415,17 @@ export function AdminUniverso({T,S}){
       <button onClick={openNew} style={S.btn(T.accent)}>+ Engadir verificada</button>
     </div>
 
-    {showForm&&<div style={{...S.panel,marginBottom:"1rem",border:`1.5px solid ${T.accent}44`}}>
-      <p style={S.ptitle(T.accent)}>{editId?"Editar entrada":"Nova entrada (xa verificada)"}</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(120px,100%),1fr))",gap:"0.5rem",marginBottom:"0.5rem"}}>
-        <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))} style={S.input}>
-          {["compañía","festival","escola","persoa","proxecto"].map(t=><option key={t} value={t}>{t}</option>)}
-        </select>
-        <input value={form.pais} onChange={e=>setForm(f=>({...f,pais:e.target.value}))} placeholder="🇪🇸 País" style={S.input}/>
-        <input value={form.cidade} onChange={e=>setForm(f=>({...f,cidade:e.target.value}))} placeholder="Cidade" style={S.input}/>
-        <input value={form.logo} onChange={e=>setForm(f=>({...f,logo:e.target.value}))} placeholder="Emoji" style={S.input}/>
-      </div>
-      <input value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Nome" style={{...S.input,marginBottom:"0.5rem"}}/>
-      <textarea value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Descrición real e verificable" style={{...S.input,minHeight:65,marginBottom:"0.5rem",resize:"vertical"}}/>
-      <input value={form.web} onChange={e=>setForm(f=>({...f,web:e.target.value}))} placeholder="Web (opcional)" style={{...S.input,marginBottom:"0.5rem"}}/>
-      <input value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="Etiquetas separadas por coma" style={{...S.input,marginBottom:"0.75rem"}}/>
-      <div style={{display:"flex",gap:"0.5rem"}}>
-        <button onClick={gardar} disabled={!form.nome.trim()||!form.desc.trim()} style={{...S.btn(T.accent),opacity:(!form.nome.trim()||!form.desc.trim())?0.4:1}}>Gardar</button>
-        <button onClick={()=>setShowForm(false)} style={S.btn(T.bg3,T.text3)}>Cancelar</button>
-      </div>
-    </div>}
+    {/* Formulario compartido coa pestana Universo. Antes había aquí outro
+        distinto con só 8 campos: sen logo por imaxe, sen redes sociais e sen
+        os campos de plantilla. Toda entrada creada desde Admin nacía
+        incompleta e despois había que completala a man na outra pantalla. */}
+    {showForm&&<UniversoForm
+      cats={cats}
+      logueado={true}
+      admin={true}
+      inicial={editId?todos.find(x=>x.id===editId)||null:null}
+      onEnviar={gardarFicha}
+      onCancelar={()=>{setShowForm(false);setEditId(null);}}/>}
 
     {/* M08 — Cola de moderación.
         Rexeitar xa NON borra a fila: cambia o estado a 'rexeitada'. Así
