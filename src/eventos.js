@@ -147,3 +147,47 @@ export function agruparPorMes(eventos) {
   }
   return [...mapa.values()];
 }
+
+// ─────────────────────────────────────────────
+// VISTA DE CALENDARIO
+// ─────────────────────────────────────────────
+
+// Devolve as semanas dun mes como matriz de días, empezando en luns.
+// Inclúe os días de recheo do mes anterior e seguinte para que a grella
+// quede completa: sen eles as columnas descolócanse.
+export function semanasDoMes(ano, mes) {
+  const primeiro = new Date(ano, mes, 1);
+  const desprazamento = (primeiro.getDay() + 6) % 7;   // luns = 0
+  const inicio = new Date(ano, mes, 1 - desprazamento);
+  const semanas = [];
+  for (let s = 0; s < 6; s++) {
+    const dias = [];
+    for (let d = 0; d < 7; d++) {
+      const data = new Date(inicio);
+      data.setDate(inicio.getDate() + s * 7 + d);
+      dias.push({
+        iso: `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`,
+        dia: data.getDate(),
+        doMes: data.getMonth() === mes,
+      });
+    }
+    semanas.push(dias);
+    // Non debuxar unha sexta fila baleira
+    const ultimo = dias[6];
+    if (s >= 4 && !ultimo.doMes && !dias[0].doMes) { semanas.pop(); break; }
+  }
+  return semanas;
+}
+
+// Un evento ocupa todos os días entre a data de inicio e a de fin.
+export function eventosDoDia(eventos, iso) {
+  return (eventos || []).filter(e => {
+    const ini = e.dataInicio;
+    const fin = e.dataFin || e.dataInicio;
+    return iso >= ini && iso <= fin;
+  });
+}
+
+export const MESES = ['Xaneiro','Febreiro','Marzo','Abril','Maio','Xuño','Xullo',
+                      'Agosto','Setembro','Outubro','Novembro','Decembro'];
+export const DIAS_SEMANA = ['L','M','X','X','V','S','D'];

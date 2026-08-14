@@ -129,7 +129,7 @@ function AppInner({perfil,publico}={}){
           <button onClick={()=>{setMenuAberto(false);changeTab("inicio");}} title="Inicio" style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden",background:"none",border:"none",padding:0,cursor:"pointer",color:"inherit",fontFamily:"inherit"}}>
             <span style={{fontSize:"1.15rem",flexShrink:0}}>🎭</span>
             <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>impro<span style={{color:T.accent}}>App</span></span>
-            {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v8</span>}
+            {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v10</span>}
           </button>
           <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
             {!esMovil&&<div style={{position:"relative"}}>

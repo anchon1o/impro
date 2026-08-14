@@ -11,18 +11,60 @@ import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
 //
 // Dentro dunha sección mantense o menú horizontal de sempre.
 
+// As descricións tamén se traducen: antes estaban fixas en galego mentres
+// as etiquetas viñan de UI_STRINGS, así que ao poñer a app en castelán a
+// botonera mostraba "Generar" cunha descrición en galego.
+export const DESCS={
+  es:{generar:"Estímulos por categoría, escenas combinadas y plantillas propias.",
+      reto:"Una dinámica al azar con estímulos y sus instrucciones.",
+      show:"Cabina de sonido: audio multipista, efectos, metrónomo y escaleta.",
+      guia:"Catálogo de dinámicas con pasos, objetivos y variantes.",
+      sesiones:"Planifica y guarda tus sesiones de trabajo.",
+      grupos:"Gestiona tus grupos y haz seguimiento.",
+      qr:"Abre una sala y recoge propuestas del público en directo.",
+      universo:"Compañías, escuelas, festivales y formatos verificados.",
+      axenda:"Cursos, talleres y shows. Sugiere los tuyos.",
+      manual:"Cómo funciona cada parte de la aplicación.",
+      ajustes:"Idioma, tema y preferencias.",
+      admin:"Usuarios, estímulos, dinámicas y estadísticas."},
+  gl:{generar:"Estímulos por categoría, escenas combinadas e plantillas propias.",
+      reto:"Unha dinámica ao chou con estímulos, coas súas instrucións.",
+      show:"Cabina de son: audio multipista, efectos, metrónomo e escaleta.",
+      guia:"Catálogo de dinámicas con pasos, obxectivos e variantes.",
+      sesiones:"Planifica e garda as túas sesións de traballo.",
+      grupos:"Xestiona os teus grupos e fai seguimento.",
+      qr:"Abre unha sala e recolle propostas do público en directo.",
+      universo:"Compañías, escolas, festivais e formatos verificados.",
+      axenda:"Cursos, obradoiros e shows. Suxire os teus.",
+      manual:"Como funciona cada parte da aplicación.",
+      ajustes:"Idioma, tema e preferencias.",
+      admin:"Usuarios, estímulos, dinámicas e estatísticas."},
+  en:{generar:"Prompts by category, combined scenes and your own templates.",
+      reto:"A random exercise with prompts and full instructions.",
+      show:"Sound booth: multitrack audio, effects, metronome and rundown.",
+      guia:"Exercise library with steps, goals and variations.",
+      sesiones:"Plan and save your training sessions.",
+      grupos:"Manage your groups and track their progress.",
+      qr:"Open a room and collect audience suggestions live.",
+      universo:"Companies, schools, festivals and verified formats.",
+      axenda:"Courses, workshops and shows. Suggest your own.",
+      manual:"How every part of the app works.",
+      ajustes:"Language, theme and preferences.",
+      admin:"Users, prompts, exercises and statistics."},
+};
+
 export const AREAS=[
-  {id:"generar",  emoji:"🎲",  cor:"accent", desc:"Estímulos por categoría, escenas combinadas e plantillas propias."},
-  {id:"reto",     emoji:"⚡", cor:"warn", desc:"Unha dinámica ao chou con estímulos, coas súas instrucións."},
-  {id:"show",     emoji:"🎛", cor:"danger", desc:"Cabina de son: audio multipista, efectos, metrónomo e rundown."},
-  {id:"guia",     emoji:"📖", cor:"ok", desc:"Catálogo de dinámicas con pasos, obxectivos e variantes."},
+  {id:"generar",  emoji:"🎲",  cor:"accent"},
+  {id:"reto",     emoji:"⚡", cor:"warn"},
+  {id:"show",     emoji:"🎛", cor:"danger"},
+  {id:"guia",     emoji:"📖", cor:"ok"},
   {id:"sesiones", emoji:"📋", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
   {id:"grupos",   emoji:"👥", cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
   {id:"qr",       emoji:"📱", cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
-  {id:"universo", emoji:"🌍", cor:"accent", desc:"Compañías, escolas, festivais e formatos verificados."},
-  {id:"axenda",   emoji:"📅", cor:"info", desc:"Cursos, obradoiros e shows. Suxire os teus."},
-  {id:"manual",   emoji:"📘", cor:"info", desc:"Como funciona cada parte da aplicación."},
-  {id:"ajustes",  emoji:"⚙️", cor:"muted", desc:"Idioma, tema e preferencias."},
+  {id:"universo", emoji:"🌍", cor:"accent"},
+  {id:"axenda",   emoji:"📅", cor:"info"},
+  {id:"manual",   emoji:"📘", cor:"info"},
+  {id:"ajustes",  emoji:"⚙️", cor:"muted"},
   {id:"admin",    emoji:"🔐", cor:"danger", desc:"Usuarios, estímulos, dinámicas e estatísticas.", soAdmin:true},
 ];
 
@@ -93,7 +135,7 @@ export function Inicio({onIr,lang}){
               <span style={{color:T.text,fontWeight:800,fontSize:esMovil?"0.95rem":"1.05rem",letterSpacing:"-0.02em",lineHeight:1.2}}>
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>
-              <span style={{color:T.text3,fontSize:esMovil?"0.74rem":"0.79rem",lineHeight:1.4,flex:1}}>{a.desc}</span>
+              <span style={{color:T.text3,fontSize:esMovil?"0.74rem":"0.79rem",lineHeight:1.4,flex:1}}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>
             </button>
           );
         })}

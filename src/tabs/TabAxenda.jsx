@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTheme, useAuth, mkS } from '../core.jsx';
 import { TIPOS_EVENTO, tipoEvento, listarEventos, gardarEvento, borrarEvento,
-         formatarData, agruparPorMes, hoxeISO } from '../eventos.js';
+         formatarData, agruparPorMes, hoxeISO,
+         semanasDoMes, eventosDoDia, MESES, DIAS_SEMANA } from '../eventos.js';
 import { cargarUniverso } from '../universo.js';
 
 // Axenda de eventos. Área propia no menú principal.
@@ -25,6 +26,10 @@ export function TabAxenda({ entradas: entradasProp }) {
   const [edit,setEdit]=useState(null);
   const [msg,setMsg]=useState('');
   const [entradas,setEntradas]=useState(entradasProp||[]);
+  const [vista,setVista]=useState('lista');            // lista | calendario
+  const hoxe=new Date();
+  const [mes,setMes]=useState({ano:hoxe.getFullYear(),mes:hoxe.getMonth()});
+  const [diaSel,setDiaSel]=useState(null);
 
   // Se non veñen por prop, cárganse: a pestana é independente de Universo.
   useEffect(()=>{
@@ -83,6 +88,11 @@ export function TabAxenda({ entradas: entradasProp }) {
       </div>
       {logueado&&!edit&&<button onClick={()=>setEdit({...BALEIRO})} style={S.btn(T.accent)}>
         {esAdmin?'+ Novo evento':'+ Suxerir evento'}</button>}
+    </div>
+
+    <div style={{display:'flex',gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:'0.7rem',width:'fit-content'}}>
+      {[['lista','Lista'],['calendario','🗓 Calendario']].map(([id,lab])=>(
+        <button key={id} onClick={()=>setVista(id)} style={{...S.btn(vista===id?T.bg2:'transparent',vista===id?T.text:T.text3),borderRadius:8,padding:'0.32rem 0.8rem',fontSize:'0.78rem'}}>{lab}</button>))}
     </div>
 
     <label style={{display:'flex',alignItems:'center',gap:'0.4rem',color:T.text4,fontSize:'0.76rem',marginBottom:'0.8rem',cursor:'pointer'}}>
@@ -166,8 +176,73 @@ export function TabAxenda({ entradas: entradasProp }) {
       {!logueado&&<p style={{...S.caption,marginTop:'0.5rem'}}>Inicia sesión para suxerir eventos.</p>}
     </div>}
 
+    {/* Vista de calendario: unha grella mensual. Os eventos de varios días
+        aparecen en todos os días que ocupan. */}
+    {vista==='calendario'&&<div style={{marginBottom:'1.2rem'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
+        <button onClick={()=>setMes(m=>m.mes===0?{ano:m.ano-1,mes:11}:{ano:m.ano,mes:m.mes-1})}
+          style={{...S.btn(T.bg3,T.text2),padding:'0.3rem 0.7rem'}}>‹</button>
+        <p style={{color:T.text,fontWeight:800,fontSize:'0.95rem',margin:0}}>{MESES[mes.mes]} {mes.ano}</p>
+        <button onClick={()=>setMes(m=>m.mes===11?{ano:m.ano+1,mes:0}:{ano:m.ano,mes:m.mes+1})}
+          style={{...S.btn(T.bg3,T.text2),padding:'0.3rem 0.7rem'}}>›</button>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:2}}>
+        {DIAS_SEMANA.map((d,i)=><div key={i} style={{textAlign:'center',color:T.text4,fontSize:'0.68rem',fontWeight:700,padding:'0.3rem 0'}}>{d}</div>)}
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
+        {semanasDoMes(mes.ano,mes.mes).flat().map(d=>{
+          const evs=eventosDoDia(lista,d.iso);
+          const esHoxe=d.iso===hoxeISO();
+          const sel=diaSel===d.iso;
+          return(
+            <button key={d.iso} onClick={()=>setDiaSel(sel?null:d.iso)} style={{
+              background:sel?T.accent+'22':(esHoxe?T.bg4:T.bg2),
+              borderStyle:'solid',borderWidth:1,
+              borderColor:sel?T.accent:(esHoxe?T.accent+'55':T.border),
+              borderRadius:8,padding:'0.3rem 0.2rem',minHeight:52,cursor:'pointer',
+              fontFamily:'inherit',display:'flex',flexDirection:'column',
+              alignItems:'center',gap:2,opacity:d.doMes?1:0.35}}>
+              <span style={{color:esHoxe?T.accent:T.text2,fontSize:'0.76rem',fontWeight:esHoxe?800:400}}>{d.dia}</span>
+              <span style={{display:'flex',gap:2,flexWrap:'wrap',justifyContent:'center'}}>
+                {evs.slice(0,3).map((e,i)=>(
+                  <span key={i} style={{width:5,height:5,borderRadius:3,background:T[tipoEvento(e.tipo).cor]||T.accent}}/>))}
+                {evs.length>3&&<span style={{color:T.text4,fontSize:'0.6rem',lineHeight:1}}>+{evs.length-3}</span>}
+              </span>
+            </button>);
+        })}
+      </div>
+
+      {/* Detalle do día escollido */}
+      {diaSel&&<div style={{marginTop:'0.8rem'}}>
+        <p style={{color:T.text4,fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.06em',
+          textTransform:'uppercase',margin:'0 0 0.4rem'}}>{formatarData(diaSel)}</p>
+        {eventosDoDia(lista,diaSel).length===0
+          ?<p style={{...S.caption,margin:0}}>Sen eventos este día.</p>
+          :<div style={{display:'flex',flexDirection:'column',gap:'0.35rem'}}>
+            {eventosDoDia(lista,diaSel).map(e=>{
+              const tp=tipoEvento(e.tipo); const org=ficha(e.organizaId), lug=ficha(e.lugarId);
+              return(<div key={e.id} style={{...S.panel,padding:'0.6rem 0.7rem',
+                borderStyle:'solid',borderWidth:'1px 1px 1px 3px',borderColor:T.border,
+                borderLeftColor:T[tp.cor]||T.accent}}>
+                <div style={{display:'flex',gap:'0.4rem',alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{...S.tag(T[tp.cor]||T.accent),fontSize:'0.64rem'}}>{tp.emoji} {tp.label}</span>
+                  {e.hora&&<span style={{color:T.text4,fontSize:'0.72rem',fontFamily:'monospace'}}>{e.hora}</span>}
+                </div>
+                <p style={{color:T.text,fontWeight:700,fontSize:'0.86rem',margin:'0.2rem 0 0'}}>{e.titulo}</p>
+                <p style={{color:T.text4,fontSize:'0.72rem',margin:'0.15rem 0 0'}}>
+                  {org&&<span>{org.logo} {org.nome}</span>}{org&&(lug||e.cidade)&&' · '}
+                  {lug?<span>📍 {lug.nome}</span>:(e.cidade&&<span>📍 {e.cidade}</span>)}
+                </p>
+              </div>);
+            })}
+          </div>}
+      </div>}
+    </div>}
+
     {/* Agrupados por mes */}
-    {meses.map(m=>(<div key={m.chave} style={{marginBottom:'1.2rem'}}>
+    {vista==='lista'&&meses.map(m=>(<div key={m.chave} style={{marginBottom:'1.2rem'}}>
       <p style={{color:T.text4,fontSize:'0.72rem',fontWeight:700,letterSpacing:'0.06em',
         textTransform:'uppercase',margin:'0 0 0.5rem',paddingBottom:'0.3rem',
         borderBottomStyle:'solid',borderBottomWidth:1,borderBottomColor:T.border}}>{m.label}</p>
