@@ -2,12 +2,19 @@ import { useState, useEffect } from 'react';
 import { useTheme, useAuth, mkS } from '../core.jsx';
 import { TIPOS_EVENTO, tipoEvento, listarEventos, gardarEvento, borrarEvento,
          formatarData, agruparPorMes, hoxeISO } from '../eventos.js';
+import { cargarUniverso } from '../universo.js';
 
-// Axenda de eventos. Vive dentro de Universo porque un evento case sempre
-// pertence a alguén que xa está no directorio: unha escola que dá un curso,
-// unha compañía que fai un show, un garito que o acolle.
+// Axenda de eventos. Área propia no menú principal.
+//
+// Tres niveis de acceso:
+//   · sen conta  → ver o calendario
+//   · con conta  → suxerir eventos, que quedan pendentes de revisión
+//   · admin      → publicar directo e moderar (en Admin → Axenda)
+//
+// Os eventos vincúlanse a entradas de Universo (quen organiza e onde), que
+// é o que fai que a axenda non sexa unha lista solta.
 
-export function UniversoAxenda({ entradas, cats }) {
+export function TabAxenda({ entradas: entradasProp }) {
   const {T}=useTheme(); const S=mkS(T);
   const {logueado,esAdmin,user}=useAuth();
   const [eventos,setEventos]=useState([]);
@@ -17,6 +24,13 @@ export function UniversoAxenda({ entradas, cats }) {
   const [pasados,setPasados]=useState(false);
   const [edit,setEdit]=useState(null);
   const [msg,setMsg]=useState('');
+  const [entradas,setEntradas]=useState(entradasProp||[]);
+
+  // Se non veñen por prop, cárganse: a pestana é independente de Universo.
+  useEffect(()=>{
+    if(entradasProp&&entradasProp.length)return;
+    cargarUniverso().then(u=>setEntradas(u||[]));
+  },[entradasProp]);
 
   const cargar=()=>{
     setCargando(true);
@@ -39,8 +53,13 @@ export function UniversoAxenda({ entradas, cats }) {
   const gardar=async()=>{
     if(!edit.titulo.trim()){setMsg('Fai falta un título.');return;}
     if(!edit.dataInicio){setMsg('Fai falta a data.');return;}
-    const r=await gardarEvento(edit);
-    if(r.ok){setEdit(null);setMsg('');cargar();}
+    const r=await gardarEvento(edit,{admin:esAdmin});
+    if(r.ok){
+      setEdit(null);
+      setMsg(esAdmin?'':'Recibido. O evento aparecerá cando sexa revisado.');
+      setTimeout(()=>setMsg(''),5000);
+      cargar();
+    }
     else setMsg(r.erro||'Non se puido gardar.');
   };
 
@@ -62,7 +81,8 @@ export function UniversoAxenda({ entradas, cats }) {
             fontWeight:filtro===t.id?700:400,cursor:'pointer',fontFamily:'inherit'}}>
             {t.emoji} {t.label}</button>))}
       </div>
-      {logueado&&!edit&&<button onClick={()=>setEdit({...BALEIRO})} style={S.btn(T.accent)}>+ Novo evento</button>}
+      {logueado&&!edit&&<button onClick={()=>setEdit({...BALEIRO})} style={S.btn(T.accent)}>
+        {esAdmin?'+ Novo evento':'+ Suxerir evento'}</button>}
     </div>
 
     <label style={{display:'flex',alignItems:'center',gap:'0.4rem',color:T.text4,fontSize:'0.76rem',marginBottom:'0.8rem',cursor:'pointer'}}>
@@ -78,7 +98,10 @@ export function UniversoAxenda({ entradas, cats }) {
 
     {/* Editor */}
     {edit&&<div style={{...S.panel,marginBottom:'1rem',borderStyle:'solid',borderWidth:1,borderColor:T.accent+'44'}}>
-      <p style={S.ptitle(T.accent)}>{edit.id?'Editar evento':'Novo evento'}</p>
+      <p style={S.ptitle(T.accent)}>{edit.id?'Editar evento':(esAdmin?'Novo evento':'Suxerir un evento')}</p>
+      {!esAdmin&&<p style={{...S.caption,marginBottom:'0.7rem'}}>
+        A túa suxestión revisarase antes de publicarse. Mentres tanto poderás vela e editala ti.
+      </p>}
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 130px',gap:'0.4rem',marginBottom:'0.4rem'}}>
         <input value={edit.titulo} onChange={e=>setEdit(x=>({...x,titulo:e.target.value}))} placeholder="Título *" style={inp}/>
@@ -140,7 +163,7 @@ export function UniversoAxenda({ entradas, cats }) {
       <p style={{color:T.text4,fontSize:'0.86rem',margin:0}}>
         {pasados?'Sen eventos nesta vista.':'Non hai eventos próximos.'}
       </p>
-      {!logueado&&<p style={{...S.caption,marginTop:'0.5rem'}}>Inicia sesión para engadir eventos.</p>}
+      {!logueado&&<p style={{...S.caption,marginTop:'0.5rem'}}>Inicia sesión para suxerir eventos.</p>}
     </div>}
 
     {/* Agrupados por mes */}
@@ -168,7 +191,9 @@ export function UniversoAxenda({ entradas, cats }) {
                 <div style={{display:'flex',gap:'0.4rem',alignItems:'center',flexWrap:'wrap'}}>
                   <span style={{...S.tag(T[tp.cor]||T.accent),fontSize:'0.66rem'}}>{tp.emoji} {tp.label}</span>
                   {e.estado==='cancelado'&&<span style={{...S.tag(T.danger),fontSize:'0.66rem'}}>cancelado</span>}
-                  {e.estado==='borrador'&&<span style={{...S.tag(T.warn),fontSize:'0.66rem'}}>borrador</span>}
+                  {e.estado==='borrador'&&<span style={{...S.tag(T.muted),fontSize:'0.66rem'}}>borrador</span>}
+                  {e.estado==='pendente'&&<span style={{...S.tag(T.warn),fontSize:'0.66rem'}}>agarda revisión</span>}
+                  {e.estado==='rexeitado'&&<span style={{...S.tag(T.danger),fontSize:'0.66rem'}}>non aceptado</span>}
                 </div>
                 <p style={{color:T.text,fontWeight:700,fontSize:'0.92rem',margin:'0.25rem 0 0'}}>{e.titulo}</p>
                 {e.desc&&<p style={{color:T.text3,fontSize:'0.8rem',margin:'0.2rem 0 0',lineHeight:1.5}}>{e.desc}</p>}

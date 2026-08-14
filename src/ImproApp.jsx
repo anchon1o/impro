@@ -33,6 +33,7 @@ import { ModoShow } from './ModoShow.jsx';
 import { LoginModal } from './auth/LoginModal.jsx';
 import { LoginGate } from './auth/LoginGate.jsx';
 import { Inicio } from './Inicio.jsx';
+import { TabAxenda } from './tabs/TabAxenda.jsx';
 import { BotonReporte } from './tabs/BotonReporte.jsx';
 import { LimiteErro } from './LimiteErro.jsx';
 
@@ -48,6 +49,7 @@ const TABS=[
   {id:"ajustes",label:"Ajustes",emoji:"⚙️"},
   {id:"manual",label:"Manual",emoji:"📘"},
   {id:"universo",label:"Universo",emoji:"🌍"},
+  {id:"axenda",label:"Axenda",emoji:"📅"},
 ];
 
 function AppInner({perfil,publico}={}){
@@ -209,6 +211,7 @@ function AppInner({perfil,publico}={}){
         {tab==="ajustes"&&<TabAjustes/>}
         {tab==="manual"&&<TabManual/>}
         {tab==="universo"&&<TabUniverso/>}
+        {tab==="axenda"&&<TabAxenda/>}
         </LimiteErro>
       </div>
     </main>

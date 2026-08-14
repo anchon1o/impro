@@ -31,9 +31,9 @@ export const useAuth = () => useContext(AuthCtx) || {};
 export const useLang = () => useContext(LangCtx);
 
 export const UI_STRINGS = {
-  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo"},
-  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo"},
-  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",show:"Booth",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe"},
+  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Agenda"},
+  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Axenda"},
+  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",show:"Booth",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe",axenda:"Calendar"},
 };
 
 export const t = (lang, key) => UI_STRINGS[lang]?.[key] || UI_STRINGS.es[key] || key;

@@ -20,6 +20,7 @@ export const AREAS=[
   {id:"grupos",   emoji:"👥", cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
   {id:"qr",       emoji:"📱", cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
   {id:"universo", emoji:"🌍", cor:"accent", desc:"Compañías, escolas, festivais e formatos verificados."},
+  {id:"axenda",   emoji:"📅", cor:"info", desc:"Cursos, obradoiros e shows. Suxire os teus."},
   {id:"manual",   emoji:"📘", cor:"info", desc:"Como funciona cada parte da aplicación."},
   {id:"ajustes",  emoji:"⚙️", cor:"muted", desc:"Idioma, tema e preferencias."},
   {id:"admin",    emoji:"🔐", cor:"danger", desc:"Usuarios, estímulos, dinámicas e estatísticas.", soAdmin:true},

@@ -13,6 +13,7 @@ import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUn
 import { LimiteErro } from '../LimiteErro.jsx';
 import { AdminCategorias } from './AdminCategorias.jsx';
 import { AdminTiposDinamica } from './AdminTiposDinamica.jsx';
+import { AdminAxenda } from './AdminAxenda.jsx';
 import { AdminTablaMasiva } from './AdminTablaMasiva.jsx';
 import { AdminReportes } from './AdminReportes.jsx';
 import { UniversoForm } from './UniversoForm.jsx';
@@ -37,6 +38,7 @@ export function TabAdmin(){
     {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
     {id:"universo",emoji:"🌍",label:"Universo"},
+    {id:"axenda",emoji:"📅",label:"Axenda"},
     {id:"reportes",emoji:"🐛",label:"Reportes"},
     {id:"grupos",emoji:"👥",label:"Grupos"},
     {id:"stats",emoji:"📊",label:"Stats"},
@@ -63,6 +65,7 @@ export function TabAdmin(){
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
+    {adminTab==="axenda"&&<AdminAxenda/>}
     {adminTab==="reportes"&&<AdminReportes/>}
     {adminTab==="grupos"&&<AdminGrupos T={T} S={S}/>}
     {adminTab==="stats"&&<AdminStats T={T} S={S}/>}

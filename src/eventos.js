@@ -4,6 +4,14 @@
 
 import { supabase } from './supabase.js';
 
+export const ESTADOS_EVENTO = [
+  {id:'pendente',  label:'Pendente',  cor:'warn'},
+  {id:'publicado', label:'Publicado', cor:'ok'},
+  {id:'borrador',  label:'Borrador',  cor:'muted'},
+  {id:'rexeitado', label:'Rexeitado', cor:'danger'},
+  {id:'cancelado', label:'Cancelado', cor:'danger'},
+];
+
 export const TIPOS_EVENTO = [
   {id:'obradoiro', label:'Obradoiro', emoji:'🎓', cor:'info'},
   {id:'curso',     label:'Curso',     emoji:'📚', cor:'accent'},
@@ -25,6 +33,7 @@ function mapRow(d) {
     lon: d.lon != null ? Number(d.lon) : null,
     url: d.url || '', prezo: d.prezo || '',
     estado: d.estado, userId: d.user_id, creadoEn: d.created_at,
+    notaRevision: d.nota_revision || '',
   };
 }
 
@@ -59,9 +68,20 @@ function resultado(lista, erro) {
   return out;
 }
 
-export async function listarEventos({ desde, ata, incluirPasados = false } = {}) {
+// Moderación: cambiar de estado deixa rastro de quen revisou e cando.
+export async function moderarEvento(id, estado, nota) {
+  const { data: { user } = {} } = await supabase.auth.getUser();
+  const patch = { estado, revisado_por: user?.id || null, revisado_en: new Date().toISOString() };
+  if (nota !== undefined) patch.nota_revision = nota;
+  const { error } = await supabase.from('eventos').update(patch).eq('id', id);
+  if (error) console.error('[eventos] moderar:', error.message);
+  return !error;
+}
+
+export async function listarEventos({ desde, ata, incluirPasados = false, estado } = {}) {
   try {
     let q = supabase.from('eventos').select('*').order('data_inicio');
+    if (estado && estado !== 'todos') q = q.eq('estado', estado);
     if (desde) q = q.gte('data_inicio', desde);
     else if (!incluirPasados) {
       // Un evento de varios días segue vixente ata a súa data de fin
@@ -78,9 +98,12 @@ export async function listarEventos({ desde, ata, incluirPasados = false } = {})
   }
 }
 
-export async function gardarEvento(ev) {
+export async function gardarEvento(ev, { admin = false } = {}) {
   const { data: { user } = {} } = await supabase.auth.getUser();
   const fila = aFila(ev);
+  // A política RLS esixe estado='pendente' a quen non é admin. Se se manda
+  // outro, o insert é rexeitado; mellor forzalo aquí que fallar despois.
+  if (!admin) fila.estado = 'pendente';
   if (ev.id) {
     const { error } = await supabase.from('eventos').update(fila).eq('id', ev.id);
     if (error) console.error('[eventos] actualizar:', error.message);
