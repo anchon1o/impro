@@ -8,16 +8,44 @@
 -- así que non se perden as edicións feitas desde Admin.
 -- ═══════════════════════════════════════════════════════════════════
 
--- Columnas que precisa o catálogo completo
+-- ⚠️ Decláranse TODAS as columnas, non só as que semellan novas.
+-- A táboa `dinamicas` orixinal creouse hai tempo e non se sabe con certeza
+-- que columnas ten: nunha instalación real faltaba `participantes`, e o
+-- insert fallaba enteiro. `if not exists` fai que engadir unha que xa
+-- estea sexa inofensivo, así que compensa listalas todas.
 alter table public.dinamicas
-  add column if not exists objetivo   text,
-  add column if not exists variantes  jsonb default '[]'::jsonb,
-  add column if not exists notas      text,
-  add column if not exists autoria    text,
-  add column if not exists licencia   text,
-  add column if not exists fuente     text,
-  add column if not exists es_base    boolean default false,
-  add column if not exists orde       integer default 0;
+  add column if not exists nombre        text,
+  add column if not exists tipo          text,
+  add column if not exists duracion      integer default 10,
+  add column if not exists participantes text default 'grupo',
+  add column if not exists descripcion   text,
+  add column if not exists pasos         jsonb default '[]'::jsonb,
+  add column if not exists objetivo      text,
+  add column if not exists variantes     jsonb default '[]'::jsonb,
+  add column if not exists notas         text,
+  add column if not exists autoria       text,
+  add column if not exists licencia      text,
+  add column if not exists fuente        text,
+  add column if not exists es_base       boolean default false,
+  add column if not exists orde          integer default 0,
+  add column if not exists user_id       uuid,
+  add column if not exists created_at    timestamptz default now();
+
+-- `pasos` e `variantes` teñen que ser jsonb. Se nalgunha instalación
+-- quedaran como text, o insert fallaría por tipo incompatible.
+do $$ begin
+  alter table public.dinamicas alter column pasos type jsonb using
+    case when pasos is null then '[]'::jsonb
+         when jsonb_typeof(pasos::jsonb) is not null then pasos::jsonb
+         else '[]'::jsonb end;
+exception when others then null; end $$;
+
+do $$ begin
+  alter table public.dinamicas alter column variantes type jsonb using
+    case when variantes is null then '[]'::jsonb
+         when jsonb_typeof(variantes::jsonb) is not null then variantes::jsonb
+         else '[]'::jsonb end;
+exception when others then null; end $$;
 
 create index if not exists dinamicas_tipo_idx on public.dinamicas(tipo);
 create index if not exists dinamicas_base_idx on public.dinamicas(es_base);
