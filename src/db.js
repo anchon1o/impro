@@ -93,49 +93,47 @@ export async function deleteUserStimulus(cat, nivel, orig_idx, isBase) {
 // ─────────────────────────────────────────────
 // DINÁMICAS
 // ─────────────────────────────────────────────
-export async function getDinamicas(base) {
-  // As dinámicas base viven en datos.js e actualízanse con cada despregue.
-  // A BD garda só as propias do usuario.
-  //
-  // ⚠️ Comportamento anterior: se a consulta devolvía calquera fila, retornábase
-  // SÓ esa lista e descartábanse as base por completo. Bastaba con que o usuario
-  // creara unha dinámica propia para que desaparecesen as 136 base. Ademais,
-  // as base novas engadidas en datos.js nunca chegaban a verse.
-  //
-  // A sementeira a Supabase eliminouse: a política `dinamicas_insert` esixe
-  // with_check (user_id = auth.uid() AND is_aprobado()) e o insert non mandaba
-  // user_id, polo que sempre fallaba en silencio. Era unha petición morta en
-  // cada carga.
-  const baseNorm = (base || []).map(d => ({ ...d, id: String(d.id), es_base: true }));
+// As dinámicas viven agora na base de datos (supabase_dinamicas_seed.sql).
+// `base` segue aceptándose como rede de seguridade: se a BD non responde ou
+// aínda non se sementou, a app funciona co catálogo do código.
+//
+// Devolve un array que ademais leva .dinamicas e .erro, para que non importe
+// como o consuma quen chame.
+function resultadoDin(lista, erro) {
+  const out = Array.isArray(lista) ? lista.slice() : [];
+  Object.defineProperty(out, 'dinamicas', { value: out, enumerable: false });
+  Object.defineProperty(out, 'erro', { value: erro || null, enumerable: false });
+  return out;
+}
 
-  const fusionar = (propias) => {
-    const porId = new Map();
-    const porNome = new Map();
-    for (const d of baseNorm) {
-      porId.set(String(d.id), d);
-      if (d.nombre) porNome.set(d.nombre.trim().toLowerCase(), String(d.id));
-    }
-    for (const d of propias || []) {
-      if (d.es_base) continue; // resto dunha sementeira antiga: manda datos.js
-      const clave = (d.nombre || '').trim().toLowerCase();
-      // Se unha propia comparte nome cunha base (sementeira vella sen a marca
-      // es_base), a propia substitúea en lugar de duplicarse na lista.
-      if (clave && porNome.has(clave)) porId.set(porNome.get(clave), d);
-      else porId.set(String(d.id), d);
-    }
-    return [...porId.values()];
+function normalizarDin(d) {
+  return {
+    ...d,
+    id: String(d.id),
+    pasos: Array.isArray(d.pasos) ? d.pasos : [],
+    variantes: Array.isArray(d.variantes) ? d.variantes : [],
+    duracion: Number(d.duracion) || 10,
   };
+}
 
+export async function getDinamicas(base) {
+  const baseNorm = (base || []).map(d => normalizarDin({ ...d, es_base: true }));
   try {
-    const { data, error } = await supabase.from('dinamicas').select('*').order('created_at');
+    const { data, error } = await supabase
+      .from('dinamicas').select('*').order('orde', { ascending: true });
     if (error) throw error;
-    const fusionadas = fusionar(data);
-    ls.set('impro_dinamicas_v2', fusionadas);
-    return fusionadas;
-  } catch {
-    // Sen rede: as propias que quedaran en caché, sempre sobre as base actuais
+    if (data && data.length) {
+      const lista = data.map(normalizarDin);
+      ls.set('impro_dinamicas_v2', lista);
+      return resultadoDin(lista, null);
+    }
+    // Táboa baleira: aínda non se executou a sementeira.
+    return resultadoDin(baseNorm, null);
+  } catch (e) {
+    console.warn('[db] getDinamicas:', e?.message);
     const cache = ls.get('impro_dinamicas_v2', []);
-    return fusionar(Array.isArray(cache) ? cache : []);
+    const lista = (Array.isArray(cache) && cache.length) ? cache.map(normalizarDin) : baseNorm;
+    return resultadoDin(lista, e?.message || null);
   }
 }
 
@@ -485,4 +483,34 @@ export async function borrarTipoDinamica(id) {
   if (count > 0) return { ok: false, motivo: `Hai ${count} dinámicas deste tipo.` };
   const { error } = await supabase.from('dinamicas_tipos').delete().eq('id', id);
   return { ok: !error, motivo: error?.message };
+}
+
+
+// Gardado en lote de dinámicas, para a táboa masiva. Fila a fila: se unha
+// falla, as demais aplícanse igual e devólvese o detalle.
+export async function gardarLoteDinamicas(filas) {
+  const r = { gardadas: 0, creadas: 0, erros: [] };
+  for (const f of filas) {
+    const fila = {
+      nombre: f.nombre, tipo: f.tipo,
+      duracion: Number(f.duracion) || 10,
+      participantes: f.participantes || 'grupo',
+      descripcion: f.descripcion || '',
+      pasos: Array.isArray(f.pasos) ? f.pasos : [],
+      objetivo: f.objetivo || null,
+      variantes: Array.isArray(f.variantes) ? f.variantes : [],
+      notas: f.notas || null, autoria: f.autoria || null,
+      licencia: f.licencia || null, fuente: f.fuente || null,
+    };
+    if (f.id && !String(f.id).startsWith('nova-')) {
+      const { error } = await supabase.from('dinamicas').update(fila).eq('id', f.id);
+      if (error) r.erros.push({ nome: f.nombre, msg: error.message }); else r.gardadas++;
+    } else {
+      const { data: { user } = {} } = await supabase.auth.getUser();
+      const { error } = await supabase.from('dinamicas')
+        .insert({ ...fila, id: String(Date.now()) + Math.random().toString(36).slice(2, 6), user_id: user?.id || null });
+      if (error) r.erros.push({ nome: f.nombre, msg: error.message }); else r.creadas++;
+    }
+  }
+  return r;
 }

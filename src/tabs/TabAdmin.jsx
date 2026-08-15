@@ -14,6 +14,7 @@ import { LimiteErro } from '../LimiteErro.jsx';
 import { AdminCategorias } from './AdminCategorias.jsx';
 import { AdminTiposDinamica } from './AdminTiposDinamica.jsx';
 import { AdminAxenda } from './AdminAxenda.jsx';
+import { AdminTablaDinamicas } from './AdminTablaDinamicas.jsx';
 import { AdminTablaMasiva } from './AdminTablaMasiva.jsx';
 import { AdminReportes } from './AdminReportes.jsx';
 import { UniversoForm } from './UniversoForm.jsx';
@@ -327,10 +328,11 @@ export function AdminDinamicas({T,S}){
 
   return(<div>
     <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:"0.8rem",width:"fit-content"}}>
-      {[["lista","Dinámicas"],["tipos","🎯 Tipos"]].map(([id,lab])=>(
+      {[["lista","Dinámicas"],["masiva","🧮 Táboa"],["tipos","🎯 Tipos"]].map(([id,lab])=>(
         <button key={id} onClick={()=>setVistaDin(id)} style={{...S.btn(vistaDin===id?T.bg2:"transparent",vistaDin===id?T.text:T.text3),borderRadius:8,padding:"0.32rem 0.8rem",fontSize:"0.78rem"}}>{lab}</button>))}
     </div>
     {vistaDin==="tipos"&&<AdminTiposDinamica/>}
+    {vistaDin==="masiva"&&<AdminTablaDinamicas/>}
     {vistaDin==="lista"&&<>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.75rem"}}>
       <p style={{...S.ptitle(T.accent),margin:0}}>Dinámicas ({dinamicas.length})</p>
