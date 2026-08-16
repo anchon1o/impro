@@ -116,6 +116,24 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   };
   const activar=id=>setRundown(rundown.map(a=>({...a,activa:a.id===id})));
 
+  // ── EDICIÓN DA ESCALETA ──
+  // Antes editábase na Cabina e aquí só se activaba. Ao soltar a Cabina
+  // baixa aquí enteira: é onde se usa, e así non hai que saír do directo
+  // para engadir unha actuación que faltaba.
+  const [novaAct,setNovaAct]=useState("");
+  const [editando,setEditando]=useState(false);
+  const engadirAct=()=>{
+    const nome=novaAct.trim(); if(!nome)return;
+    setRundown([...(rundown||[]),{id:Date.now()+Math.random(),nombre:nome,activa:false,hecho:false}]);
+    setNovaAct("");
+  };
+  const quitarAct=id=>setRundown((rundown||[]).filter(a=>a.id!==id));
+  const moverAct=(id,dir)=>{
+    const r=[...(rundown||[])];const i=r.findIndex(a=>a.id===id);const j=i+dir;
+    if(i<0||j<0||j>=r.length)return;
+    [r[i],r[j]]=[r[j],r[i]];setRundown(r);
+  };
+
   const urx=restante>0&&restante<10, avi=restante>0&&restante<30;
   const colT=urx?T.danger:avi?T.warn:T.accent;
 
@@ -211,14 +229,44 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         </div>
 
         {panel==="rundown"&&<div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem",flex:1,overflowY:"auto",minHeight:0}}>
-          {seguinte&&<button onClick={avanzar} style={{...S.btn(T.info,"#000"),width:"100%",marginBottom:"0.6rem",padding:"0.5rem"}}>⏭ Seguinte: {seguinte.nombre}</button>}
-          {(!rundown||rundown.length===0)&&<p style={{color:T.text4,fontSize:"0.8rem",textAlign:"center",padding:"1.5rem 0"}}>Crea o rundown en Show → Rundown</p>}
+          {seguinte&&!editando&&<button onClick={avanzar} style={{...S.btn(T.info,"#000"),width:"100%",marginBottom:"0.6rem",padding:"0.5rem"}}>⏭ Seguinte: {seguinte.nombre}</button>}
+
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem",gap:"0.4rem"}}>
+            <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:FONT_MONO,letterSpacing:"0.06em",textTransform:"uppercase"}}>Escaleta</span>
+            <button onClick={()=>setEditando(e=>!e)} style={{...S.btn(editando?T.accent:T.bg3,editando?"#fff":T.text3),fontSize:"0.72rem",padding:"0.28rem 0.7rem",minHeight:32}}>
+              {editando?"✓ Feito":"✎ Editar"}
+            </button>
+          </div>
+
+          {editando&&<div style={{display:"flex",gap:"0.35rem",marginBottom:"0.6rem"}}>
+            <input value={novaAct} onChange={e=>setNovaAct(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter")engadirAct();}}
+              placeholder="Nova actuación" aria-label="Nova actuación"
+              style={{...S.input,flex:1,minHeight:38,padding:"0.4rem 0.6rem"}}/>
+            <button onClick={engadirAct} style={{...S.btn(T.accent),minHeight:38,padding:"0.35rem 0.8rem"}}>＋</button>
+          </div>}
+
+          {(!rundown||rundown.length===0)&&<p style={{color:T.text4,fontSize:"0.8rem",textAlign:"center",padding:"1.5rem 0"}}>
+            {editando?"Engade a primeira actuación arriba.":"Sen escaleta. Preme ✎ Editar para crearlla."}
+          </p>}
+
           <div style={{display:"flex",flexDirection:"column",gap:"0.3rem"}}>
-            {(rundown||[]).map((a,i)=>(<button key={a.id} onClick={()=>activar(a.id)} style={{background:a.activa?T.info+"18":T.bg3,border:`1px solid ${a.activa?T.info:T.border}`,borderRadius:8,padding:"0.45rem 0.6rem",cursor:"pointer",textAlign:"left",display:"flex",gap:"0.45rem",alignItems:"center",fontFamily:"inherit"}}>
+            {(rundown||[]).map((a,i)=>(<div key={a.id} style={{background:a.activa?T.info+"18":T.bg3,borderStyle:"solid",borderWidth:1,borderColor:a.activa?T.info:T.border,borderRadius:8,padding:"0.45rem 0.6rem",display:"flex",gap:"0.45rem",alignItems:"center"}}>
               <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:FONT_MONO,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{i+1}</span>
-              <span style={{flex:1,color:a.hecho?T.text4:a.activa?T.info:T.text2,fontSize:"0.8rem",textDecoration:a.hecho?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.nombre}</span>
-              {a.activa&&<span style={{color:T.info,fontSize:"0.7rem"}}>▶</span>}
-            </button>))}
+              <button onClick={()=>!editando&&activar(a.id)} disabled={editando}
+                style={{flex:1,background:"none",border:"none",padding:0,textAlign:"left",cursor:editando?"default":"pointer",color:a.hecho?T.text4:a.activa?T.info:T.text2,fontSize:"0.8rem",fontFamily:"inherit",textDecoration:a.hecho?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {a.nombre}
+              </button>
+              {!editando&&a.activa&&<span style={{color:T.info,fontSize:"0.7rem"}}>▶</span>}
+              {editando&&<span style={{display:"flex",gap:"0.15rem",flexShrink:0}}>
+                <button onClick={()=>moverAct(a.id,-1)} disabled={i===0} aria-label="Subir"
+                  style={{background:"none",border:"none",color:i===0?T.text4:T.text3,cursor:i===0?"default":"pointer",fontSize:"0.8rem",padding:"0.15rem 0.25rem"}}>▲</button>
+                <button onClick={()=>moverAct(a.id,1)} disabled={i===(rundown||[]).length-1} aria-label="Baixar"
+                  style={{background:"none",border:"none",color:i===(rundown||[]).length-1?T.text4:T.text3,cursor:i===(rundown||[]).length-1?"default":"pointer",fontSize:"0.8rem",padding:"0.15rem 0.25rem"}}>▼</button>
+                <button onClick={()=>quitarAct(a.id)} aria-label="Eliminar"
+                  style={{background:"none",border:"none",color:T.danger,cursor:"pointer",fontSize:"0.8rem",padding:"0.15rem 0.25rem"}}>✕</button>
+              </span>}
+            </div>))}
           </div>
         </div>}
 

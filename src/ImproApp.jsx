@@ -21,7 +21,6 @@ import { TabGenerar } from './tabs/TabGenerar.jsx';
 import { TabReto } from './tabs/TabReto.jsx';
 import { TabSesiones } from './tabs/TabSesiones.jsx';
 import { TabGuia } from './tabs/TabGuia.jsx';
-import { TabShow } from './tabs/TabShow.jsx';
 import { TabSonido } from './sonido/TabSonido.jsx';
 import { TabGrupos } from './tabs/TabGrupos.jsx';
 import { TabQR } from './tabs/TabQR.jsx';
@@ -44,7 +43,6 @@ const TABS=[
   {id:"sesiones",label:"Sesiones",emoji:"📋"},
   {id:"guia",label:"Guía",emoji:"📖"},
   {id:"sonido",label:"Sonido",emoji:"🔊"},
-  {id:"show",label:"Cabina",emoji:"🎛"},
   {id:"grupos",label:"Grupos",emoji:"👥"},
   {id:"qr",label:"QR",emoji:"📱"},
   {id:"admin",label:"Admin",emoji:"🔐"},
@@ -237,7 +235,6 @@ function AppInner({perfil,publico}={}){
         {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
         {tab==="sonido"&&<TabSonido/>}
-        {tab==="show"&&<TabShow audio={audio} onRundownChange={setPubRundown}/>}
         {tab==="grupos"&&<LoginGate titulo="Xestiona os teus grupos" descricion="Crea grupos, engade membros e fai seguimento das súas estatísticas."><TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/></LoginGate>}
         {tab==="qr"&&<TabQR/>}
         {tab==="admin"&&<TabAdmin/>}

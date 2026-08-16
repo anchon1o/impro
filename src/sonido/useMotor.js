@@ -17,11 +17,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { crearMotor } from '../audio/motor.js';
+import { crearMetronomo } from '../audio/metronomo.js';
 
 const BALEIRO = { estado: 'parado', desfase: 0, volBus: {}, capas: [] };
 
 export function useMotor({ maxRexistro = 60 } = {}) {
   const ref = useRef(null);
+  const metro = useRef(null);
+  const [pulso, setPulso] = useState(-1);
   const pendente = useRef(null);
   const raf = useRef(null);
   const [snap, setSnap] = useState(BALEIRO);
@@ -50,6 +53,13 @@ export function useMotor({ maxRexistro = 60 } = {}) {
 
   if (!ref.current) {
     ref.current = crearMotor({ onCambio: agrupar, onLog: anotar });
+  }
+  if (!metro.current) {
+    metro.current = crearMetronomo(
+      () => ref.current.ctx,
+      () => ref.current.bus('efectos'),
+      { onPulso: (p) => setPulso(p) },
+    );
   }
 
   // ── Ciclo de vida de iOS ────────────────────────────────────────
@@ -95,6 +105,7 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     const cancelar = typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame : clearTimeout;
     return () => {
       if (raf.current) cancelar(raf.current);
+      if (metro.current) metro.current.parar();
       motor.destruir();
     };
   }, []);
@@ -116,6 +127,25 @@ export function useMotor({ maxRexistro = 60 } = {}) {
 
   const descartarAviso = useCallback(() => setPerdido(null), []);
 
+  // ── Metrónomo ──
+  const [metroOn, setMetroOn] = useState(false);
+  const [bpm, setBpmEstado] = useState(100);
+  const [beats, setBeatsEstado] = useState(4);
+
+  const alternarMetro = useCallback(() => {
+    const m = metro.current;
+    if (m.activo) { m.parar(); setMetroOn(false); setPulso(-1); }
+    else if (m.arrancar()) setMetroOn(true);
+  }, []);
+
+  // Cambiar en marcha non reinicia o pulso: o metrónomo segue soando.
+  const setBpm = useCallback((v) => {
+    metro.current.setBpm(v); setBpmEstado(metro.current.bpm);
+  }, []);
+  const setBeats = useCallback((v) => {
+    metro.current.setBeats(v); setBeatsEstado(metro.current.beats);
+  }, []);
+
   const motor = ref.current;
   const listo = snap.estado === 'listo';
 
@@ -136,6 +166,8 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     recuperar,
     descartarAviso,
 
+    metroOn, bpm, beats, pulso, alternarMetro, setBpm, setBeats,
+
     arrancar,
     acender: motor.acender,
     volCapa: motor.volCapa,
@@ -144,7 +176,14 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     disparar: motor.disparar,
     precargar: motor.precargar,
     volumeBus: motor.volumeBus,
-    pararTodo: motor.pararTodo,
+    // STOP TODO ten que parar tamén o metrónomo: se non, queda soando
+    // el só despois de silenciar a mesa enteira.
+    pararTodo: useCallback(() => {
+      if (metro.current && metro.current.activo) {
+        metro.current.parar(); setMetroOn(false); setPulso(-1);
+      }
+      motor.pararTodo();
+    }, [motor]),
     fadeTodo: motor.fadeTodo,
   };
 }

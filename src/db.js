@@ -297,8 +297,22 @@ export async function trackMinsSupa(mins) {
 }
 
 // ─────────────────────────────────────────────
-// PLAYLISTS
+// PLAYLISTS  ⚠️ EN RETIRADA
 // ─────────────────────────────────────────────
+// Só as usa ModoShow. `savePlaylists` e `saveEfectos` xa se borraron:
+// quedaron sen chamantes ao soltar a Cabina.
+//
+// ⚠️ DOUS PROBLEMAS CONFIRMADOS, non arranxados aquí para non tocar
+// En directo na mesma entrega que se solta a Cabina:
+//
+//  1. `.select('*')` NON filtra por usuario. Se a RLS de `playlists`
+//     non filtra tampouco, cada quen ve as dos demais.
+//  2. Se a táboa está baleira, INSERTA os defaults —  sen `user_id` —
+//     para todo o mundo. O primeiro que entra sementa a táboa allea.
+//
+// Ademais `PLAYLISTS_DEFAULT` e `EFECTOS_DEFAULT` teñen as URLs
+// baleiras, así que isto non reproduce nada: é un armazón. Substitúeo
+// `sonido/recursos.js`, que si filtra e non escribe ao ler.
 export async function getPlaylists(defaults) {
   try {
     const { data, error } = await supabase.from('playlists').select('*');
@@ -312,14 +326,6 @@ export async function getPlaylists(defaults) {
   } catch {
     return ls.get('impro_playlists_v2', defaults);
   }
-}
-
-export async function savePlaylists(playlists) {
-  ls.set('impro_playlists_v2', playlists);
-  try {
-    const u = await uid();
-    await supabase.from('playlists').upsert(playlists.map(p => ({ ...p, user_id: u })));
-  } catch {}
 }
 
 // ─────────────────────────────────────────────
@@ -338,14 +344,6 @@ export async function getEfectos(defaults) {
   } catch {
     return ls.get('impro_efectos_v2', defaults);
   }
-}
-
-export async function saveEfectos(efectos) {
-  ls.set('impro_efectos_v2', efectos);
-  try {
-    const u = await uid();
-    await supabase.from('efectos').upsert(efectos.map(e => ({ ...e, user_id: u })));
-  } catch {}
 }
 
 // ─────────────────────────────────────────────

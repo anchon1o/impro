@@ -16,6 +16,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useTheme, mkS, useViewport } from '../core.jsx';
 import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
+import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
@@ -469,6 +470,52 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
     </Panel>
   );
 
+  // ── Metrónomo ──────────────────────────────────────────────────
+  // Vén da Cabina co seu 🥁. Discreto: colapsado ata que se abre.
+  const panelMetro = (
+    <Panel T={T} S={S} titulo="🥁 Metrónomo"
+      extra={
+        <button onClick={m.alternarMetro}
+          style={{ ...S.btn(m.metroOn ? T.danger : T.info, m.metroOn ? '#fff' : '#000'), minHeight: 40 }}>
+          {m.metroOn ? '⏹ Parar' : '▶ Iniciar'}
+        </button>
+      }>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flexWrap: 'wrap' }}>
+        <div style={{ ...S.t.numeric, fontSize: '2rem', color: m.metroOn ? T.info : T.text2, minWidth: 62 }}>
+          {m.bpm}
+        </div>
+        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+          {Array.from({ length: m.beats }).map((_, i) => (
+            <div key={i} style={{
+              width: i === 0 ? 13 : 10, height: i === 0 ? 13 : 10, borderRadius: '50%',
+              background: m.metroOn && m.pulso === i ? T.info : T.bg4,
+              transition: 'background 0.05s',
+            }} />
+          ))}
+        </div>
+        <select value={COMPASES.find((c) => beatsOf(c) === m.beats) || '4/4'}
+          onChange={(e) => m.setBeats(beatsOf(e.target.value))}
+          aria-label="Compás"
+          style={{ ...S.input, width: 'auto', flex: '0 0 auto' }}>
+          {COMPASES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      <input type="range" min={30} max={240} value={m.bpm}
+        onChange={(e) => m.setBpm(Number(e.target.value))}
+        aria-label="Pulsos por minuto"
+        style={{ width: '100%', height: 30, accentColor: T.info, background: 'transparent', marginTop: '0.4rem' }} />
+      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+        {PRESETS_BPM.map((b) => (
+          <button key={b} onClick={() => m.setBpm(b)} aria-label={b + ' bpm'}
+            style={{
+              ...S.btn(m.bpm === b ? T.info : T.bg3, m.bpm === b ? '#000' : T.text2),
+              minHeight: 36, padding: '0.3rem 0.6rem', fontSize: '0.75rem',
+            }}>{b}</button>
+        ))}
+      </div>
+    </Panel>
+  );
+
   // ── Composición ────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
@@ -494,6 +541,7 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', minWidth: 0 }}>
             {panelEfectos}
             {panelContadores}
+            {!modoFuncion && panelMetro}
           </div>
         </div>
       ) : (
@@ -502,6 +550,7 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
           {panelMusica}
           {panelAmbientes}
           {panelEfectos}
+          {!modoFuncion && panelMetro}
         </div>
       )}
 

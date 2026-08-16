@@ -25,7 +25,11 @@ function novoId() {
   return 'c' + Date.now().toString(36) + contador.toString(36);
 }
 
-export function crearContador({ tipo = 'crono', etiqueta = '', cor = 'ok', minutos = 5 } = {}) {
+// ⚠️ Nacen PARADOS a propósito. Un contador que empeza a correr só
+// mide desde que se creou o contador, non desde que empezou o show, e
+// iso é peor que non ter contador: dá un número que parece certo.
+// Arráncao ti cando empece de verdade.
+export function crearContador({ tipo = 'crono', etiqueta = '', cor = 'ok', minutos = 5, arrancado = false } = {}) {
   const t = TIPOS.includes(tipo) ? tipo : 'crono';
   return {
     id: novoId(),
@@ -35,7 +39,8 @@ export function crearContador({ tipo = 'crono', etiqueta = '', cor = 'ok', minut
     inicioEn: Date.now(),
     acumuladoMs: 0,
     obxectivoMs: t === 'atras' ? Math.max(1, minutos) * 60000 : 0,
-    correndo: t !== 'reloxo',
+    // O reloxo non se para: amosa a hora, non mide nada.
+    correndo: t === 'reloxo' ? true : !!arrancado,
     avisos: t === 'atras' ? [15, 5] : [],   // minutos restantes con aviso visual
   };
 }

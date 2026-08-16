@@ -278,8 +278,12 @@ export function crearMotor(opcions = {}) {
     cambiou();
   }
 
+  // O metrónomo precisa entrar pola mesma cadea de buses: se fose
+  // directo ao destino, non o afectaría nin o volume xeral nin o STOP.
+  function bus(nome) { return busNodes[nome] || null; }
+
   return {
-    arrancar, reanudar, destruir,
+    arrancar, reanudar, destruir, bus,
     engadirCapa, acender, volCapa, quitarCapa,
     precargar, disparar,
     volumeBus, pararTodo, fadeTodo,
