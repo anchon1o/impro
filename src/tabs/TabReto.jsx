@@ -3,10 +3,8 @@
 // Xerado automaticamente na división de ImproApp.jsx (T04)
 // ============================================================
 
-import { useState, useEffect } from 'react';
-import { useTheme, useEstimulos, CAT_ICONS, pick, trackDin, mkS, colorTipo } from '../core.jsx';
-import { DINAMICAS_BASE } from '../datos.js';
-import { getDinamicas } from '../db.js';
+import { useState } from 'react';
+import { useTheme, useEstimulos, CAT_ICONS, pick, trackDin, mkS, colorTipo, useDinamicas, AvisoDinamicas } from '../core.jsx';
 
 // Normaliza pasos/variantes: no editor gárdanse como array, pero filas
 // antigas ou importadas poden vir como texto con saltos de liña.
@@ -21,11 +19,9 @@ export function TabReto(){
   const [reto,setReto]=useState(null);
   const [nivel,setNivel]=useState("simple");
   const [verInstrucciones,setVerInstrucciones]=useState(false);
-  // Mesma fonte de datos que a Guía: Supabase con fallback a localStorage
-  // e, en último caso, ás dinámicas base. Antes lía só de localStorage, polo
-  // que Reto e Guía podían discrepar sobre que dinámicas existen.
-  const [dinamicas,setDinamicas]=useState(DINAMICAS_BASE);
-  useEffect(()=>{getDinamicas(DINAMICAS_BASE).then(d=>{if(d&&d.length)setDinamicas(d);});},[]);
+  // Mesma fonte que a Guía, literalmente o mesmo hook. Antes lía só de
+  // localStorage, polo que Reto e Guía discrepaban sobre que existía (B16).
+  const {dinamicas,cargando,motivo,recargar}=useDinamicas();
   const getList=cat=>{const d=ESTIMULOS[cat]||{simple:[],plus:[]};return nivel==="plus"&&d.plus.length>0?d.plus:d.simple;};
   const genReto=()=>{
     const din=pick(dinamicas);
@@ -36,7 +32,9 @@ export function TabReto(){
     setVerInstrucciones(false);
     setReto({din,estimulos});
   };
+  const senCatalogo=!cargando&&dinamicas.length===0;
   return(<div>
+    <AvisoDinamicas motivo={cargando?null:motivo} baleiro={senCatalogo} onRecargar={recargar}/>
     <div style={{...S.panel,marginBottom:"1.25rem"}}>
       <p style={{color:T.text2,lineHeight:1.6,margin:"0 0 1rem",fontSize:"0.88rem"}}>Combina una dinámica, estímulos y tiempo en una propuesta lista para usar de inmediato.</p>
       <div style={{display:"flex",gap:"0.5rem",flexWrap:"wrap"}}>
@@ -45,7 +43,9 @@ export function TabReto(){
             <button key={v} onClick={()=>setNivel(v)} style={{...S.btn(v==="plus"&&nivel==="plus"?T.accent:v==="simple"&&nivel==="simple"?T.bg2:"transparent",v===nivel?(v==="plus"?"#fff":T.text):T.text3),borderRadius:8,padding:"0.35rem 0.65rem",fontSize:"0.78rem"}}>{l}</button>
           ))}
         </div>
-        <button onClick={genReto} style={{...S.btn(T.accent),flex:1}}>⚡ Xerar reto</button>
+        {/* Sen catálogo non hai nada que sortear: mellor desactivar que
+            deixar un botón que non fai nada ao premelo. */}
+        <button onClick={genReto} disabled={senCatalogo||cargando} style={{...S.btn(T.accent),flex:1,opacity:(senCatalogo||cargando)?0.4:1,cursor:(senCatalogo||cargando)?"default":"pointer"}}>⚡ Xerar reto</button>
       </div>
     </div>
     {reto?(<div style={{animation:"fadeIn 0.35s ease"}}>

@@ -6,7 +6,6 @@
 import { useState } from 'react';
 import { useLang, useTheme, CAT_ICONS, ls, mkS, LANGS } from '../core.jsx';
 import { SelectorTemas } from './SelectorTemas.jsx';
-import { DINAMICAS_BASE } from '../datos.js';
 
 export function TabAjustes(){
   const {T}=useTheme();const S=mkS(T);
@@ -45,7 +44,7 @@ export function TabAjustes(){
     {view==="tema"&&<SelectorTemas/>}
     {view==="stats"&&<div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1.25rem"}}>
-        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:T.info},{label:"En Guía",val:ls.get("impro_dinamicas_v2",DINAMICAS_BASE).length,col:T.ok}].map((s,i)=>(
+        {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:T.info},{label:"En Guía",val:(ls.get("impro_dinamicas_v2",[])||[]).length,col:T.ok}].map((s,i)=>(
           <div key={i} style={{...S.panel,textAlign:"center",border:`1.5px solid ${s.col}44`}}><div style={{color:s.col,fontWeight:900,fontSize:"1.6rem",lineHeight:1}}>{s.val}</div><div style={{color:T.text3,fontSize:"0.7rem",marginTop:"0.25rem"}}>{s.label}</div></div>
         ))}
       </div>

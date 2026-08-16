@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { cargarEstimulos, cargarCategorias } from './estimulos.js';
+import { getDinamicas, recargarDinamicas } from './db.js';
 
 // Antes eran cores fixas; agora son nomes de token, para que cada tema
 // as repinte. `colorTipo(T,tipo)` resolve contra o tema activo.
@@ -381,6 +382,82 @@ export const mkS = (T) => ({
   grid:(min=240)=>({display:"grid",gridTemplateColumns:`repeat(auto-fill,minmax(min(${min}px,100%),1fr))`,gap:"0.6rem"}),
 });
 
+
+// ── FONTE ÚNICA DE DINÁMICAS ──
+//
+// Desde A04 o catálogo non está no código: vén só da táboa `dinamicas`. Iso
+// quere dicir que a lista xa non existe no primeiro render, e que «baleiro»
+// pasa a ser un estado real que hai que distinguir de «aínda cargando».
+// Catro pantallas facían esta carga por separado (Guía, Reto, Admin e a
+// Táboa masiva); agora comparten hook. Ter dúas copias da mesma lóxica foi
+// o que fixo que Reto e Guía discrepasen sobre que dinámicas existían (B16).
+export function useDinamicas() {
+  const [dinamicas, setDinamicas] = useState(() => {
+    const c = ls.get('impro_dinamicas_v2', []);
+    return Array.isArray(c) ? c : [];
+  });
+  const [cargando, setCargando] = useState(true);
+  const [motivo, setMotivo] = useState(null);
+
+  const aplicar = useCallback((r) => {
+    const lista = Array.isArray(r) ? r : (r?.dinamicas || []);
+    setDinamicas(lista);
+    setMotivo(r?.motivo || (lista.length ? null : 'baleira'));
+    setCargando(false);
+  }, []);
+
+  // `vivo` evita escribir estado nun compoñente xa desmontado: en Admin
+  // pódese cambiar de sección antes de que responda a consulta.
+  useEffect(() => {
+    let vivo = true;
+    setCargando(true);
+    getDinamicas().then(r => { if (vivo) aplicar(r); });
+    return () => { vivo = false; };
+  }, [aplicar]);
+
+  const recargar = useCallback(async () => {
+    setCargando(true);
+    aplicar(await recargarDinamicas());
+  }, [aplicar]);
+
+  // `desdeCache` non se devolve: sería sempre o contrario de `baleiro`, e ter
+  // dous nomes para o mesmo estado é como empezan as discrepancias.
+  return { dinamicas, setDinamicas, cargando, motivo, recargar };
+}
+
+// Aviso cando o catálogo non está completo. Antes isto era invisible: se a
+// base fallaba aparecían igual as 247 do código e ninguén se enteraba.
+export function AvisoDinamicas({ motivo, baleiro, onRecargar }) {
+  const { T } = useTheme(); const S = mkS(T);
+  if (!motivo) return null;
+  const senConexion = motivo === 'sen-conexion';
+  const cor = baleiro ? T.danger : T.warn;
+  // ⚠️ `S.panel` trae `border` en abreviatura. Deixala e engadir `borderColor`
+  // é exactamente B24: React reescribe só o que muda, e ao cambiar de tema a
+  // abreviatura reinicia os catro lados e leva por diante a cor. Anúlase a
+  // abreviatura e decláranse as tres propiedades longas.
+  return (
+    <div style={{
+      ...S.panel, border: undefined,
+      borderStyle: 'solid', borderWidth: '1.5px', borderColor: cor + '55',
+      background: cor + '12', marginBottom: '0.9rem',
+    }}>
+      <p style={{ ...S.ptitle(cor), marginBottom: '0.45rem' }}>
+        {baleiro ? 'Non hai dinámicas' : 'Catálogo posiblemente desactualizado'}
+      </p>
+      <p style={{ ...TYPE.bodySm, color: T.text2, margin: 0 }}>
+        {senConexion
+          ? (baleiro
+            ? 'Non se puido contactar coa base de datos e non hai copia local. Comproba a conexión e volve tentalo.'
+            : 'Non se puido contactar coa base de datos. Estás vendo a última copia local.')
+          : (baleiro
+            ? 'A táboa dinamicas está baleira. Falta executar supabase_dinamicas_seed.sql no SQL Editor de Supabase.'
+            : 'A táboa dinamicas está baleira. Estás vendo a última copia local; executa supabase_dinamicas_seed.sql para restaurala.')}
+      </p>
+      {onRecargar && <button onClick={onRecargar} style={{ ...S.btn(T.bg3, T.text2), marginTop: '0.7rem' }}>↺ Volver tentar</button>}
+    </div>
+  );
+}
 
 // ── EDITOR DE DINÁMICAS COMPARTIDO ──
 // Usado tanto en Guía coma en Admin → Dinámicas, para que a experiencia

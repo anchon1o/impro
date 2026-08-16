@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useTheme, mkS, UID } from '../core.jsx';
-import { DINAMICAS_BASE } from '../datos.js';
 import { getDinamicas, gardarLoteDinamicas, deleteDinamica, cargarTiposDinamica } from '../db.js';
 
 // Edición masiva de dinámicas, en folla de cálculo.
@@ -39,7 +38,7 @@ export function AdminTablaDinamicas(){
 
   const cargar=()=>{
     setCargando(true);
-    Promise.all([getDinamicas(DINAMICAS_BASE),cargarTiposDinamica()]).then(([d,t])=>{
+    Promise.all([getDinamicas(),cargarTiposDinamica()]).then(([d,t])=>{
       const lista=(Array.isArray(d)?d:(d?.dinamicas||[])).map(x=>({...x,_k:x.id||UID()}));
       setFilas(lista);
       setOrixinais(Object.fromEntries(lista.map(f=>[f._k,JSON.stringify(f)])));

@@ -55,7 +55,7 @@ const TABS=[
 function AppInner({perfil,publico}={}){
   const {dark,toggle,T}=useTheme();
   const {logueado,pedirLogin,esAdmin,migrando}=useAuth();
-  const {esMovil,esTablet}=useViewport();
+  const {esMovil,esTablet,esPC}=useViewport();
   const [tab,setTab]=useState("inicio");
   const [animating,setAnimating]=useState(false);
   const [pubStimulus,setPubStimulus]=useState(null);
@@ -151,8 +151,19 @@ function AppInner({perfil,publico}={}){
                 visual có botón de Modo Show, que si é a acción principal. */}
             {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}>{dark?"☀️":"🌙"}</button>}
             {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}>⏱</button>}
-            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Proxección" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>📺</button>}
-            <button onClick={()=>setModoShow(true)} title="En directo" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0}}>🎬</button>
+            {/* V05 · As dúas levaban só a icona, e `title` non existe nun
+                móbil nin nunha tableta táctil: eran dous debuxos sen nome.
+                A etiqueta só aparece en escritorio (esPC, non !esMovil): en
+                tableta a fila medía máis do ancho dispoñible, que é a causa
+                exacta de B22. */}
+            {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Proxección" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",color:T.text2,fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>
+              <span>📺</span>{esPC&&<span style={{fontSize:"0.72rem",fontWeight:600,whiteSpace:"nowrap"}}>Proxección</span>}
+            </button>}
+            <button onClick={()=>setModoShow(true)} title="En directo" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0,display:"flex",alignItems:"center",gap:"0.3rem"}}>
+              <span>🎬</span>{esPC&&<span style={{whiteSpace:"nowrap"}}>En directo</span>}
+            </button>
+            {/* V01 · Admin sae da botonera e sobe aquí. Só para admins. */}
+            {!esMovil&&esAdmin&&<button onClick={()=>{setMenuAberto(false);changeTab("admin");}} title="Admin" style={{background:tab==="admin"?T.danger+"22":"none",border:`1px solid ${tab==="admin"?T.danger:"transparent"}`,borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.9rem",opacity:tab==="admin"?1:0.65,transition:"opacity 0.2s",flexShrink:0,fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=tab==="admin"?1:0.65}>🔐</button>}
             {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
             {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
           </div>
@@ -175,11 +186,30 @@ function AppInner({perfil,publico}={}){
                 </button>)}
               </div>}
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(100px,100%),1fr))",gap:"0.4rem"}}>
-              <button onClick={toggle} style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:T.text2,fontFamily:"inherit",minHeight:38}}>{dark?"☀️ Claro":"🌙 Escuro"}</button>
-              <button onClick={()=>{setTimerAberto(v=>!v);setMenuAberto(false);}} style={{background:timerAberto?T.accent+"22":T.bg2,border:`1px solid ${timerAberto?T.accent:T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:timerAberto?T.accent:T.text2,fontFamily:"inherit",minHeight:38}}>⏱ Temporizador</button>
-              <button onClick={()=>{setPubOpen(p=>!p);setMenuAberto(false);}} style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",fontSize:"0.78rem",color:T.text2,fontFamily:"inherit",minHeight:38}}>📺 Pantalla</button>
+            {/* V03 · Antes era `auth-fit` con minmax(100px): nun móbil de 360
+                non chegaban os 100 px por columna e caía a dúas, coas
+                etiquetas partidas en dúas liñas. Agora son tres columnas
+                fixas con icona arriba e etiqueta pequena debaixo, que é o
+                único que cabe ben nun ancho de teléfono. */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:"0.4rem"}}>
+              {[
+                {k:"tema",  icona:dark?"☀️":"🌙", etiqueta:dark?"Claro":"Escuro", activo:false,       onClick:toggle},
+                {k:"timer", icona:"⏱",            etiqueta:"Temporizador",        activo:timerAberto, onClick:()=>{setTimerAberto(v=>!v);setMenuAberto(false);}},
+                {k:"pub",   icona:"📺",           etiqueta:"Proxección",          activo:pubOpen,     onClick:()=>{setPubOpen(p=>!p);setMenuAberto(false);}},
+              ].map(b=>(
+                <button key={b.k} onClick={b.onClick} style={{background:b.activo?T.accent+"22":T.bg2,borderStyle:"solid",borderWidth:1,borderColor:b.activo?T.accent:T.border,borderRadius:8,padding:"0.5rem 0.3rem",cursor:"pointer",color:b.activo?T.accent:T.text2,fontFamily:"inherit",minHeight:56,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"0.22rem"}}>
+                  <span style={{fontSize:"1.05rem",lineHeight:1}}>{b.icona}</span>
+                  <span style={{fontSize:"0.66rem",lineHeight:1.15,textAlign:"center",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{b.etiqueta}</span>
+                </button>
+              ))}
             </div>
+            {/* V01 · Admin en móbil. Vai fóra da reixa a propósito: os tres de
+                arriba son interruptores e este leva a outra pantalla. */}
+            {esAdmin&&<button onClick={()=>{setMenuAberto(false);changeTab("admin");}} style={{display:"flex",alignItems:"center",gap:"0.5rem",width:"100%",marginTop:"0.4rem",background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",color:T.text2,fontSize:"0.78rem",fontFamily:"inherit",minHeight:38}}>
+              <span style={{fontSize:"0.95rem"}}>🔐</span>
+              <span style={{flex:1,textAlign:"left"}}>Admin</span>
+              <span style={{color:T.text4,fontSize:"0.8rem"}}>›</span>
+            </button>}
           </div>
         </div>}
 

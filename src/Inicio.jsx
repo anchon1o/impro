@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTheme, useAuth, useViewport, mkS, TAB_LABELS } from './core.jsx';
+import { useTheme, useAuth, useViewport, mkS, TAB_LABELS, TYPE } from './core.jsx';
 
 // IM-M02 — Pantalla de inicio tipo botonera.
 //
@@ -65,20 +65,22 @@ export const AREAS=[
   {id:"axenda",   emoji:"📅", cor:"info"},
   {id:"manual",   emoji:"📘", cor:"info"},
   {id:"ajustes",  emoji:"⚙️", cor:"muted"},
-  {id:"admin",    emoji:"🔐", cor:"danger", desc:"Usuarios, estímulos, dinámicas e estatísticas.", soAdmin:true},
 ];
+// V01 · Admin xa non está aquí: subiu á cabeceira. Era a única das doce que
+// non se usa facendo impro, e ocupaba unha tarxeta enteira para os admins.
+// A descrición mantense en DESCS porque a segue usando o menú ⋯ de móbil.
 
 export function Inicio({onIr,lang}){
   const {T}=useTheme();const S=mkS(T);
   // O hover pasa por estado de React en vez de escribir no DOM: se React e
   // o DOM discrepan sobre o estilo, gañan cousas raras ao redebuxar.
   const [hover,setHover]=useState(null);
-  const {logueado,esAdmin}=useAuth();
+  const {logueado}=useAuth();
   const {w,esMovil}=useViewport();
 
   // Resolve o token de cor da área contra o tema activo.
   const corDe=a=>T[a.cor]||T.accent;
-  const visibles=AREAS.filter(a=>!a.soAdmin||esAdmin);
+  const visibles=AREAS;
   // Columnas fixadas en vez de auto-fit. Con auto-fit e un minmax por
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
   // volvía a 3 a partir de 1024, é dicir, a grella empeoraba ao agrandar a
@@ -114,14 +116,19 @@ export function Inicio({onIr,lang}){
                 borderLeftColor:hover===a.id?corDe(a):T.border,
                 borderTopColor:corDe(a),
                 borderRadius:14,
-                padding:esMovil?"0.9rem 0.8rem":"1.15rem 1rem",
+                // V02 · A tarxeta era de 148 px cunha descrición de dúas
+                // liñas: sobraban uns 40 px de aire morto abaixo. Baixar a
+                // altura só non chega, porque a descrición longa tende a
+                // ocupar tres liñas nalgunhas áreas e o minHeight é un chan,
+                // non un teito: por iso vai recortada a dúas (liñas abaixo).
+                padding:esMovil?"0.7rem 0.75rem":"0.85rem 0.95rem",
                 cursor:"pointer",
                 textAlign:"left",
                 fontFamily:"inherit",
                 display:"flex",
                 flexDirection:"column",
-                gap:"0.4rem",
-                minHeight:esMovil?116:148,
+                gap:"0.35rem",
+                minHeight:esMovil?96:110,
                 transform:hover===a.id?"translateY(-2px)":"none",
                 transition:"transform 0.15s, border-color 0.15s, background 0.15s",
               }}
@@ -129,13 +136,16 @@ export function Inicio({onIr,lang}){
               onMouseLeave={()=>setHover(null)}
             >
               <div style={{display:"flex",alignItems:"center",gap:"0.5rem",minWidth:0}}>
-                <span style={{fontSize:esMovil?"1.4rem":"1.7rem",lineHeight:1,flexShrink:0}}>{a.emoji}</span>
-                {bloqueada&&<span style={{marginLeft:"auto",fontSize:"0.62rem",color:T.text4,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.1rem 0.4rem",whiteSpace:"nowrap",flexShrink:0}}>conta</span>}
+                <span style={{fontSize:esMovil?"1.2rem":"1.4rem",lineHeight:1,flexShrink:0}}>{a.emoji}</span>
+                {bloqueada&&<span style={{marginLeft:"auto",...TYPE.caption,fontSize:"0.62rem",color:T.text4,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.1rem 0.4rem",whiteSpace:"nowrap",flexShrink:0}}>conta</span>}
               </div>
-              <span style={{color:T.text,fontWeight:800,fontSize:esMovil?"0.95rem":"1.05rem",letterSpacing:"-0.02em",lineHeight:1.2}}>
+              <span style={{...TYPE.h3,color:T.text,fontWeight:800,fontSize:esMovil?"0.9rem":"1rem",letterSpacing:"-0.02em",lineHeight:1.2}}>
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>
-              <span style={{color:T.text3,fontSize:esMovil?"0.74rem":"0.79rem",lineHeight:1.4,flex:1}}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>
+              {/* Recortada a dúas liñas: é o que fai que a tarxeta de 110 px
+                  sexa unha altura de verdade e non un mínimo que case ningunha
+                  área respecta. O texto completo segue no Manual. */}
+              <span style={{color:T.text3,fontSize:esMovil?"0.7rem":"0.76rem",lineHeight:1.3,flex:1,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>
             </button>
           );
         })}

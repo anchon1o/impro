@@ -4,10 +4,9 @@
 // ============================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, colorTipo, EditorDinamica, useViewport } from '../core.jsx';
-import { DINAMICAS_BASE } from '../datos.js';
+import { useAuth, t, useTheme, FALLBACK_ESTIMULOS, useEstimulos, CAT_ICONS, ls, mkS, colorTipo, EditorDinamica, useViewport, useDinamicas, AvisoDinamicas } from '../core.jsx';
 import { listarUsuarios, aprobarUsuario, cambiarRol, editarNomeUsuario, listarPropostasCompartir, aprobarCompartir } from '../auth.js';
-import { getDinamicas, saveDinamica, deleteDinamica, listarTodosGrupos, cargarTiposDinamica } from '../db.js';
+import { saveDinamica, deleteDinamica, listarTodosGrupos, cargarTiposDinamica } from '../db.js';
 import { IDIOMAS, listarEstimulos, engadirEstimulo, editarEstimulo, borrarEstimulo, cambiarNivelEstimulo, exportarTraducion, importarTraducion, progresoTraducion } from '../estimulos.js';
 import { listarPendentesUniverso, listarTodoUniverso, moderarUniverso, engadirUniverso, editarUniverso, borrarUniverso, cargarCategorias } from '../universo.js';
 import { LimiteErro } from '../LimiteErro.jsx';
@@ -290,7 +289,7 @@ export function AdminDinamicas({T,S}){
   const [vistaDin,setVistaDin]=useState('lista');
   const [tiposDin,setTiposDin]=useState([]);
   useEffect(()=>{cargarTiposDinamica().then(r=>setTiposDin((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));},[]);
-  const [dinamicas,setDinamicas]=useState(()=>ls.get("impro_dinamicas_v2",DINAMICAS_BASE));
+  const {dinamicas,setDinamicas,cargando:cargandoDin,motivo:motivoDin,recargar:recargarDin}=useDinamicas();
   const [search,setSearch]=useState("");
   const [filtro,setFiltro]=useState("todos");
   const [orde,setOrde]=useState("nombre");
@@ -299,7 +298,6 @@ export function AdminDinamicas({T,S}){
   const FORM0={nombre:"",tipo:"calentamiento",duracion:10,participantes:"grupo",descripcion:"",pasos:"",objetivo:"",variantes:""};
   const [form,setForm]=useState(FORM0);
 
-  useEffect(()=>{getDinamicas(DINAMICAS_BASE).then(setDinamicas);},[]);
 
   const tipos=["todos",...new Set(dinamicas.map(d=>d.tipo))];
   let lista=dinamicas.filter(d=>(filtro==="todos"||d.tipo===filtro)&&(!search||d.nombre.toLowerCase().includes(search.toLowerCase())));
@@ -311,7 +309,8 @@ export function AdminDinamicas({T,S}){
   });
 
   const deleteDin=async id=>{if(!confirm("¿Eliminar?"))return;const u=dinamicas.filter(d=>d.id!==id);setDinamicas(u);await deleteDinamica(id);};
-  const restoreAll=()=>{if(!confirm("¿Restaurar todas as dinámicas base?"))return;setDinamicas(DINAMICAS_BASE);ls.set("impro_dinamicas_v2",DINAMICAS_BASE);};
+  // Sen catálogo no código, «restaurar» é volver ler a base de datos.
+  const restoreAll=recargarDin;
 
   const openNew=()=>{setEditId(null);setForm(FORM0);setShowForm(true);};
   const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);};
@@ -327,6 +326,7 @@ export function AdminDinamicas({T,S}){
   };
 
   return(<div>
+    <AvisoDinamicas motivo={cargandoDin?null:motivoDin} baleiro={dinamicas.length===0} onRecargar={recargarDin}/>
     <div style={{display:"flex",gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:"0.8rem",width:"fit-content"}}>
       {[["lista","Dinámicas"],["masiva","🧮 Táboa"],["tipos","🎯 Tipos"]].map(([id,lab])=>(
         <button key={id} onClick={()=>setVistaDin(id)} style={{...S.btn(vistaDin===id?T.bg2:"transparent",vistaDin===id?T.text:T.text3),borderRadius:8,padding:"0.32rem 0.8rem",fontSize:"0.78rem"}}>{lab}</button>))}

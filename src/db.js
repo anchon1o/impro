@@ -93,16 +93,23 @@ export async function deleteUserStimulus(cat, nivel, orig_idx, isBase) {
 // ─────────────────────────────────────────────
 // DINÁMICAS
 // ─────────────────────────────────────────────
-// As dinámicas viven agora na base de datos (supabase_dinamicas_seed.sql).
-// `base` segue aceptándose como rede de seguridade: se a BD non responde ou
-// aínda non se sementou, a app funciona co catálogo do código.
+// As dinámicas viven na base de datos (supabase_dinamicas_seed.sql). Xa non
+// hai catálogo no código: DINAMICAS_BASE desapareceu de datos.js (A04).
 //
-// Devolve un array que ademais leva .dinamicas e .erro, para que non importe
-// como o consuma quen chame.
-function resultadoDin(lista, erro) {
+// A cadea de reserva é agora: Supabase → caché de localStorage → baleiro.
+// Cando queda baleiro NON se disimula: `motivo` di por que, e a interface
+// amosa un aviso.
+//
+// Devolve un array que ademais leva .dinamicas, .erro, .motivo e .desdeCache,
+// para que non importe como o consuma quen chame (o patrón de sempre).
+//
+//   motivo: null | 'baleira' | 'sen-conexion'
+function resultadoDin(lista, erro, motivo, desdeCache) {
   const out = Array.isArray(lista) ? lista.slice() : [];
   Object.defineProperty(out, 'dinamicas', { value: out, enumerable: false });
   Object.defineProperty(out, 'erro', { value: erro || null, enumerable: false });
+  Object.defineProperty(out, 'motivo', { value: motivo || null, enumerable: false });
+  Object.defineProperty(out, 'desdeCache', { value: !!desdeCache, enumerable: false });
   return out;
 }
 
@@ -116,8 +123,11 @@ function normalizarDin(d) {
   };
 }
 
-export async function getDinamicas(base) {
-  const baseNorm = (base || []).map(d => normalizarDin({ ...d, es_base: true }));
+// O parámetro mantense aínda que non se use: se algún ficheiro quedase sen
+// actualizar e seguise chamando getDinamicas(ALGO), a chamada segue sendo
+// válida en vez de rebentar. Mesma razón pola que cargarCategorias devolve
+// un array con propiedades.
+export async function getDinamicas(_base) {
   try {
     const { data, error } = await supabase
       .from('dinamicas').select('*').order('orde', { ascending: true });
@@ -125,16 +135,31 @@ export async function getDinamicas(base) {
     if (data && data.length) {
       const lista = data.map(normalizarDin);
       ls.set('impro_dinamicas_v2', lista);
-      return resultadoDin(lista, null);
+      return resultadoDin(lista, null, null, false);
     }
-    // Táboa baleira: aínda non se executou a sementeira.
-    return resultadoDin(baseNorm, null);
+    // A táboa respondeu pero está baleira: falta executar a sementeira.
+    // Se hai caché dunha visita anterior úsase, pero avisando.
+    const cache = ls.get('impro_dinamicas_v2', []);
+    if (Array.isArray(cache) && cache.length) {
+      return resultadoDin(cache.map(normalizarDin), null, 'baleira', true);
+    }
+    return resultadoDin([], null, 'baleira', false);
   } catch (e) {
     console.warn('[db] getDinamicas:', e?.message);
     const cache = ls.get('impro_dinamicas_v2', []);
-    const lista = (Array.isArray(cache) && cache.length) ? cache.map(normalizarDin) : baseNorm;
-    return resultadoDin(lista, e?.message || null);
+    if (Array.isArray(cache) && cache.length) {
+      return resultadoDin(cache.map(normalizarDin), e?.message || null, 'sen-conexion', true);
+    }
+    return resultadoDin([], e?.message || null, 'sen-conexion', false);
   }
+}
+
+// Recarga forzada: bota a caché antes de preguntar. É o que fan agora os
+// botóns ↺ da Guía e de Admin, que antes «restauraban» ao catálogo do
+// código. Sen ese catálogo, restaurar é volver preguntarlle á base.
+export async function recargarDinamicas() {
+  try { localStorage.removeItem('impro_dinamicas_v2'); } catch { /* modo privado */ }
+  return getDinamicas();
 }
 
 export async function saveDinamica(d) {
