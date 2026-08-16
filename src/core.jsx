@@ -344,7 +344,9 @@ export const TYPE = {
 };
 
 // Puntos de corte compartidos por toda a app
-export const BP = { movil:520, tablet:900 };
+// ⚠️ `tablet:900` non distingue un iPad horizontal (1024–1366) dun
+// escritorio: sen `tabletH` a mesa de Sonido colle o layout de rato.
+export const BP = { movil:520, tablet:900, tabletH:1180 };
 
 // Hook de tamaño de pantalla, para adaptar layouts que clamp() non cobre
 export function useViewport(){
@@ -355,7 +357,15 @@ export function useViewport(){
     window.addEventListener("resize",onR);
     return()=>{window.removeEventListener("resize",onR);if(raf)cancelAnimationFrame(raf);};
   },[]);
-  return { w, esMovil:w<BP.movil, esTablet:w>=BP.movil&&w<BP.tablet, esPC:w>=BP.tablet };
+  return {
+    w,
+    esMovil:  w<BP.movil,
+    esTablet: w>=BP.movil&&w<BP.tablet,
+    esPC:     w>=BP.tablet,
+    // Novos, para Sonido. `esTabletH` é a experiencia principal da mesa.
+    esTabletH: w>=BP.tablet&&w<BP.tabletH,
+    esEscritorio: w>=BP.tabletH,
+  };
 }
 
 export const mkS = (T) => ({
