@@ -32,11 +32,16 @@ export const useAuth = () => useContext(AuthCtx) || {};
 export const useLang = () => useContext(LangCtx);
 
 export const UI_STRINGS = {
-  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Agenda"},
-  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",show:"Cabina",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Axenda"},
-  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",show:"Booth",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe",axenda:"Calendar"},
+  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",sonido:"Sonido",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Agenda"},
+  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",sonido:"Son",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Axenda"},
+  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",sonido:"Sound",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe",axenda:"Calendar"},
 };
 
+// ⚠️ O último `|| key` é unha rede de seguridade, non unha tradución: se
+// falta a clave devolve o identificador cru en minúscula ("sonido"), que
+// é o que se viu na botonera ao engadir a área sen tocar UI_STRINGS.
+// Toda área nova ten que entrar AQUÍ tamén, non só en AREAS e TABS.
+// Hai unha proba que o comproba (test_nav).
 export const t = (lang, key) => UI_STRINGS[lang]?.[key] || UI_STRINGS.es[key] || key;
 
 export const TAB_LABELS = UI_STRINGS;
