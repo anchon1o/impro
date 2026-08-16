@@ -23,6 +23,7 @@ export default [
         requestAnimationFrame: 'readonly', cancelAnimationFrame: 'readonly',
         Image: 'readonly', Audio: 'readonly', React: 'readonly',
         URLSearchParams: 'readonly', crypto: 'readonly', location: 'readonly',
+        indexedDB: 'readonly', IDBKeyRange: 'readonly', MediaMetadata: 'readonly',
       },
     },
     plugins: { react },
