@@ -15,12 +15,13 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTheme, mkS } from '../core.jsx';
+import { useTheme, mkS, useAuth } from '../core.jsx';
 import { getRecursos } from './recursos.js';
 import {
   dispoñible, gardarFicheiro, listarFicheiros, borrarFicheiro,
   actualizarMeta, estimar, formatarBytes,
 } from '../audio/almacen.js';
+import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa } from './mesas.js';
 import { Sonido } from './Sonido.jsx';
 
 // Formatos que Safari de iOS reproduce. `.ogg` queda fóra a propósito:
@@ -41,6 +42,8 @@ function tipoPorNome(nome) {
 export function TabSonido() {
   const { T } = useTheme();
   const S = mkS(T);
+  const { perfil } = useAuth();
+  const userId = perfil ? perfil.id : null;
   const [daBd, setDaBd] = useState([]);
   const [motivo, setMotivo] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -51,6 +54,11 @@ export function TabSonido() {
   const [modoFuncion, setModoFuncion] = useState(false);
   const inputRef = useRef(null);
   const urls = useRef([]);
+  const [mesas, setMesas] = useState([]);
+  const [mesaActiva, setMesaActiva] = useState(null);
+  const [editandoMesa, setEditandoMesa] = useState(false);
+  const [nomeMesa, setNomeMesa] = useState('');
+  const [avisoMesa, setAvisoMesa] = useState(null);
 
   const recargarLocais = useCallback(async () => {
     if (!dispoñible()) { setErroLocal('Este navegador non garda ficheiros localmente.'); return; }
@@ -74,8 +82,9 @@ export function TabSonido() {
       setDaBd(r); setMotivo(r.motivo); setCargando(false);
     });
     recargarLocais();
+    cargarMesas(userId).then((r) => { if (vivo) setMesas(r.mesas); });
     return () => { vivo = false; };
-  }, [recargarLocais]);
+  }, [recargarLocais, userId]);
 
   // Liberar as URLs de obxecto ao saír: se non, os ficheiros quedan en
   // memoria mentres viva a pestana.
@@ -120,9 +129,44 @@ export function TabSonido() {
     await recargarLocais();
   }, [recargarLocais]);
 
-  const recursos = [...daBd, ...locais];
-  const baleiro = !cargando && recursos.length === 0;
+  const todos = [...daBd, ...locais];
+  // Sen mesa activa vese todo o catálogo; cunha mesa, só o que ela trae.
+  const { recursos, faltan } = resolverMesa(mesaActiva, todos);
+  const baleiro = !cargando && todos.length === 0;
   const bytes = locais.reduce((n, r) => n + (r.bytes || 0), 0);
+
+  const escollerMesa = useCallback((id) => {
+    setMesaActiva(id ? mesas.find((m) => m.id === id) || null : null);
+    setEditandoMesa(false);
+    setAvisoMesa(null);
+  }, [mesas]);
+
+  const gardarComoMesa = useCallback(async () => {
+    const nome = nomeMesa.trim();
+    if (!nome) { setAvisoMesa('Ponlle un nome á mesa.'); return; }
+    // Gárdanse os sons que hai diante agora mesmo. Se hai unha mesa
+    // activa, iso é o seu contido; se non, o catálogo enteiro.
+    const base = mesaActiva ? { ...mesaActiva, nome } : { ...mesaBaleira(nome) };
+    base.recursoIds = recursos.map((r) => r.id);
+    const g = await gardarMesaNomeada(base, userId);
+    if (!g.ok) { setAvisoMesa(g.erro); return; }
+    const r2 = await cargarMesas(userId);
+    setMesas(r2.mesas);
+    setMesaActiva(r2.mesas.find((m) => m.id === g.mesa.id) || g.mesa);
+    setEditandoMesa(false);
+    setNomeMesa('');
+    setAvisoMesa(null);
+  }, [nomeMesa, mesaActiva, recursos, userId]);
+
+  const eliminarMesa = useCallback(async () => {
+    if (!mesaActiva) return;
+    if (mesaActiva.local) borrarMesaLocal(mesaActiva.id);
+    const r2 = await cargarMesas(userId);
+    setMesas(r2.mesas);
+    setMesaActiva(null);
+    setEditandoMesa(false);
+    if (!mesaActiva.local) setAvisoMesa('As mesas da conta bórranse desde Admin, de momento.');
+  }, [mesaActiva, userId]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
@@ -154,6 +198,67 @@ export function TabSonido() {
 
       {erroLocal && (
         <p style={{ ...S.t.caption, color: T.danger, margin: 0 }}>{erroLocal}</p>
+      )}
+
+      {/* ── Mesas ── */}
+      {!modoFuncion && todos.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select value={mesaActiva ? mesaActiva.id : ''}
+            onChange={(e) => escollerMesa(e.target.value)}
+            aria-label="Mesa activa"
+            style={{ ...S.input, width: 'auto', flex: '1 1 170px', minHeight: 44 }}>
+            <option value="">Todos os sons ({todos.length})</option>
+            {mesas.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.emoji} {m.nome} ({m.recursoIds.length}){m.local ? ' · local' : ''}
+              </option>
+            ))}
+          </select>
+
+          <button onClick={() => {
+            setEditandoMesa((v) => !v);
+            setNomeMesa(mesaActiva ? mesaActiva.nome : '');
+          }} style={S.btn(T.bg3, T.text2)}>
+            {editandoMesa ? '✕' : mesaActiva ? '✎ Mesa' : '💾 Gardar mesa'}
+          </button>
+
+          {mesaActiva && (
+            <button onClick={eliminarMesa} aria-label="Eliminar mesa"
+              style={{ ...S.btn(T.bg4, T.danger), minWidth: 44 }}>🗑</button>
+          )}
+        </div>
+      )}
+
+      {editandoMesa && !modoFuncion && (
+        <div style={{
+          background: T.bg2, borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
+          borderRadius: 14, padding: '0.75rem',
+        }}>
+          <p style={{ ...S.t.caption, color: T.text3, margin: '0 0 0.5rem' }}>
+            Gárdanse os {recursos.length} sons que tes diante agora.
+            {userId ? '' : ' Sen conta, a mesa queda neste dispositivo.'}
+          </p>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <input value={nomeMesa} onChange={(e) => setNomeMesa(e.target.value)}
+              placeholder="Nome da mesa" aria-label="Nome da mesa"
+              style={{ ...S.input, flex: '2 1 150px', width: 'auto' }} />
+            <button onClick={gardarComoMesa} style={S.btn(T.accent)}>Gardar</button>
+          </div>
+        </div>
+      )}
+
+      {avisoMesa && (
+        <p style={{ ...S.t.caption, color: T.warn, margin: 0 }}>{avisoMesa}</p>
+      )}
+
+      {/* Unha mesa que apunta a sons borrados non é un erro, é un oco. */}
+      {faltan.length > 0 && (
+        <p style={{ ...S.t.caption, color: T.warn, margin: 0 }}>
+          {faltan.length === 1
+            ? 'Un son desta mesa xa non está dispoñible.'
+            : `${faltan.length} sons desta mesa xa non están dispoñibles.`}
+          {' '}Puideron borrarse do dispositivo ou despublicarse.
+        </p>
       )}
 
       {/* Xestor dos sons locais: renomear, cambiar tipo, borrar. */}
