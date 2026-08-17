@@ -14,6 +14,7 @@ import { AdminCategorias } from './AdminCategorias.jsx';
 import { AdminTiposDinamica } from './AdminTiposDinamica.jsx';
 import { AdminAxenda } from './AdminAxenda.jsx';
 import { AdminTablaDinamicas } from './AdminTablaDinamicas.jsx';
+import { AdminSonidos } from '../sonido/AdminSonidos.jsx';
 import { AdminTablaMasiva } from './AdminTablaMasiva.jsx';
 import { AdminReportes } from './AdminReportes.jsx';
 import { UniversoForm } from './UniversoForm.jsx';
@@ -37,6 +38,7 @@ export function TabAdmin(){
     {id:"estimulos",emoji:"✦",label:"Estímulos"},
     {id:"traducions",emoji:"🌐",label:"Idiomas"},
     {id:"dinamicas",emoji:"📖",label:"Dinámicas"},
+    {id:"sonidos",emoji:"🔊",label:"Sons"},
     {id:"universo",emoji:"🌍",label:"Universo"},
     {id:"axenda",emoji:"📅",label:"Axenda"},
     {id:"reportes",emoji:"🐛",label:"Reportes"},
@@ -64,6 +66,7 @@ export function TabAdmin(){
     {adminTab==="estimulos"&&<AdminEstimulos T={T} S={S}/>}
     {adminTab==="traducions"&&<AdminTraducions T={T} S={S}/>}
     {adminTab==="dinamicas"&&<AdminDinamicas T={T} S={S}/>}
+    {adminTab==="sonidos"&&<AdminSonidos T={T} S={S}/>}
     {adminTab==="universo"&&<AdminUniverso T={T} S={S}/>}
     {adminTab==="axenda"&&<AdminAxenda/>}
     {adminTab==="reportes"&&<AdminReportes/>}

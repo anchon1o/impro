@@ -283,3 +283,66 @@ export async function duplicarColeccion(coleccionId, userId) {
     return { ok: true, coleccion: copia.coleccion, n: items.length };
   } catch (e) { return { ok: false, erro: e.message || String(e) }; }
 }
+
+// ── GARDADO EN LOTE ──────────────────────────────────────────────
+// Para a edición masiva en Admin. Vai fila a fila e non nun só insert
+// a propósito: se unha fila é mala, quérese saber CAL, non perder as
+// cincuenta boas. É a lección de B37, onde un insert enteiro fallou
+// por unha columna e non se soubo por que.
+export async function gardarLoteRecursos(filas, userId) {
+  const r = { gardados: 0, creados: 0, erros: [] };
+  for (const f of filas || []) {
+    const erro = validarRecurso(f);
+    if (erro) { r.erros.push({ nome: f.nome || '(sen nome)', msg: erro }); continue; }
+    const fila = aFila({ ...f, userId: f.userId || userId });
+    try {
+      if (f.id && !String(f.id).startsWith('nova-')) {
+        const { error } = await supabase.from('son_recursos').update(fila).eq('id', f.id);
+        if (error) throw error;
+        r.gardados++;
+      } else {
+        const { error } = await supabase.from('son_recursos').insert(fila);
+        if (error) throw error;
+        r.creados++;
+      }
+    } catch (e) {
+      r.erros.push({ nome: f.nome || '(sen nome)', msg: e.message || String(e) });
+    }
+  }
+  return r;
+}
+
+// Pegar desde unha folla de cálculo. Excel, Numbers e Google Sheets
+// copian con TABULADORES entre columnas e saltos de liña entre filas.
+// Acéptanse tamén punto e coma por se o texto vén doutro sitio.
+//
+// ⚠️ As comas NON valen como separador: as descricións e os nomes
+// levan comas constantemente e partiríanse polo medio (é o que causou
+// B33 nos campos de lista).
+export function analizarPegado(texto, columnas) {
+  const liñas = String(texto || '').split(/\r?\n/).filter((l) => l.trim());
+  const fóra = [];
+  for (const liña of liñas) {
+    const partes = liña.includes('\t') ? liña.split('\t') : liña.split(';');
+    const fila = {};
+    columnas.forEach((c, i) => { fila[c] = (partes[i] || '').trim(); });
+    // Unha liña cunha soa columna que pareza URL é un caso frecuente:
+    // pégase unha lista de enlaces soa. Trátase como url, non como nome.
+    if (partes.length === 1 && /^https?:\/\//i.test(partes[0].trim())) {
+      const url = partes[0].trim();
+      fóra.push({ url, nome: nomeDesdeUrl(url) });
+      continue;
+    }
+    fóra.push(fila);
+  }
+  return fóra;
+}
+
+export function nomeDesdeUrl(url) {
+  try {
+    const ruta = new URL(url).pathname;
+    const base = decodeURIComponent(ruta.split('/').pop() || '');
+    const senExt = base.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+    return senExt ? senExt.charAt(0).toUpperCase() + senExt.slice(1) : 'Sen nome';
+  } catch (e) { return 'Sen nome'; }
+}
