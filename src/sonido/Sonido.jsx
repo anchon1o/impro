@@ -13,10 +13,11 @@
 //   · Reixas con `minmax(min(Npx,100%),1fr)`, senón desbordan (B23).
 // ═══════════════════════════════════════════════════════════════════
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTheme, mkS, useViewport } from '../core.jsx';
 import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
 import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
+import { cargarMesa, gardarMesa } from './mesa.js';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
@@ -207,9 +208,17 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
   const vp = useViewport();
   const m = useMotor();
 
-  const [contadores, setContadores] = useState(() => [
-    crearContador({ tipo: 'crono', etiqueta: 'Show completo', cor: 'ok' }),
-  ]);
+  // Lese unha soa vez, no primeiro render. Se non hai nada gardado,
+  // dáse un cronómetro de cortesía —  parado, coma todos.
+  const gardado = useRef(null);
+  if (gardado.current === null) gardado.current = cargarMesa();
+
+  const [contadores, setContadores] = useState(() => (
+    gardado.current.contadores.length
+      ? gardado.current.contadores
+      : [crearContador({ tipo: 'crono', etiqueta: 'Show completo', cor: 'ok' })]
+  ));
+  const [volRecurso, setVolRecurso] = useState(() => gardado.current.volRecurso);
   const [novoTipo, setNovoTipo] = useState('crono');
   const [novaEtiqueta, setNovaEtiqueta] = useState('');
   const [novaCor, setNovaCor] = useState('info');
@@ -229,18 +238,50 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
 
   const capaDe = useCallback((id) => m.capas.find((c) => c.id === id), [m.capas]);
 
+  // Restaurar os volumes de bus en canto o motor está listo. Antes non
+  // se pode: os nodos aínda non existen.
+  const restaurado = useRef(false);
+  useEffect(() => {
+    if (restaurado.current || !m.arrancado) return;
+    restaurado.current = true;
+    const v = gardado.current.volBus;
+    for (const bus of ['musica', 'ambientes', 'efectos', 'master']) {
+      if (typeof v[bus] === 'number') m.volumeBus(bus, v[bus]);
+    }
+  }, [m]);
+
+  // Gárdase con retardo: arrastrar un control dispara decenas de
+  // cambios e escribir en cada un é traballo tirado.
+  const gardarTardio = useRef(null);
+  useEffect(() => {
+    if (!m.arrancado) return undefined;
+    if (gardarTardio.current) clearTimeout(gardarTardio.current);
+    gardarTardio.current = setTimeout(() => {
+      gardarMesa({ contadores, volBus: m.volBus, volRecurso });
+    }, 500);
+    return () => { if (gardarTardio.current) clearTimeout(gardarTardio.current); };
+  }, [contadores, m.volBus, volRecurso, m.arrancado]);
+
   const alternarCapa = useCallback((r) => {
     const c = capaDe(r.id);
     if (!c) {
       m.engadirCapa(r.id, {
         url: r.url, bus: r.tipo === 'musica' ? 'musica' : 'ambientes',
-        vol: r.vol, loop: r.modo === 'loop' || r.tipo === 'ambiente', tipo: r.tipo,
+        // O volume que lle deras a este son a última vez manda sobre o
+        // que trae o recurso: é o axuste que custou traballo.
+        vol: typeof volRecurso[r.id] === 'number' ? volRecurso[r.id] : r.vol,
+        loop: r.modo === 'loop' || r.tipo === 'ambiente', tipo: r.tipo,
       });
       setTimeout(() => m.acender(r.id, true), 0);
       return;
     }
     m.acender(r.id, !c.on);
-  }, [capaDe, m]);
+  }, [capaDe, m, volRecurso]);
+
+  const cambiarVol = useCallback((id, v) => {
+    m.volCapa(id, v);
+    setVolRecurso((o) => ({ ...o, [id]: v }));
+  }, [m]);
 
   const accionContador = useCallback((id, que) => {
     setContadores((cs) => {
@@ -376,9 +417,10 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
       sen={porTipo.musica.length ? null : 'Sen música na mesa.'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {porTipo.musica.map((r) => {
-          const c = capaDe(r.id) || { on: false, vol: r.vol, erro: null };
+          const c = capaDe(r.id)
+            || { on: false, vol: volRecurso[r.id] ?? r.vol, erro: null };
           return <Canle key={r.id} T={T} S={S} capa={c} recurso={r}
-            onAcender={() => alternarCapa(r)} onVol={(v) => m.volCapa(r.id, v)} />;
+            onAcender={() => alternarCapa(r)} onVol={(v) => cambiarVol(r.id, v)} />;
         })}
       </div>
     </Panel>
@@ -390,9 +432,10 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
       sen={porTipo.ambiente.length ? null : 'Sen ambientes na mesa.'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {porTipo.ambiente.map((r) => {
-          const c = capaDe(r.id) || { on: false, vol: r.vol, erro: null };
+          const c = capaDe(r.id)
+            || { on: false, vol: volRecurso[r.id] ?? r.vol, erro: null };
           return <Canle key={r.id} T={T} S={S} capa={c} recurso={r}
-            onAcender={() => alternarCapa(r)} onVol={(v) => m.volCapa(r.id, v)} />;
+            onAcender={() => alternarCapa(r)} onVol={(v) => cambiarVol(r.id, v)} />;
         })}
       </div>
     </Panel>
