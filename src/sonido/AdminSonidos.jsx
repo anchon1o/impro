@@ -18,6 +18,8 @@ import { useTheme, mkS, useAuth, UID } from '../core.jsx';
 import {
   getRecursos, gardarLoteRecursos, borrarRecurso,
   validarRecurso, analizarPegado, nomeDesdeUrl,
+  getTags, agruparTags, getTagsDeRecursos, gardarTagsRecurso,
+  getDenuncias, resolverDenuncia, moderarRecurso,
 } from './recursos.js';
 
 const COLS = [
@@ -55,6 +57,11 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
   const [erros, setErros] = useState([]);
   const [pegado, setPegado] = useState('');
   const [verPegar, setVerPegar] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [tagsDe, setTagsDe] = useState({});
+  const [etiquetando, setEtiquetando] = useState(null);
+  const [denuncias, setDenuncias] = useState([]);
+  const [verDenuncias, setVerDenuncias] = useState(false);
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -68,6 +75,29 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
   }, []);
 
   useEffect(cargar, [cargar]);
+  useEffect(() => { getTags().then(setTags); }, []);
+  useEffect(() => {
+    const ids = filas.map((f) => f.id).filter((i) => i && !String(i).startsWith('nova-'));
+    if (ids.length) getTagsDeRecursos(ids).then(setTagsDe);
+  }, [filas]);
+  useEffect(() => { if (verDenuncias) getDenuncias().then(setDenuncias); }, [verDenuncias]);
+
+  const alternarTag = async (recursoId, tagId) => {
+    const actuais = tagsDe[recursoId] || [];
+    const novas = actuais.includes(tagId)
+      ? actuais.filter((t) => t !== tagId)
+      : [...actuais, tagId];
+    setTagsDe((o) => ({ ...o, [recursoId]: novas }));
+    const r = await gardarTagsRecurso(recursoId, novas);
+    if (!r.ok) { setMsg('Non se puideron gardar as etiquetas: ' + r.erro); setTagsDe((o) => ({ ...o, [recursoId]: actuais })); }
+  };
+
+  const xestionar = async (d, estado, ocultar) => {
+    if (ocultar && d.recurso_id) await moderarRecurso(d.recurso_id, 'oculta');
+    await resolverDenuncia(d.id, estado);
+    setDenuncias(await getDenuncias());
+    if (ocultar) cargar();
+  };
 
   const editar = (k, campo, valor) => {
     setFilas((fs) => fs.map((f) => {
@@ -135,6 +165,10 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
             {invalidas.length} sen completar
           </span>
         )}
+        <button onClick={() => setVerDenuncias((v) => !v)} style={S.btn(T.bg3, T.text2)}>
+          ⚑ Denuncias{denuncias.filter((d) => d.estado === 'aberta').length
+            ? ` (${denuncias.filter((d) => d.estado === 'aberta').length})` : ''}
+        </button>
         <button onClick={gardar} disabled={gardando || !cambiadas.length}
           style={{ ...S.btn(cambiadas.length ? T.accent : T.bg3, cambiadas.length ? '#fff' : T.text4) }}>
           {gardando ? 'Gardando…' : `💾 Gardar (${cambiadas.length})`}
@@ -165,6 +199,48 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
           <button onClick={pegar} style={{ ...S.btn(T.accent), marginTop: '0.5rem' }}>
             Engadir filas
           </button>
+        </div>
+      )}
+
+      {verDenuncias && (
+        <div style={{
+          background: T.bg2, borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
+          borderRadius: 12, padding: '0.75rem', marginBottom: '0.7rem',
+        }}>
+          {!denuncias.length && (
+            <p style={{ ...S.t.caption, color: T.text4, margin: 0 }}>Sen denuncias.</p>
+          )}
+          {denuncias.map((d) => (
+            <div key={d.id} style={{
+              display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap',
+              padding: '0.4rem 0',
+              borderBottomStyle: 'solid', borderBottomWidth: 1, borderBottomColor: T.border,
+            }}>
+              <span style={{ ...S.t.caption, color: d.estado === 'aberta' ? T.warn : T.text4 }}>
+                {d.estado}
+              </span>
+              <span style={{ ...S.t.bodySm, color: T.text2, flex: 1, minWidth: 120 }}>
+                {d.motivo}{d.detalle ? ` · ${d.detalle}` : ''}
+              </span>
+              <span style={{ ...S.t.caption, color: T.text4 }}>
+                {(filas.find((f) => f.id === d.recurso_id) || {}).nome || '—'}
+              </span>
+              {d.estado === 'aberta' && (
+                <>
+                  {/* Ocultar, non borrar: unha denuncia pode ser falsa
+                      e borrar non ten volta atrás. */}
+                  <button onClick={() => xestionar(d, 'revisada', true)}
+                    style={{ ...S.btn(T.danger), minHeight: 34, fontSize: '0.72rem' }}>
+                    Ocultar o son
+                  </button>
+                  <button onClick={() => xestionar(d, 'desestimada', false)}
+                    style={{ ...S.btn(T.bg3, T.text2), minHeight: 34, fontSize: '0.72rem' }}>
+                    Desestimar
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -200,7 +276,9 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
           <tbody>
             {filas.map((f) => {
               const e = validarRecurso(f);
+              const grupos = agruparTags(tags);
               return (
+                <>
                 <tr key={f._k} style={{ background: e ? T.warn + '10' : 'transparent' }}>
                   {COLS.map((c) => (
                     <td key={c.id} style={{
@@ -224,6 +302,16 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
                     </td>
                   ))}
                   <td style={{ borderBottomStyle: 'solid', borderBottomWidth: 1, borderBottomColor: T.border }}>
+                    {!String(f.id).startsWith('nova-') && (
+                      <button onClick={() => setEtiquetando(etiquetando === f.id ? null : f.id)}
+                        aria-label={'Etiquetas de ' + (f.nome || 'fila')}
+                        style={{
+                          width: 32, height: 32, borderRadius: 7, background: T.bg4,
+                          borderStyle: 'solid', borderWidth: 1,
+                          borderColor: (tagsDe[f.id] || []).length ? T.accent : T.border,
+                          color: T.text2, cursor: 'pointer', fontSize: '0.72rem', marginRight: 4,
+                        }}>🏷{(tagsDe[f.id] || []).length || ''}</button>
+                    )}
                     <button onClick={() => eliminar(f)} aria-label={'Eliminar ' + (f.nome || 'fila')}
                       style={{
                         width: 32, height: 32, borderRadius: 7, background: T.bg4,
@@ -232,6 +320,40 @@ export function AdminSonidos({ T: Tp, S: Sp }) {
                       }}>✕</button>
                   </td>
                 </tr>
+                {etiquetando === f.id && (
+                  <tr key={f._k + '-tags'}>
+                    <td colSpan={COLS.length + 1} style={{ padding: '0.5rem 0.3rem', background: T.bg2 }}>
+                      {['funcion', 'tono', 'universo', 'caracteristica'].map((cat) => (
+                        <div key={cat} style={{ marginBottom: '0.4rem' }}>
+                          <div style={{ ...S.t.caption, color: T.text4, marginBottom: '0.2rem' }}>{cat}</div>
+                          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                            {(grupos[cat] || []).map((tg) => {
+                              const on = (tagsDe[f.id] || []).includes(tg.id);
+                              return (
+                                <button key={tg.id} onClick={() => alternarTag(f.id, tg.id)}
+                                  aria-pressed={on} aria-label={tg.nome}
+                                  style={{
+                                    background: on ? T.accent : T.bg3,
+                                    borderStyle: 'solid', borderWidth: 1,
+                                    borderColor: on ? T.accent : T.border,
+                                    borderRadius: 999, color: on ? '#fff' : T.text3,
+                                    padding: '0.2rem 0.6rem', minHeight: 32,
+                                    fontSize: '0.72rem', cursor: 'pointer', fontFamily: S.font,
+                                  }}>{tg.nome}</button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      {!tags.length && (
+                        <span style={{ ...S.t.caption, color: T.warn }}>
+                          Sen etiquetas na base. Executa supabase_sonido_tags.sql.
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </>
               );
             })}
           </tbody>

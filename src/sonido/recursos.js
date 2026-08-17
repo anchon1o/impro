@@ -346,3 +346,173 @@ export function nomeDesdeUrl(url) {
     return senExt ? senExt.charAt(0).toUpperCase() + senExt.slice(1) : 'Sen nome';
   } catch (e) { return 'Sen nome'; }
 }
+
+// ── ETIQUETAS DUN RECURSO ────────────────────────────────────────
+// Reescríbense enteiras: reconciliar altas e baixas por separado é
+// onde aparecen as etiquetas fantasma.
+export async function gardarTagsRecurso(recursoId, tagIds) {
+  try {
+    const { error: e1 } = await supabase.from('son_recursos_tags')
+      .delete().eq('recurso_id', recursoId);
+    if (e1) throw e1;
+    const ids = [...new Set((tagIds || []).filter(Boolean))];
+    if (!ids.length) return { ok: true, n: 0 };
+    const { error: e2 } = await supabase.from('son_recursos_tags')
+      .insert(ids.map((t) => ({ recurso_id: recursoId, tag_id: t })));
+    if (e2) throw e2;
+    return { ok: true, n: ids.length };
+  } catch (e) { return { ok: false, erro: e.message || String(e) }; }
+}
+
+// ⚠️ Nada de joins. Léese a táboa de unión á parte e xúntase en
+// memoria, igual que con `perfis`: un select anidado que falla devolve
+// lista baleira SEN erro aparente, e o síntoma sería «desapareceron as
+// etiquetas» sen ningunha pista.
+export async function getTagsDeRecursos(ids) {
+  const mapa = {};
+  if (!ids || !ids.length) return mapa;
+  try {
+    const { data, error } = await supabase.from('son_recursos_tags')
+      .select('recurso_id, tag_id').in('recurso_id', ids);
+    if (error) throw error;
+    for (const r of data || []) {
+      if (!mapa[r.recurso_id]) mapa[r.recurso_id] = [];
+      mapa[r.recurso_id].push(r.tag_id);
+    }
+    return mapa;
+  } catch (e) { return mapa; }
+}
+
+// ── EXPLORAR ─────────────────────────────────────────────────────
+// Só contido publicado. A RLS xa filtra, pero pedilo explicitamente
+// evita depender dunha soa capa: se algún día unha política se afrouxa,
+// isto segue sen amosar borradores alleos.
+export async function explorar({ tipo = null, tags = [], busca = '', limite = 60 } = {}) {
+  try {
+    let q = supabase.from('son_recursos').select('*')
+      .eq('estado', 'publicada').eq('visibilidade', 'publico');
+    if (tipo) q = q.eq('tipo', tipo);
+    if (busca && busca.trim()) q = q.ilike('nome', `%${busca.trim()}%`);
+    const { data, error } = await q.order('gardados', { ascending: false }).limit(limite);
+    if (error) throw error;
+
+    let lista = (data || []).map(normalizar);
+    if (tags && tags.length) {
+      const mapa = await getTagsDeRecursos(lista.map((r) => r.id));
+      // Todas as etiquetas escollidas teñen que estar: filtrar é
+      // acoutar. Se fose «algunha», engadir un filtro daría MÁIS
+      // resultados, que é o contrario do que espera calquera.
+      lista = lista.filter((r) => {
+        const seus = mapa[r.id] || [];
+        return tags.every((t) => seus.includes(t));
+      });
+      lista = lista.map((r) => ({ ...r, tags: mapa[r.id] || [] }));
+    }
+    return resultado(lista);
+  } catch (e) {
+    return resultado([], { erro: e, motivo: 'sen-conexion' });
+  }
+}
+
+export async function explorarColeccions({ tipo = 'escena', busca = '', limite = 40 } = {}) {
+  try {
+    let q = supabase.from('son_coleccions').select('*')
+      .eq('estado', 'publicada').eq('visibilidade', 'publico');
+    if (tipo) q = q.eq('tipo', tipo);
+    if (busca && busca.trim()) q = q.ilike('nome', `%${busca.trim()}%`);
+    const { data, error } = await q.order('gardados', { ascending: false }).limit(limite);
+    if (error) throw error;
+    return resultado((data || []).map(normalizarCol));
+  } catch (e) {
+    return resultado([], { erro: e, motivo: 'sen-conexion' });
+  }
+}
+
+// ── GARDADOS ─────────────────────────────────────────────────────
+export async function gardarNaBiblioteca(userId, { recursoId = null, coleccionId = null }) {
+  if (!userId) return { ok: false, erro: 'Fai falta unha conta para gardar' };
+  try {
+    const { error } = await supabase.from('son_gardados')
+      .insert({ user_id: userId, recurso_id: recursoId, coleccion_id: coleccionId });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    // Gardar dúas veces o mesmo choca co índice único. Non é un fallo
+    // que teña que ver o usuario: xa o tiña gardado.
+    const msg = e.message || String(e);
+    if (/duplicate|unique/i.test(msg)) return { ok: true, xaEstaba: true };
+    return { ok: false, erro: msg };
+  }
+}
+
+export async function getGardados(userId) {
+  if (!userId) return { recursos: [], coleccions: [] };
+  try {
+    const { data, error } = await supabase.from('son_gardados').select('*').eq('user_id', userId);
+    if (error) throw error;
+    return {
+      recursos: (data || []).map((g) => g.recurso_id).filter(Boolean),
+      coleccions: (data || []).map((g) => g.coleccion_id).filter(Boolean),
+    };
+  } catch (e) { return { recursos: [], coleccions: [] }; }
+}
+
+// ── DUPLICAR UN RECURSO ──────────────────────────────────────────
+// §28: modificar a copia nunca pode tocar o orixinal. Por iso a copia
+// nace PRIVADA e en borrador: herdar a visibilidade publicaría contido
+// sen que ninguén o decidise.
+export async function duplicarRecurso(recurso, userId) {
+  if (!userId) return { ok: false, erro: 'Fai falta unha conta para duplicar' };
+  const copia = {
+    ...recurso, id: undefined,
+    nome: (recurso.nome || 'Sen nome') + ' (copia)',
+    visibilidade: 'privado', estado: 'borrador', userId,
+  };
+  const r = await gardarRecurso(copia);
+  if (!r.ok) return r;
+  const mapa = await getTagsDeRecursos([recurso.id]);
+  const tags = mapa[recurso.id] || [];
+  if (tags.length && r.recurso) await gardarTagsRecurso(r.recurso.id, tags);
+  return r;
+}
+
+// ── DENUNCIAR ────────────────────────────────────────────────────
+// Pode calquera, mesmo sen conta: quen atopa un problema de dereitos
+// nun son adoita ser alguén de fóra.
+export async function denunciar({ recursoId = null, coleccionId = null, motivo = 'outro', detalle = '', userId = null }) {
+  try {
+    const { error } = await supabase.from('son_denuncias').insert({
+      recurso_id: recursoId, coleccion_id: coleccionId,
+      motivo, detalle: detalle || null, user_id: userId,
+    });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) { return { ok: false, erro: e.message || String(e) }; }
+}
+
+export async function getDenuncias() {
+  try {
+    const { data, error } = await supabase.from('son_denuncias')
+      .select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return resultado(data || []);
+  } catch (e) { return resultado([], { erro: e, motivo: 'sen-conexion' }); }
+}
+
+export async function resolverDenuncia(id, estado) {
+  try {
+    const { error } = await supabase.from('son_denuncias').update({ estado }).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) { return { ok: false, erro: e.message || String(e) }; }
+}
+
+// Ocultar contido denunciado. Non se borra: unha denuncia pode ser
+// falsa, e borrar non ten volta.
+export async function moderarRecurso(id, estado) {
+  try {
+    const { error } = await supabase.from('son_recursos').update({ estado }).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) { return { ok: false, erro: e.message || String(e) }; }
+}

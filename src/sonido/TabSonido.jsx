@@ -23,6 +23,7 @@ import {
 } from '../audio/almacen.js';
 import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa } from './mesas.js';
 import { cargarEscenas, gardarEscena, borrarEscenaLocal } from './escenas.js';
+import { Explorar } from './Explorar.jsx';
 import { Sonido } from './Sonido.jsx';
 
 // Formatos que Safari de iOS reproduce. `.ogg` queda fóra a propósito:
@@ -61,6 +62,8 @@ export function TabSonido() {
   const [nomeMesa, setNomeMesa] = useState('');
   const [avisoMesa, setAvisoMesa] = useState(null);
   const [escenas, setEscenas] = useState([]);
+  const [vista, setVista] = useState('mesa');
+  const [probando, setProbando] = useState([]);
 
   const recargarLocais = useCallback(async () => {
     if (!dispoñible()) { setErroLocal('Este navegador non garda ficheiros localmente.'); return; }
@@ -132,7 +135,9 @@ export function TabSonido() {
     await recargarLocais();
   }, [recargarLocais]);
 
-  const todos = [...daBd, ...locais];
+  // Un son que veñas de probar desde Explorar súmase á mesa desta
+  // sesión. Non se garda: probar non pode ensuciar a túa biblioteca.
+  const todos = [...daBd, ...locais, ...probando];
   // Sen mesa activa vese todo o catálogo; cunha mesa, só o que ela trae.
   const { recursos, faltan } = resolverMesa(mesaActiva, todos);
   const baleiro = !cargando && todos.length === 0;
@@ -188,8 +193,21 @@ export function TabSonido() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
 
-      {!modoFuncion && (
+      {vista === 'explorar' && (
+        <Explorar
+          onVolver={() => setVista('mesa')}
+          onProbar={(r) => {
+            setProbando((p) => (p.find((x) => x.id === r.id) ? p : [...p, r]));
+            setVista('mesa');
+          }}
+        />
+      )}
+
+      {vista === 'mesa' && !modoFuncion && (
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => setVista('explorar')} style={S.btn(T.bg3, T.text)}>
+            🔍 Explorar
+          </button>
           <button onClick={() => inputRef.current && inputRef.current.click()}
             style={S.btn(T.bg3, T.text)}>
             ＋ Engadir sons
@@ -213,12 +231,12 @@ export function TabSonido() {
         </div>
       )}
 
-      {erroLocal && (
+      {vista === 'mesa' && erroLocal && (
         <p style={{ ...S.t.caption, color: T.danger, margin: 0 }}>{erroLocal}</p>
       )}
 
       {/* ── Mesas ── */}
-      {!modoFuncion && todos.length > 0 && (
+      {vista === 'mesa' && !modoFuncion && todos.length > 0 && (
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={mesaActiva ? mesaActiva.id : ''}
             onChange={(e) => escollerMesa(e.target.value)}
@@ -246,7 +264,7 @@ export function TabSonido() {
         </div>
       )}
 
-      {editandoMesa && !modoFuncion && (
+      {vista === 'mesa' && editandoMesa && !modoFuncion && (
         <div style={{
           background: T.bg2, borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
           borderRadius: 14, padding: '0.75rem',
@@ -279,7 +297,7 @@ export function TabSonido() {
       )}
 
       {/* Xestor dos sons locais: renomear, cambiar tipo, borrar. */}
-      {xestor && !modoFuncion && (
+      {vista === 'mesa' && xestor && !modoFuncion && (
         <section style={{
           background: T.bg2, borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
           borderRadius: 14, padding: '0.75rem',
@@ -325,12 +343,12 @@ export function TabSonido() {
         </section>
       )}
 
-      {cargando && (
+      {vista === 'mesa' && cargando && (
         <p style={{ ...S.t.caption, color: T.text4, margin: 0 }}>Cargando sons…</p>
       )}
 
       {/* Estado honesto: distínguese cargando, baleiro e sen conexión. */}
-      {baleiro && (
+      {vista === 'mesa' && baleiro && (
         <div style={{
           background: (motivo === 'sen-conexion' ? T.danger : T.warn) + '12',
           borderStyle: 'solid', borderWidth: 1.5,
@@ -348,14 +366,14 @@ export function TabSonido() {
         </div>
       )}
 
-      <Sonido
+      {vista === 'mesa' && <Sonido
         recursos={recursos}
         escenas={escenas}
         onGardarEscena={onGardarEscena}
         onBorrarEscena={onBorrarEscena}
         modoFuncion={modoFuncion}
         onSairFuncion={() => setModoFuncion(false)}
-      />
+      />}
     </div>
   );
 }
