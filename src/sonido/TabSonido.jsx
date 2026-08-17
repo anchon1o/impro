@@ -22,6 +22,7 @@ import {
   actualizarMeta, estimar, formatarBytes,
 } from '../audio/almacen.js';
 import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa } from './mesas.js';
+import { cargarEscenas, gardarEscena, borrarEscenaLocal } from './escenas.js';
 import { Sonido } from './Sonido.jsx';
 
 // Formatos que Safari de iOS reproduce. `.ogg` queda fóra a propósito:
@@ -59,6 +60,7 @@ export function TabSonido() {
   const [editandoMesa, setEditandoMesa] = useState(false);
   const [nomeMesa, setNomeMesa] = useState('');
   const [avisoMesa, setAvisoMesa] = useState(null);
+  const [escenas, setEscenas] = useState([]);
 
   const recargarLocais = useCallback(async () => {
     if (!dispoñible()) { setErroLocal('Este navegador non garda ficheiros localmente.'); return; }
@@ -83,6 +85,7 @@ export function TabSonido() {
     });
     recargarLocais();
     cargarMesas(userId).then((r) => { if (vivo) setMesas(r.mesas); });
+    cargarEscenas(userId).then((r) => { if (vivo) setEscenas(r.escenas); });
     return () => { vivo = false; };
   }, [recargarLocais, userId]);
 
@@ -134,6 +137,20 @@ export function TabSonido() {
   const { recursos, faltan } = resolverMesa(mesaActiva, todos);
   const baleiro = !cargando && todos.length === 0;
   const bytes = locais.reduce((n, r) => n + (r.bytes || 0), 0);
+
+  const onGardarEscena = useCallback(async (e) => {
+    const g = await gardarEscena(e, userId);
+    if (!g.ok) return g;
+    const r2 = await cargarEscenas(userId);
+    setEscenas(r2.escenas);
+    return g;
+  }, [userId]);
+
+  const onBorrarEscena = useCallback(async (e) => {
+    if (e.local) borrarEscenaLocal(e.id);
+    const r2 = await cargarEscenas(userId);
+    setEscenas(r2.escenas);
+  }, [userId]);
 
   const escollerMesa = useCallback((id) => {
     setMesaActiva(id ? mesas.find((m) => m.id === id) || null : null);
@@ -333,6 +350,9 @@ export function TabSonido() {
 
       <Sonido
         recursos={recursos}
+        escenas={escenas}
+        onGardarEscena={onGardarEscena}
+        onBorrarEscena={onBorrarEscena}
         modoFuncion={modoFuncion}
         onSairFuncion={() => setModoFuncion(false)}
       />

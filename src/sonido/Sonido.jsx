@@ -18,6 +18,7 @@ import { useTheme, mkS, useViewport } from '../core.jsx';
 import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
 import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
 import { cargarMesa, gardarMesa } from './mesa.js';
+import { capturarEscena, planificarEscena } from './escenas.js';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
@@ -202,7 +203,10 @@ function Panel({ T, S, titulo, extra, children, sen }) {
 // ═══════════════════════════════════════════════════════════════════
 // A MESA
 // ═══════════════════════════════════════════════════════════════════
-export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
+export function Sonido({
+  recursos = [], modoFuncion = false, onSairFuncion,
+  escenas = [], onGardarEscena, onBorrarEscena,
+}) {
   const { T } = useTheme();
   const S = mkS(T);
   const vp = useViewport();
@@ -282,6 +286,46 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
     m.volCapa(id, v);
     setVolRecurso((o) => ({ ...o, [id]: v }));
   }, [m]);
+
+  // ── Escenas ──
+  const [nomeEscena, setNomeEscena] = useState('');
+  const [verEscenas, setVerEscenas] = useState(false);
+  const [avisoEscena, setAvisoEscena] = useState(null);
+
+  const aplicarEscena = useCallback((e) => {
+    const plan = planificarEscena(e, recursos, m.capas);
+    // Primeiro baixa o que sobra, con fundido: un corte seco no medio
+    // dunha función óese máis que o propio cambio.
+    for (const id of plan.apagar) m.acender(id, false);
+    for (const { recurso, vol } of plan.acender) {
+      const c = capaDe(recurso.id);
+      if (!c) {
+        m.engadirCapa(recurso.id, {
+          url: recurso.url, bus: recurso.tipo === 'musica' ? 'musica' : 'ambientes',
+          vol, loop: recurso.modo === 'loop' || recurso.tipo === 'ambiente', tipo: recurso.tipo,
+        });
+        setTimeout(() => { m.volCapa(recurso.id, vol); m.acender(recurso.id, true); }, 0);
+      } else {
+        m.volCapa(recurso.id, vol);
+        if (!c.on) m.acender(recurso.id, true);
+      }
+      setVolRecurso((o) => ({ ...o, [recurso.id]: vol }));
+    }
+    setAvisoEscena(plan.faltan.length
+      ? `${e.nome}: faltan ${plan.faltan.length} sons desta escena.`
+      : null);
+  }, [recursos, m, capaDe]);
+
+  const gardarEscenaActual = useCallback(() => {
+    const nome = nomeEscena.trim();
+    if (!nome) { setAvisoEscena('Ponlle un nome á escena.'); return; }
+    const e = capturarEscena(nome, m.capas, porTipo.efecto);
+    if (!onGardarEscena) return;
+    Promise.resolve(onGardarEscena(e)).then((r) => {
+      if (r && r.ok === false) { setAvisoEscena(r.erro); return; }
+      setNomeEscena(''); setAvisoEscena(null);
+    });
+  }, [nomeEscena, m.capas, porTipo.efecto, onGardarEscena]);
 
   const accionContador = useCallback((id, que) => {
     setContadores((cs) => {
@@ -513,6 +557,73 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
     </Panel>
   );
 
+  // ── Escenas ────────────────────────────────────────────────────
+  // Acceso rápido: en directo isto ten que estar a un toque, así que
+  // os botóns van grandes e visibles tamén en Modo función.
+  const panelEscenas = (
+    <Panel T={T} S={S} titulo="🎭 Escenas"
+      extra={!modoFuncion && (
+        <IconBtn T={T} label="Gardar escena" onClick={() => setVerEscenas((v) => !v)}>
+          {verEscenas ? '✕' : '+'}
+        </IconBtn>
+      )}
+      sen={escenas.length || verEscenas ? null : 'Monta a mesa como a queres e garda a escena.'}>
+      {escenas.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(auto-fill,minmax(min(${dobreColumna ? 130 : 108}px,100%),1fr))`,
+          gap: '0.45rem',
+        }}>
+          {escenas.map((e) => (
+            <div key={e.id} style={{ position: 'relative' }}>
+              <button onClick={() => aplicarEscena(e)} aria-label={'Aplicar ' + e.nome}
+                style={{
+                  width: '100%', background: T.bg3,
+                  borderStyle: 'solid', borderWidth: 1.5, borderColor: T.alt,
+                  borderRadius: 12, color: T.text, minHeight: TOQUE,
+                  padding: '0.4rem 0.3rem', cursor: 'pointer', fontFamily: S.font,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  justifyContent: 'center', gap: '0.15rem', touchAction: 'manipulation',
+                }}>
+                <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{e.emoji}</span>
+                <span style={{
+                  ...S.t.caption, color: 'inherit', maxWidth: '100%',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{e.nome}</span>
+              </button>
+              {!modoFuncion && onBorrarEscena && (
+                <button onClick={() => onBorrarEscena(e)} aria-label={'Eliminar ' + e.nome}
+                  style={{
+                    position: 'absolute', top: -6, right: -6, width: 24, height: 24,
+                    borderRadius: '50%', background: T.bg4,
+                    borderStyle: 'solid', borderWidth: 1, borderColor: T.border,
+                    color: T.text4, fontSize: '0.62rem', cursor: 'pointer', lineHeight: 1,
+                  }}>✕</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {verEscenas && !modoFuncion && (
+        <div style={{
+          display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.6rem',
+          paddingTop: '0.6rem',
+          borderTopStyle: 'solid', borderTopWidth: 1, borderTopColor: T.border,
+        }}>
+          <input value={nomeEscena} onChange={(ev) => setNomeEscena(ev.target.value)}
+            placeholder="Nome da escena" aria-label="Nome da escena"
+            style={{ ...S.input, flex: '2 1 140px', width: 'auto' }} />
+          <button onClick={gardarEscenaActual} style={S.btn(T.accent)}>Gardar o que soa</button>
+        </div>
+      )}
+
+      {avisoEscena && (
+        <p style={{ ...S.t.caption, color: T.warn, margin: '0.5rem 0 0' }}>{avisoEscena}</p>
+      )}
+    </Panel>
+  );
+
   // ── Metrónomo ──────────────────────────────────────────────────
   // Vén da Cabina co seu 🥁. Discreto: colapsado ata que se abre.
   const panelMetro = (
@@ -583,6 +694,7 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', minWidth: 0 }}>
             {panelEfectos}
+            {panelEscenas}
             {panelContadores}
             {!modoFuncion && panelMetro}
           </div>
@@ -590,6 +702,7 @@ export function Sonido({ recursos = [], modoFuncion = false, onSairFuncion }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
           {panelContadores}
+          {panelEscenas}
           {panelMusica}
           {panelAmbientes}
           {panelEfectos}

@@ -4,7 +4,7 @@
 // A maioría dos módulos viven agora en ficheiros propios (T04).
 // ============================================================
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import {
   ThemeCtx, LangCtx, AuthCtx, useAuth, useLang, useTheme, useThemeProvider,
   EstimulosProvider, useEstimulos, TAB_LABELS, LANGS, ls, mkS, TimerBar, useAudio,
@@ -21,12 +21,9 @@ import { TabGenerar } from './tabs/TabGenerar.jsx';
 import { TabReto } from './tabs/TabReto.jsx';
 import { TabSesiones } from './tabs/TabSesiones.jsx';
 import { TabGuia } from './tabs/TabGuia.jsx';
-import { TabSonido } from './sonido/TabSonido.jsx';
 import { TabGrupos } from './tabs/TabGrupos.jsx';
 import { TabQR } from './tabs/TabQR.jsx';
-import { TabAdmin } from './tabs/TabAdmin.jsx';
 import { TabAjustes } from './tabs/TabAjustes.jsx';
-import { TabManual } from './tabs/TabManual.jsx';
 import { TabUniverso } from './tabs/TabUniverso.jsx';
 import { PantallaPublica } from './PantallaPublica.jsx';
 import { ModoShow } from './ModoShow.jsx';
@@ -36,6 +33,28 @@ import { Inicio } from './Inicio.jsx';
 import { TabAxenda } from './tabs/TabAxenda.jsx';
 import { BotonReporte } from './tabs/BotonReporte.jsx';
 import { LimiteErro } from './LimiteErro.jsx';
+
+// ⚠️ Carga baixo demanda. Estas tres pestanas son as máis pesadas do
+// proxecto e as que menos xente abre: Sonido arrastra o motor de audio
+// enteiro, Admin son 9 seccións e Manual 13. Cargalas de saída facía
+// que as pagase todo o mundo, incluído quen só entra a Xerar estímulos.
+//
+// `React.lazy` precisa export por defecto; estes ficheiros exportan por
+// nome, así que se adapta aquí en vez de tocar catro ficheiros.
+const TabSonido = lazy(() => import('./sonido/TabSonido.jsx').then(m => ({ default: m.TabSonido })));
+const TabAdmin  = lazy(() => import('./tabs/TabAdmin.jsx').then(m => ({ default: m.TabAdmin })));
+const TabManual = lazy(() => import('./tabs/TabManual.jsx').then(m => ({ default: m.TabManual })));
+
+// Mentres chega o anaco. Non é un spinner animado a propósito: aparece
+// e desaparece nun intre, e un spinner que parpadea molesta máis que
+// unha liña de texto.
+function Cargando({ T }) {
+  return (
+    <p style={{ color: T.text4, fontSize: '0.85rem', padding: '2rem 0', textAlign: 'center' }}>
+      Cargando…
+    </p>
+  );
+}
 
 const TABS=[
   {id:"generar",label:"Generar",emoji:"🎲"},
@@ -229,6 +248,7 @@ function AppInner({perfil,publico}={}){
     <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>
         <LimiteErro onde={tab} T={T}>
+        <Suspense fallback={<Cargando T={T}/>}>
         {tab==="inicio"&&<Inicio lang={lang} onIr={id=>changeTab(id)}/>}
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
@@ -242,6 +262,7 @@ function AppInner({perfil,publico}={}){
         {tab==="manual"&&<TabManual/>}
         {tab==="universo"&&<TabUniverso/>}
         {tab==="axenda"&&<TabAxenda/>}
+        </Suspense>
         </LimiteErro>
       </div>
     </main>
