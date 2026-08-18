@@ -114,12 +114,39 @@ export function crearMotor(opcions = {}) {
 
   // Ao volver do segundo plano. Devolve unha promesa: a interface debe
   // esperar antes de dicir que todo está ben.
+  // ⚠️ COMPROBADO NUN iPad: ao pasar a segundo plano ou bloquear a
+  // pantalla, o audio PÁRASE SEMPRE, tamén con altofalante Bluetooth.
+  // Non é un caso raro: é o comportamento normal de Web Audio en iOS.
+  //
+  // E `ctx.resume()` NON abonda: reactiva o contexto, pero os elementos
+  // <audio> quedaron pausados polo sistema. Sen volver darlles ao play,
+  // as capas seguirían marcadas como acesas e MUDAS, que é o peor
+  // estado posible nunha mesa de son.
+  function rearrancarCapas() {
+    let n = 0;
+    for (const [id, c] of capas) {
+      if (!c.on || !c.el || !c.el.paused) continue;
+      const p = c.el.play();
+      if (p && p.catch) p.catch(() => { c.erro = 'bloqueado'; rexistrar(id + ': non retomou'); });
+      n += 1;
+    }
+    if (n) rexistrar(n + ' capas retomadas');
+    return n;
+  }
+
   function reanudar() {
     if (!ctx) return Promise.resolve(false);
-    if (ctx.state === 'running') { refWall = Date.now(); refAudio = ctx.currentTime; cambiou(); return Promise.resolve(true); }
+    if (ctx.state === 'running') {
+      refWall = Date.now(); refAudio = ctx.currentTime;
+      rearrancarCapas();
+      cambiou();
+      return Promise.resolve(true);
+    }
     return ctx.resume().then(() => {
       refWall = Date.now(); refAudio = ctx.currentTime;
-      estado = 'listo'; rexistrar('audio recuperado'); cambiou(); return true;
+      estado = 'listo';
+      rearrancarCapas();
+      rexistrar('audio recuperado'); cambiou(); return true;
     }).catch((e) => {
       estado = 'suspendido'; rexistrar('non se puido recuperar: ' + e.message); cambiou(); return false;
     });
