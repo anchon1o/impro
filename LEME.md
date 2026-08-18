@@ -1,24 +1,44 @@
-# Sonido · os sons do dispositivo xa non se perden
+# ImproApp · estado completo · substitúe a TODOS os zips anteriores
 
-## Ficheiros
-- `src/audio/almacen.js` — **novo**. IndexedDB para os ficheiros do usuario.
-- `src/sonido/TabSonido.jsx` — reescrito: persistencia, xestor, renomear,
-  cambiar tipo, borrar, e aviso de espazo.
-- `eslint.config.js` — engadidos os globais `indexedDB`, `IDBKeyRange`
-  e `MediaMetadata`. Sen isto, ESLint marca `indexedDB` como non definido.
+Se non sabes cales aplicaches e cales non, **usa só este**. Leva o
+`src/` enteiro no estado actual. Non fai falta aplicar ningún zip
+anterior nin en ningunha orde.
 
-## Requisito previo
-Vai enriba de todas as entregas de Sonido anteriores.
-E lembra **borrar a man `src/tabs/TabShow.jsx`** se aínda está.
+## Como aplicalo
 
-## Por que IndexedDB e non localStorage
-`localStorage` só garda texto e ten uns 5 MB: un só ambiente de tres
-minutos xa non entra. IndexedDB garda Blobs.
+1. Arrastra `src/` sobre `impro/src/` → **FUSIONAR**, nunca substituír.
+2. Copia `eslint.config.js` á raíz.
+3. **BORRA A MAN `src/tabs/TabShow.jsx`.** Un zip non pode eliminar
+   ficheiros. A Cabina desapareceu e ese ficheiro xa non o importa
+   ninguén, pero segue pesando no bundle.
+4. Comproba que `src/supabase.js` segue aí. Non vai neste zip a
+   propósito.
+5. Commit → Push.
 
-## O que hai que saber
-Os ficheiros **non saen do dispositivo**. Non se soben a ningures, non
-custan almacenamento e non teñen problema de licenzas.
+## SQL
 
-Pero **non son unha copia de seguridade**: se borras os datos do navegador
-márchanse, e Safari pode expulsalos se o aparello anda moi xusto de espazo
-ou se pasan semanas sen abrir a web. A interface dío.
+Van os dous ficheiros. **Se xa os executaches, non pasa nada por
+repetilos**: son idempotentes, está comprobado.
+
+- `supabase_sonido.sql` → debe devolver 7 filas, todas con `rls=true`
+- `supabase_sonido_tags.sql` → 8 · 11 · 10 · 8 etiquetas
+
+## Que hai dentro
+
+**Sonido** (módulo novo, substitúe á Cabina): motor de audio multicapa,
+buses, STOP e FADE, precarga con contador, metrónomo, contadores,
+mesas, escenas, ficheiros do dispositivo en IndexedDB, Explorar con
+etiquetas e busca, e Admin → 🔊 Sons con pegado masivo de URLs.
+
+**Iconos**: os 34 SVG do set, sen emojis no menú nin na cabeceira.
+
+**Botonera**: iconos a 52 px, sen descrición, botón `?` para amosalas.
+
+**Bundle**: 624 kB de arranque. Sonido, Admin e Manual cárganse baixo
+demanda.
+
+## Verificación desta entrega
+- ESLint: 0 erros
+- 44 ficheiros con todos os compoñentes JSX importados
+- 500+ casos de proba, todos pasando
+- Build correcto

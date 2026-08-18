@@ -38,6 +38,10 @@ export function crearMotor(opcions = {}) {
   const busNodes = {};
   const capas = new Map();      // id → {tipo, gain, el, buffer, on, vol, fade}
   const buffers = new Map();    // url → AudioBuffer
+  // url → 'cargando' | 'listo' | 'erro'. Sen isto non hai forma de
+  // dicirlle a ninguén se un botón vai soar ao premelo ou vai quedar
+  // calado mentres se descarga.
+  const estadoUrl = new Map();
   let estado = 'parado';
   let volBus = { musica: 0.8, ambientes: 0.8, efectos: 0.8, master: 0.8 };
   let refWall = 0, refAudio = 0;
@@ -49,6 +53,9 @@ export function crearMotor(opcions = {}) {
       estado,
       desfase: desfase(),
       volBus: { ...volBus },
+      urls: Object.fromEntries(estadoUrl),
+      listos: [...estadoUrl.values()].filter((x) => x === 'listo').length,
+      cargando: [...estadoUrl.values()].filter((x) => x === 'cargando').length,
       capas: [...capas.entries()].map(([id, c]) => ({
         id, tipo: c.tipo, bus: c.bus, on: c.on, vol: c.vol,
         fade: c.fade, cargando: c.cargando, erro: c.erro,
@@ -156,6 +163,15 @@ export function crearMotor(opcions = {}) {
     return capa;
   }
 
+  // Engadir a capa e deixar que o navegador vaia baixando o ficheiro,
+  // sen reproducir. É o que permite chegar ao show co traballo feito.
+  function preparar(id, opcions) {
+    if (!capas.has(id)) engadirCapa(id, opcions);
+    const c = capas.get(id);
+    if (c && c.el) { try { c.el.load(); } catch (e) { /* xa cargando */ } }
+    return c;
+  }
+
   function acender(id, si = true) {
     const c = capas.get(id);
     if (!c || !ctx) return false;
@@ -193,25 +209,68 @@ export function crearMotor(opcions = {}) {
 
   // ── EFECTOS ──────────────────────────────────────────────────────
   async function precargar(url) {
-    if (!ctx) return null;
+    if (!ctx || !url) return null;
     if (buffers.has(url)) return buffers.get(url);
+    if (estadoUrl.get(url) === 'cargando') return null;   // xa vai de camiño
+    estadoUrl.set(url, 'cargando');
+    cambiou();
     try {
       const r = await fetch(url);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const buf = await ctx.decodeAudioData(await r.arrayBuffer());
       buffers.set(url, buf);
+      estadoUrl.set(url, 'listo');
+      cambiou();
       return buf;
     } catch (e) {
-      rexistrar('precarga fallou: ' + url + ' · ' + e.message);
+      estadoUrl.set(url, 'erro');
+      // O fallo típico aquí é CORS, e o navegador non o distingue dun
+      // erro de rede. Dise as dúas cousas para non mandar a ninguén a
+      // buscar no sitio equivocado.
+      rexistrar('non se puido cargar (rede ou CORS): ' + url);
+      cambiou();
       return null;
     }
+  }
+
+  // Precarga en lote, de dous en dous. Lanzar vinte peticións á vez
+  // satura a conexión e fai que TODAS tarden; de dous en dous os
+  // primeiros quedan listos axiña e xa se pode empezar.
+  async function precargarVarios(urls, aoAvanzar) {
+    const pendentes = [...new Set((urls || []).filter(
+      (u) => u && !buffers.has(u) && estadoUrl.get(u) !== 'cargando',
+    ))];
+    let feitos = 0;
+    const total = pendentes.length;
+    const quenda = async () => {
+      for (;;) {
+        const u = pendentes.shift();
+        if (!u) return;
+        await precargar(u);
+        feitos += 1;
+        if (aoAvanzar) aoAvanzar(feitos, total);
+      }
+    };
+    await Promise.all([quenda(), quenda()]);
+    return { total, listos: [...estadoUrl.values()].filter((x) => x === 'listo').length };
+  }
+
+  function estadoDe(url) {
+    if (buffers.has(url)) return 'listo';
+    return estadoUrl.get(url) || 'pendente';
   }
 
   // Cada disparo crea o seu nodo: así solápanse en vez de cortarse.
   function disparar(url, vol = 1) {
     if (!ctx) return false;
     const buf = buffers.get(url);
-    if (!buf) { precargar(url).then((b) => { if (b) disparar(url, vol); }); return false; }
+    if (!buf) {
+      // Non estaba cargado: cárgase e dispárase en canto chegue. Non é
+      // instantáneo, e por iso a interface ten que amosar o estado en
+      // vez de deixar a alguén premendo un botón mudo.
+      precargar(url).then((b) => { if (b) disparar(url, vol); });
+      return false;
+    }
     const s = ctx.createBufferSource();
     const g = ctx.createGain();
     s.buffer = buf;
@@ -284,8 +343,8 @@ export function crearMotor(opcions = {}) {
 
   return {
     arrancar, reanudar, destruir, bus,
-    engadirCapa, acender, volCapa, quitarCapa,
-    precargar, disparar,
+    engadirCapa, preparar, acender, volCapa, quitarCapa,
+    precargar, precargarVarios, estadoDe, disparar,
     volumeBus, pararTodo, fadeTodo,
     instantanea, desfase,
     get estado() { return estado; },

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme, useAuth, useViewport, mkS, TAB_LABELS, TYPE } from './core.jsx';
+import { Icona } from './iconos.jsx';
 
 // IM-M02 — Pantalla de inicio tipo botonera.
 //
@@ -53,18 +54,25 @@ export const DESCS={
       admin:"Users, prompts, exercises and statistics."},
 };
 
+// Sen emojis: cada área ten un icono do set, e a cor sae do tema.
+// Un emoji píntao o sistema operativo, así que ignora o tema, cambia de
+// aspecto entre iOS, Android e Windows, e desentona co resto. Os iconos
+// van en `currentColor` e collen o token de cor da área.
+//
+// ⚠️ `icona` ten que existir en `iconos.jsx`. Hai unha proba que
+// percorre AREAS e falla se algunha queda sen icono.
 export const AREAS=[
-  {id:"generar",  emoji:"🎲",  cor:"accent"},
-  {id:"reto",     emoji:"⚡", cor:"warn"},
-  {id:"sonido",   emoji:"🔊", cor:"accent"},
-  {id:"guia",     emoji:"📖", cor:"ok"},
-  {id:"sesiones", emoji:"📋", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
-  {id:"grupos",   emoji:"👥", cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
-  {id:"qr",       emoji:"📱", cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
-  {id:"universo", emoji:"🌍", cor:"accent"},
-  {id:"axenda",   emoji:"📅", cor:"info"},
-  {id:"manual",   emoji:"📘", cor:"info"},
-  {id:"ajustes",  emoji:"⚙️", cor:"muted"},
+  {id:"generar",  icona:"generar",  cor:"accent"},
+  {id:"reto",     icona:"reto",     cor:"warn"},
+  {id:"sonido",   icona:"sonido",   cor:"accent"},
+  {id:"guia",     icona:"guia",     cor:"ok"},
+  {id:"sesiones", icona:"sesiones", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
+  {id:"grupos",   icona:"grupos",   cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
+  {id:"qr",       icona:"qr",       cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
+  {id:"universo", icona:"universo", cor:"accent"},
+  {id:"axenda",   icona:"axenda",   cor:"info"},
+  {id:"manual",   icona:"manual",   cor:"info"},
+  {id:"ajustes",  icona:"ajustes",  cor:"muted"},
 ];
 // V01 · Admin xa non está aquí: subiu á cabeceira. Era a única das doce que
 // non se usa facendo impro, e ocupaba unha tarxeta enteira para os admins.
@@ -85,67 +93,101 @@ export function Inicio({onIr,lang}){
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
   // volvía a 3 a partir de 1024, é dicir, a grella empeoraba ao agrandar a
   // pantalla. Fixándoas é monótono e predicible.
-  const cols=w<360?1:w<720?2:3;
+  // Con iconos grandes e sen descrición caben máis por fila: as once
+  // vense dun golpe de vista, sen desprazar.
+  const cols=w<340?2:w<560?3:w<900?4:5;
+
+  // A descrición sae das tarxetas: engade texto que só se le a primeira
+  // vez e rouba o sitio ao icono, que é o que se recoñece de lonxe.
+  // Queda detrás do botón de axuda, e completa no Manual.
+  const [axuda,setAxuda]=useState(false);
 
   return(
     <div style={{animation:"slideUp 0.3s ease"}}>
-      <div style={{marginBottom:esMovil?"1.1rem":"1.6rem"}}>
-        <h1 style={{...S.h1,margin:0}}>Que queres facer?</h1>
-        {!logueado&&<p style={{...S.caption,marginTop:"0.35rem"}}>Podes usar case todo sen conta. As áreas marcadas precisan iniciar sesión para gardar.</p>}
+      <div style={{display:"flex",alignItems:"flex-start",gap:"0.6rem",marginBottom:esMovil?"1.1rem":"1.5rem"}}>
+        <div style={{flex:1,minWidth:0}}>
+          <h1 style={{...S.h1,margin:0}}>Que queres facer?</h1>
+          {!logueado&&<p style={{...S.caption,marginTop:"0.35rem"}}>Podes usar case todo sen conta. As áreas marcadas precisan iniciar sesión para gardar.</p>}
+        </div>
+        <button onClick={()=>setAxuda(v=>!v)}
+          aria-pressed={axuda} aria-label={axuda?"Agochar as descricións":"Que fai cada área"}
+          title={axuda?"Agochar as descricións":"Que fai cada área"}
+          style={{
+            width:38,height:38,borderRadius:11,flexShrink:0,
+            background:axuda?T.accent+"1A":T.bg2,
+            borderStyle:"solid",borderWidth:1,
+            borderColor:axuda?T.accent:T.border,
+            color:axuda?T.accent:T.text3,
+            cursor:"pointer",fontFamily:"inherit",fontWeight:800,fontSize:"0.95rem",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            transition:"background 0.15s, border-color 0.15s, color 0.15s",
+          }}>?</button>
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:esMovil?"0.6rem":"0.85rem"}}>
+      <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:esMovil?"0.55rem":"0.75rem"}}>
         {visibles.map(a=>{
           const bloqueada=a.conta&&!logueado;
+          const cor=corDe(a);
           return(
             <button key={a.id} onClick={()=>onIr(a.id)}
               style={{
-                background:T.bg2,
-                // ⚠️ Antes: border:`1px solid ${T.border}` + borderTop:`3px solid ${a.cor}`.
-                // Mesturar a abreviatura `border` cunha propiedade longa
-                // (`borderTop`) rompe ao cambiar de tema: React só reescribe
-                // as propiedades que mudaron, e como a cor da área non muda pero
-                // `T.border` si, aplicaba `border` (que en CSS reinicia os
-                // catro lados) sen volver aplicar `borderTop`. Resultado: a
-                // franxa de cor desaparecía ata recargar.
-                // Solución: só propiedades longas, sen abreviaturas.
+                background:hover===a.id?cor+"14":T.bg2,
+                // ⚠️ Só propiedades longas, nunca a abreviatura `border`:
+                // mesturalas rompe ao cambiar de tema, porque React só
+                // reescribe o que mudou e `border` reinicia os catro lados
+                // levando por diante a cor da área (B24).
                 borderStyle:"solid",
-                borderWidth:"3px 1px 1px 1px",
-                borderRightColor:hover===a.id?corDe(a):T.border,
-                borderBottomColor:hover===a.id?corDe(a):T.border,
-                borderLeftColor:hover===a.id?corDe(a):T.border,
-                borderTopColor:corDe(a),
-                borderRadius:14,
-                // V02 · A tarxeta era de 148 px cunha descrición de dúas
-                // liñas: sobraban uns 40 px de aire morto abaixo. Baixar a
-                // altura só non chega, porque a descrición longa tende a
-                // ocupar tres liñas nalgunhas áreas e o minHeight é un chan,
-                // non un teito: por iso vai recortada a dúas (liñas abaixo).
-                padding:esMovil?"0.7rem 0.75rem":"0.85rem 0.95rem",
+                borderWidth:1,
+                borderColor:hover===a.id?cor:T.border,
+                borderRadius:16,
+                padding:esMovil?"1rem 0.5rem 0.85rem":"1.35rem 0.7rem 1.1rem",
                 cursor:"pointer",
-                textAlign:"left",
+                textAlign:"center",
                 fontFamily:"inherit",
                 display:"flex",
                 flexDirection:"column",
-                gap:"0.35rem",
-                minHeight:esMovil?96:110,
+                alignItems:"center",
+                justifyContent:"flex-start",
+                gap:0,
+                position:"relative",
                 transform:hover===a.id?"translateY(-2px)":"none",
                 transition:"transform 0.15s, border-color 0.15s, background 0.15s",
               }}
               onMouseEnter={()=>setHover(a.id)}
               onMouseLeave={()=>setHover(null)}
             >
-              <div style={{display:"flex",alignItems:"center",gap:"0.5rem",minWidth:0}}>
-                <span style={{fontSize:esMovil?"1.2rem":"1.4rem",lineHeight:1,flexShrink:0}}>{a.emoji}</span>
-                {bloqueada&&<span style={{marginLeft:"auto",...TYPE.caption,fontSize:"0.62rem",color:T.text4,border:`1px solid ${T.border}`,borderRadius:20,padding:"0.1rem 0.4rem",whiteSpace:"nowrap",flexShrink:0}}>conta</span>}
-              </div>
-              <span style={{...TYPE.h3,color:T.text,fontWeight:800,fontSize:esMovil?"0.9rem":"1rem",letterSpacing:"-0.02em",lineHeight:1.2}}>
+              {bloqueada&&<span style={{
+                position:"absolute",top:6,right:6,...TYPE.caption,fontSize:"0.58rem",
+                color:T.text4,borderStyle:"solid",borderWidth:1,borderColor:T.border,
+                borderRadius:20,padding:"0.05rem 0.35rem",whiteSpace:"nowrap",
+              }}>conta</span>}
+
+              {/* O icono é o protagonista: é o que se recoñece de lonxe e
+                  sen ler. A 52 px aproveita a grella de 24 moito mellor
+                  que os 25 de antes. */}
+              <Icona nome={a.icona} size={esMovil?38:52} cor={cor}/>
+
+              <span style={{
+                ...TYPE.h3,color:T.text,fontWeight:800,
+                fontSize:esMovil?"0.82rem":"0.95rem",
+                letterSpacing:"-0.02em",lineHeight:1.2,
+                marginTop:esMovil?"0.65rem":"0.85rem",
+              }}>
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>
-              {/* Recortada a dúas liñas: é o que fai que a tarxeta de 110 px
-                  sexa unha altura de verdade e non un mínimo que case ningunha
-                  área respecta. O texto completo segue no Manual. */}
-              <span style={{color:T.text3,fontSize:esMovil?"0.7rem":"0.76rem",lineHeight:1.3,flex:1,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>
+
+              {/* Subliñado coa cor da área: substitúe á franxa superior.
+                  Máis discreto e ancórase ao nome, non ao bordo. */}
+              <span style={{
+                width:24,height:3,borderRadius:2,background:cor,
+                marginTop:esMovil?"0.4rem":"0.5rem",flexShrink:0,
+              }}/>
+
+              {axuda&&<span style={{
+                color:T.text3,fontSize:esMovil?"0.68rem":"0.72rem",lineHeight:1.3,
+                marginTop:"0.55rem",display:"-webkit-box",WebkitLineClamp:3,
+                WebkitBoxOrient:"vertical",overflow:"hidden",
+              }}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>}
             </button>
           );
         })}

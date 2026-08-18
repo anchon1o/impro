@@ -29,15 +29,22 @@ import {
 const TOQUE = 56;
 
 // ── Peza base: botón de son ──────────────────────────────────────
-function BotonSon({ T, S, recurso, activo, cargando, erro, onDisparar, grande }) {
-  const cor = erro ? T.danger : activo ? T.accent : T.bg3;
+// Catro estados, e os catro teñen que verse sen ler nada:
+//   pendente → normal · cargando → atenuado · listo → punto verde
+//   erro → vermello e desactivado
+function BotonSon({ T, S, recurso, estado = 'pendente', onDisparar, grande }) {
+  const erro = estado === 'erro';
+  const cargando = estado === 'cargando';
+  const listo = estado === 'listo';
+  const cor = erro ? T.danger : listo ? T.ok : T.bg3;
   return (
     <button
       onClick={onDisparar}
-      disabled={!!erro}
-      aria-label={recurso.nome}
+      disabled={erro}
+      aria-label={recurso.nome + (erro ? ' (non se puido cargar)' : listo ? ' (listo)' : cargando ? ' (cargando)' : '')}
       style={{
-        background: activo ? T.accent + '22' : T.bg3,
+        position: 'relative',
+        background: T.bg3,
         // B24: propiedades longas, nunca a abreviatura.
         borderStyle: 'solid', borderWidth: 1.5, borderColor: cor,
         borderRadius: 12,
@@ -47,12 +54,18 @@ function BotonSon({ T, S, recurso, activo, cargando, erro, onDisparar, grande })
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', gap: '0.15rem',
         cursor: erro ? 'not-allowed' : 'pointer',
-        opacity: cargando ? 0.5 : 1,
+        opacity: cargando ? 0.45 : 1,
         fontFamily: S.font,
         touchAction: 'manipulation',
-        transition: 'background 0.12s, border-color 0.12s',
+        transition: 'opacity 0.15s, border-color 0.15s',
       }}
     >
+      {listo && (
+        <span aria-hidden style={{
+          position: 'absolute', top: 5, right: 5, width: 6, height: 6,
+          borderRadius: '50%', background: T.ok,
+        }} />
+      )}
       <span style={{ fontSize: grande ? '1.5rem' : '1.25rem', lineHeight: 1 }}>
         {recurso.emoji || '🔊'}
       </span>
@@ -60,7 +73,7 @@ function BotonSon({ T, S, recurso, activo, cargando, erro, onDisparar, grande })
         ...S.t.caption, color: 'inherit', maxWidth: '100%',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
-        {erro ? 'erro' : recurso.nome}
+        {erro ? 'non carga' : cargando ? '…' : recurso.nome}
       </span>
     </button>
   );
@@ -96,10 +109,16 @@ function Canle({ T, S, capa, recurso, onAcender, onVol }) {
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {recurso.nome}
+          {capa.cargando && !capa.erro && (
+            <span style={{ ...S.t.caption, color: T.text4, fontWeight: 400 }}> · descargando…</span>
+          )}
         </div>
         {capa.erro ? (
           <div style={{ ...S.t.caption, color: T.danger }}>Non se puido cargar</div>
         ) : (
+          /* O control de volume queda SEMPRE, aínda descargando: deixar
+             o volume posto mentres baixa o ficheiro é xusto o que se
+             quere facer, e agochalo obrigaba a agardar para nada. */
           <input
             type="range" min="0" max="1" step="0.02" value={capa.vol}
             onChange={(e) => onVol(parseFloat(e.target.value))}
@@ -379,6 +398,11 @@ export function Sonido({
 
   const dobreColumna = vp.esTabletH || vp.esEscritorio;
 
+  const efectosConUrl = porTipo.efecto.filter((r) => r.url);
+  const listosN = efectosConUrl.filter((r) => m.urls[r.url] === 'listo').length;
+  const errosN = efectosConUrl.filter((r) => m.urls[r.url] === 'erro').length;
+  const pendentes = efectosConUrl.length - listosN - errosN;
+
   // ── Aviso de son perdido ───────────────────────────────────────
   // Nunca se disimula: unha mesa que parece ir e non soa é o peor caso.
   const avisoSon = m.perdido !== null && (
@@ -418,6 +442,18 @@ export function Sonido({
       borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
       borderRadius: 14, padding: '0.6rem 0.75rem',
     }}>
+      {/* Precargar antes do show é a diferenza entre premer un botón e
+          que soe, ou premelo e agardar a que se descargue. */}
+      <button onClick={() => m.precargarTodo(recursos)} disabled={!!m.progreso}
+        style={{
+          ...S.btn(pendentes ? T.info : T.bg3, pendentes ? '#000' : T.text3),
+          minHeight: 44,
+        }}>
+        {m.progreso
+          ? `Cargando ${m.progreso.feitos}/${m.progreso.total}…`
+          : pendentes ? `⬇ Preparar sons (${pendentes})` : `✓ ${listosN} listos`}
+      </button>
+
       <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
         <span style={{ ...S.t.caption, color: T.text4 }}>Fade</span>
         {[2, 5, 10].map((s) => (
@@ -496,6 +532,7 @@ export function Sonido({
       }}>
         {porTipo.efecto.map((r) => (
           <BotonSon key={r.id} T={T} S={S} recurso={r} grande={dobreColumna}
+            estado={m.urls[r.url] || 'pendente'}
             onDisparar={() => m.disparar(r.url, r.vol)} />
         ))}
       </div>
@@ -674,6 +711,14 @@ export function Sonido({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
       {avisoSon}
+
+      {errosN > 0 && (
+        <p style={{ ...S.t.caption, color: T.danger, margin: 0 }}>
+          {errosN === 1 ? 'Un son non se puido cargar' : `${errosN} sons non se puideron cargar`}.
+          {' '}Pode ser a rede, ou que o servidor de orixe non permita usalos desde aquí (CORS).
+          Os sons do teu dispositivo non teñen ese problema.
+        </p>
+      )}
 
       {modoFuncion && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>

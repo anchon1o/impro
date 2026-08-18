@@ -10,6 +10,7 @@ import {
   EstimulosProvider, useEstimulos, TAB_LABELS, LANGS, ls, mkS, TimerBar, useAudio,
   FONT_UI, FONT_MONO, TYPE, useViewport,
 } from './core.jsx';
+import { Icona } from './iconos.jsx';
 import {
   getSession, onAuthChange, getPerfil, signOut,
 } from './auth.js';
@@ -56,19 +57,19 @@ function Cargando({ T }) {
   );
 }
 
-const TABS=[
-  {id:"generar",label:"Generar",emoji:"🎲"},
-  {id:"reto",label:"Reto",emoji:"⚡"},
-  {id:"sesiones",label:"Sesiones",emoji:"📋"},
-  {id:"guia",label:"Guía",emoji:"📖"},
-  {id:"sonido",label:"Sonido",emoji:"🔊"},
-  {id:"grupos",label:"Grupos",emoji:"👥"},
-  {id:"qr",label:"QR",emoji:"📱"},
-  {id:"admin",label:"Admin",emoji:"🔐"},
-  {id:"ajustes",label:"Ajustes",emoji:"⚙️"},
-  {id:"manual",label:"Manual",emoji:"📘"},
-  {id:"universo",label:"Universo",emoji:"🌍"},
-  {id:"axenda",label:"Axenda",emoji:"📅"},
+export const TABS=[
+  {id:"generar",label:"Generar",icona:"generar"},
+  {id:"reto",label:"Reto",icona:"reto"},
+  {id:"sesiones",label:"Sesiones",icona:"sesiones"},
+  {id:"guia",label:"Guía",icona:"guia"},
+  {id:"sonido",label:"Sonido",icona:"sonido"},
+  {id:"grupos",label:"Grupos",icona:"grupos"},
+  {id:"qr",label:"QR",icona:"qr"},
+  {id:"admin",label:"Admin",icona:"admin"},
+  {id:"ajustes",label:"Ajustes",icona:"ajustes"},
+  {id:"manual",label:"Manual",icona:"manual"},
+  {id:"universo",label:"Universo",icona:"universo"},
+  {id:"axenda",label:"Axenda",icona:"axenda"},
 ];
 
 function AppInner({perfil,publico}={}){
@@ -146,14 +147,13 @@ function AppInner({perfil,publico}={}){
             móvese a un menú. Non se oculta o overflow: elimínase a causa. */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem",minWidth:0}}>
           <button onClick={()=>{setMenuAberto(false);changeTab("inicio");}} title="Inicio" style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden",background:"none",border:"none",padding:0,cursor:"pointer",color:"inherit",fontFamily:"inherit"}}>
-            <span style={{fontSize:"1.15rem",flexShrink:0}}>🎭</span>
             <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>impro<span style={{color:T.accent}}>App</span></span>
             {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v10</span>}
           </button>
           <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
             {!esMovil&&<div style={{position:"relative"}}>
               <button onClick={()=>setLangAberto(v=>!v)} title="Idioma" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.78rem",color:T.text3,fontFamily:"inherit",display:"flex",alignItems:"center",gap:"0.25rem"}}>
-                <span style={{fontSize:"0.95rem"}}>🌐</span><span style={{fontWeight:700,fontSize:"0.7rem"}}>{lang.toUpperCase()}</span>
+                <Icona nome="idioma" size={17}/><span style={{fontWeight:700,fontSize:"0.7rem"}}>{lang.toUpperCase()}</span>
               </button>
               {langAberto&&<>
                 <div onClick={()=>setLangAberto(false)} style={{position:"fixed",inset:0,zIndex:150}}/>
@@ -168,23 +168,23 @@ function AppInner({perfil,publico}={}){
             </div>}
             {/* Secundarios: icona soa, sen recadro. Antes tiñan o mesmo peso
                 visual có botón de Modo Show, que si é a acción principal. */}
-            {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}>{dark?"☀️":"🌙"}</button>}
-            {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}>⏱</button>}
+            {!esMovil&&<button onClick={toggle} title={dark?"Tema claro":"Tema escuro"} style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:0.65,transition:"opacity 0.2s",fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0.65}><Icona nome="tema" size={18}/></button>}
+            {!esMovil&&<button onClick={()=>setTimerAberto(v=>!v)} title="Temporizador" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.35rem",cursor:"pointer",fontSize:"0.9rem",opacity:timerAberto?1:0.65,filter:timerAberto?"none":"grayscale(0.4)",transition:"opacity 0.2s"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=timerAberto?1:0.65}><Icona nome="temporizador" size={18}/></button>}
             {/* V05 · As dúas levaban só a icona, e `title` non existe nun
                 móbil nin nunha tableta táctil: eran dous debuxos sen nome.
                 A etiqueta só aparece en escritorio (esPC, non !esMovil): en
                 tableta a fila medía máis do ancho dispoñible, que é a causa
                 exacta de B22. */}
             {!esMovil&&<button onClick={()=>setPubOpen(p=>!p)} title="Proxección" style={{background:"none",border:"none",borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.9rem",opacity:pubOpen?1:0.65,filter:pubOpen?"none":"grayscale(0.4)",transition:"opacity 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",color:T.text2,fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=pubOpen?1:0.65}>
-              <span>📺</span>{esPC&&<span style={{fontSize:"0.72rem",fontWeight:600,whiteSpace:"nowrap"}}>Proxección</span>}
+              <Icona nome="proxeccion" size={18}/>{esPC&&<span style={{fontSize:"0.72rem",fontWeight:600,whiteSpace:"nowrap"}}>Proxección</span>}
             </button>}
             <button onClick={()=>setModoShow(true)} title="En directo" style={{background:T.info,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#000",fontWeight:700,fontFamily:"inherit",flexShrink:0,display:"flex",alignItems:"center",gap:"0.3rem"}}>
-              <span>🎬</span>{esPC&&<span style={{whiteSpace:"nowrap"}}>En directo</span>}
+              <Icona nome="endirecto" size={18}/>{esPC&&<span style={{whiteSpace:"nowrap"}}>En directo</span>}
             </button>
             {/* V01 · Admin sae da botonera e sobe aquí. Só para admins. */}
-            {!esMovil&&esAdmin&&<button onClick={()=>{setMenuAberto(false);changeTab("admin");}} title="Admin" style={{background:tab==="admin"?T.danger+"22":"none",border:`1px solid ${tab==="admin"?T.danger:"transparent"}`,borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.9rem",opacity:tab==="admin"?1:0.65,transition:"opacity 0.2s",flexShrink:0,fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=tab==="admin"?1:0.65}>🔐</button>}
+            {!esMovil&&esAdmin&&<button onClick={()=>{setMenuAberto(false);changeTab("admin");}} title="Admin" style={{background:tab==="admin"?T.danger+"22":"none",border:`1px solid ${tab==="admin"?T.danger:"transparent"}`,borderRadius:8,padding:"0.3rem 0.45rem",cursor:"pointer",fontSize:"0.9rem",opacity:tab==="admin"?1:0.65,transition:"opacity 0.2s",flexShrink:0,fontFamily:"inherit"}} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=tab==="admin"?1:0.65}><Icona nome="admin" size={18}/></button>}
             {esMovil&&<button onClick={()=>setMenuAberto(v=>!v)} title="Máis" style={{background:menuAberto?T.accent+"22":T.bg3,border:`1px solid ${menuAberto?T.accent:T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.85rem",color:menuAberto?T.accent:T.text3,flexShrink:0,lineHeight:1}}>⋯</button>}
-            {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}>⏻</button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
+            {logueado?<button onClick={()=>{if(confirm("Pechar sesión?"))signOut();}} title={perfil?.email} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.35rem 0.6rem",cursor:"pointer",fontSize:"0.75rem",color:T.text3,flexShrink:0}}><Icona nome="salir" size={16}/></button>:<button onClick={pedirLogin} style={{background:T.accent,border:"none",borderRadius:8,padding:"0.35rem 0.7rem",cursor:"pointer",fontSize:"0.75rem",color:"#fff",fontWeight:700,fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>Entrar</button>}
           </div>
         </div>
 
@@ -193,7 +193,7 @@ function AppInner({perfil,publico}={}){
           <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"0.6rem"}}>
             <div style={{marginBottom:"0.5rem"}}>
               <button onClick={()=>setLangAberto(v=>!v)} style={{display:"flex",alignItems:"center",gap:"0.5rem",width:"100%",background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",color:T.text2,fontSize:"0.78rem",fontFamily:"inherit",minHeight:38}}>
-                <span style={{fontSize:"0.95rem"}}>🌐</span>
+                <Icona nome="idioma" size={19}/>
                 <span style={{flex:1,textAlign:"left"}}>{LANGS.find(L=>L.id===lang)?.nativo||lang}</span>
                 <span style={{color:T.text4,fontSize:"0.8rem"}}>{langAberto?"▴":"▾"}</span>
               </button>
@@ -212,12 +212,12 @@ function AppInner({perfil,publico}={}){
                 único que cabe ben nun ancho de teléfono. */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:"0.4rem"}}>
               {[
-                {k:"tema",  icona:dark?"☀️":"🌙", etiqueta:dark?"Claro":"Escuro", activo:false,       onClick:toggle},
-                {k:"timer", icona:"⏱",            etiqueta:"Temporizador",        activo:timerAberto, onClick:()=>{setTimerAberto(v=>!v);setMenuAberto(false);}},
-                {k:"pub",   icona:"📺",           etiqueta:"Proxección",          activo:pubOpen,     onClick:()=>{setPubOpen(p=>!p);setMenuAberto(false);}},
+                {k:"tema",  icona:"tema",         etiqueta:dark?"Claro":"Escuro", activo:false,       onClick:toggle},
+                {k:"timer", icona:"temporizador", etiqueta:"Temporizador",        activo:timerAberto, onClick:()=>{setTimerAberto(v=>!v);setMenuAberto(false);}},
+                {k:"pub",   icona:"proxeccion",   etiqueta:"Proxección",          activo:pubOpen,     onClick:()=>{setPubOpen(p=>!p);setMenuAberto(false);}},
               ].map(b=>(
                 <button key={b.k} onClick={b.onClick} style={{background:b.activo?T.accent+"22":T.bg2,borderStyle:"solid",borderWidth:1,borderColor:b.activo?T.accent:T.border,borderRadius:8,padding:"0.5rem 0.3rem",cursor:"pointer",color:b.activo?T.accent:T.text2,fontFamily:"inherit",minHeight:56,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"0.22rem"}}>
-                  <span style={{fontSize:"1.05rem",lineHeight:1}}>{b.icona}</span>
+                  <Icona nome={b.icona} size={20}/>
                   <span style={{fontSize:"0.66rem",lineHeight:1.15,textAlign:"center",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{b.etiqueta}</span>
                 </button>
               ))}
@@ -225,7 +225,7 @@ function AppInner({perfil,publico}={}){
             {/* V01 · Admin en móbil. Vai fóra da reixa a propósito: os tres de
                 arriba son interruptores e este leva a outra pantalla. */}
             {esAdmin&&<button onClick={()=>{setMenuAberto(false);changeTab("admin");}} style={{display:"flex",alignItems:"center",gap:"0.5rem",width:"100%",marginTop:"0.4rem",background:T.bg2,border:`1px solid ${T.border}`,borderRadius:8,padding:"0.55rem",cursor:"pointer",color:T.text2,fontSize:"0.78rem",fontFamily:"inherit",minHeight:38}}>
-              <span style={{fontSize:"0.95rem"}}>🔐</span>
+              <Icona nome="admin" size={19}/>
               <span style={{flex:1,textAlign:"left"}}>Admin</span>
               <span style={{color:T.text4,fontSize:"0.8rem"}}>›</span>
             </button>}
@@ -234,7 +234,7 @@ function AppInner({perfil,publico}={}){
 
         {tab!=="inicio"&&<nav style={{display:"flex",gap:0,overflowX:"auto",scrollbarWidth:"none"}}>
           {TABS.filter(t=>t.id!=="admin"||esAdmin).map(t=>(<button key={t.id} onClick={()=>{setMenuAberto(false);changeTab(t.id);}} style={{background:"none",border:"none",cursor:"pointer",color:tab===t.id?T.text:T.text3,padding:esMovil?"0.55rem 0.7rem":"0.45rem 0.8rem",fontSize:esMovil?"0.78rem":"0.82rem",fontWeight:tab===t.id?700:400,borderBottom:tab===t.id?`2px solid ${T.accent}`:"2px solid transparent",transition:"all 0.2s",display:"flex",alignItems:"center",gap:"0.3rem",whiteSpace:"nowrap",flexShrink:0,fontFamily:"inherit"}}>
-            <span>{t.emoji}</span><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
+            <Icona nome={t.icona} size={17}/><span>{TAB_LABELS[lang]?.[t.id]||t.label}</span>
           </button>))}
         </nav>}
       </div>
@@ -302,7 +302,7 @@ function AuthGate(){
 
   if(loading)return(<div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
     <div style={{textAlign:"center"}}>
-      <div style={{fontSize:"2.5rem",marginBottom:"0.5rem"}}>🎭</div>
+      <div style={{fontWeight:800,fontSize:"1.6rem",letterSpacing:"-0.03em",marginBottom:"0.5rem",color:T.text}}>impro<span style={{color:T.accent}}>App</span></div>
       <p style={{color:T.text4,fontSize:"0.85rem"}}>Cargando...</p>
     </div>
   </div>);

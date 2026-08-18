@@ -146,6 +146,28 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     metro.current.setBeats(v); setBeatsEstado(metro.current.beats);
   }, []);
 
+  // ── Precarga ──
+  const [progreso, setProgreso] = useState(null);   // {feitos, total} | null
+
+  const precargarTodo = useCallback(async (recursos) => {
+    const m = ref.current;
+    const efectos = (recursos || []).filter((r) => r.tipo === 'efecto' && r.url);
+    const longos = (recursos || []).filter((r) => r.tipo !== 'efecto' && r.url);
+    // Os ambientes e a música só se preparan: son ficheiros grandes e
+    // meterlles un buffer enteiro en memoria nun iPad acaba coa pestana.
+    for (const r of longos) {
+      m.preparar(r.id, {
+        url: r.url, bus: r.tipo === 'musica' ? 'musica' : 'ambientes',
+        vol: r.vol, loop: r.modo === 'loop' || r.tipo === 'ambiente', tipo: r.tipo,
+      });
+    }
+    setProgreso({ feitos: 0, total: efectos.length });
+    await m.precargarVarios(efectos.map((r) => r.url), (feitos, total) => {
+      setProgreso({ feitos, total });
+    });
+    setProgreso(null);
+  }, []);
+
   const motor = ref.current;
   const listo = snap.estado === 'listo';
 
@@ -175,6 +197,10 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     quitarCapa: motor.quitarCapa,
     disparar: motor.disparar,
     precargar: motor.precargar,
+    precargarTodo, progreso,
+    urls: snap.urls || {},
+    estadoDe: motor.estadoDe,
+    preparar: motor.preparar,
     volumeBus: motor.volumeBus,
     // STOP TODO ten que parar tamén o metrónomo: se non, queda soando
     // el só despois de silenciar a mesa enteira.
