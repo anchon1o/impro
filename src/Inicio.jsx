@@ -208,12 +208,14 @@ export function Inicio({onIr,lang}){
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>
 
-              {/* Subliñado coa cor da área: substitúe á franxa superior.
-                  Máis discreto e ancórase ao nome, non ao bordo. */}
-              <span style={{
+              {/* O subliñado só cando hai descrición: aí separa o nome
+                  do texto e gaña algo. Sen descrición é unha raia que
+                  ocupa sitio e non separa nada, así que a cor xa a leva
+                  o propio icono. */}
+              {axuda&&<span style={{
                 width:24,height:3,borderRadius:2,background:cor,
                 marginTop:esMovil?"0.4rem":"0.5rem",flexShrink:0,
-              }}/>
+              }}/>}
 
               {axuda&&<span style={{
                 color:T.text3,fontSize:esMovil?"0.68rem":"0.74rem",lineHeight:1.35,

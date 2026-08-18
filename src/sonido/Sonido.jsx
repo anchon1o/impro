@@ -19,6 +19,7 @@ import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
 import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
 import { cargarMesa, gardarMesa } from './mesa.js';
 import { capturarEscena, planificarEscena } from './escenas.js';
+import { esMesturable } from '../audio/externo.js';
 import { Reprodutor } from './Reprodutor.jsx';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
@@ -256,7 +257,12 @@ export function Sonido({
   const agora = Date.now();
 
   const porTipo = useMemo(() => ({
-    musica: recursos.filter((r) => r.tipo === 'musica'),
+    // ⚠️ Só a música MESTURABLE entra como canle. Un recurso con URL
+    // de YouTube non se pode meter nun <audio>: aparecía na lista, ao
+    // premelo non soaba nada e non se dicía por que. Agora vai ao
+    // reprodutor de listas, que é o único que sabe reproducilo.
+    musica: recursos.filter((r) => r.tipo === 'musica' && esMesturable(r.url)),
+    musicaExterna: recursos.filter((r) => r.tipo === 'musica' && !esMesturable(r.url)),
     ambiente: recursos.filter((r) => r.tipo === 'ambiente'),
     efecto: recursos.filter((r) => r.tipo === 'efecto'),
   }), [recursos]);
@@ -509,9 +515,18 @@ export function Sonido({
       <div style={{ display: 'flex', flexDirection: 'column',
         marginTop: '0.7rem', paddingTop: '0.7rem',
         borderTopStyle: 'solid', borderTopWidth: 1, borderTopColor: T.border }}>
-        {!porTipo.musica.length && (
+        {!porTipo.musica.length && !porTipo.musicaExterna.length && (
           <p style={{ ...S.t.caption, color: T.text4, margin: 0 }}>
             Sen música solta na mesa. Podes usar unha lista de reprodución.
+          </p>
+        )}
+        {porTipo.musicaExterna.length > 0 && (
+          <p style={{ ...S.t.caption, color: T.warn, margin: 0 }}>
+            {porTipo.musicaExterna.length === 1
+              ? 'Hai 1 música de YouTube na biblioteca.'
+              : `Hai ${porTipo.musicaExterna.length} músicas de YouTube na biblioteca.`}
+            {' '}Non se poden mesturar coa mesa: engádeas a unha lista de
+            reprodución co botón ✎ de arriba.
           </p>
         )}
         {porTipo.musica.map((r) => {
