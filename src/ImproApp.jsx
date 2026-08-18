@@ -10,7 +10,7 @@ import {
   EstimulosProvider, useEstimulos, TAB_LABELS, LANGS, ls, mkS, TimerBar, useAudio,
   FONT_UI, FONT_MONO, TYPE, useViewport,
 } from './core.jsx';
-import { Icona } from './iconos.jsx';
+import { Icona, useEstiloIconos } from './iconos.jsx';
 import {
   getSession, onAuthChange, getPerfil, signOut,
 } from './auth.js';
@@ -339,6 +339,9 @@ async function migrarDatosLocais(userId){
 }
 
 export default function ImproApp(){
+  // Repinta a árbore enteira cando se cambia o estilo dos iconos.
+  useEstiloIconos();
+
   const theme=useThemeProvider();
   // Límite de erro na raíz: aínda que falle a cabeceira ou o propio AuthGate,
   // nunca se ve unha pantalla en branco sen explicación. O límite de dentro

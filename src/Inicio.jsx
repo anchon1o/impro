@@ -84,7 +84,7 @@ export function Inicio({onIr,lang}){
   // o DOM discrepan sobre o estilo, gañan cousas raras ao redebuxar.
   const [hover,setHover]=useState(null);
   const {logueado}=useAuth();
-  const {w,esMovil}=useViewport();
+  const {w,esMovil,h}=useViewport();
 
   // Resolve o token de cor da área contra o tema activo.
   const corDe=a=>T[a.cor]||T.accent;
@@ -96,6 +96,18 @@ export function Inicio({onIr,lang}){
   // Con iconos grandes e sen descrición caben máis por fila: as once
   // vense dun golpe de vista, sen desprazar.
   const cols=w<340?2:w<560?3:w<900?4:5;
+  const filas=Math.ceil(visibles.length/cols);
+  const oco=cols*filas-visibles.length;   // ocos na última fila
+
+  // A reixa enche a pantalla: calcúlase o alto dispoñible e repártese
+  // entre as filas, en vez de fixar un alto e deixar media pantalla
+  // baleira nun iPad. O icono escala con el, así que en tablet pasa de
+  // 52 a uns 84 px sen tocar nada.
+  const GAP=esMovil?9:12;
+  const RESERVA=esMovil?150:178;          // cabeceira + título + marxes
+  const libre=Math.max(240,(h||800)-RESERVA-GAP*(filas-1));
+  const altoT=Math.max(esMovil?92:112,Math.min(300,libre/filas));
+  const szIcona=Math.max(30,Math.min(84,Math.round(altoT*0.42)));
 
   // A descrición sae das tarxetas: engade texto que só se le a primeira
   // vez e rouba o sitio ao icono, que é o que se recoñece de lonxe.
@@ -124,14 +136,20 @@ export function Inicio({onIr,lang}){
           }}>?</button>
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:esMovil?"0.55rem":"0.75rem"}}>
-        {visibles.map(a=>{
+      <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:GAP}}>
+        {visibles.map((a,idx)=>{
           const bloqueada=a.conta&&!logueado;
           const cor=corDe(a);
           return(
             <button key={a.id} onClick={()=>onIr(a.id)}
               style={{
                 background:hover===a.id?cor+"14":T.bg2,
+                height:altoT,
+                // As once áreas non enchen a última fila (con 4 columnas
+                // quedan 4+4+3). En vez de deixar o oco á dereita,
+                // céntranse: unha fila descentrada lese como un erro.
+                gridColumn:(oco&&idx===visibles.length-(visibles.length%cols||cols))
+                  ?`${Math.floor(oco/2)+1} / span 1`:undefined,
                 // ⚠️ Só propiedades longas, nunca a abreviatura `border`:
                 // mesturalas rompe ao cambiar de tema, porque React só
                 // reescribe o que mudou e `border` reinicia os catro lados
@@ -140,14 +158,14 @@ export function Inicio({onIr,lang}){
                 borderWidth:1,
                 borderColor:hover===a.id?cor:T.border,
                 borderRadius:16,
-                padding:esMovil?"1rem 0.5rem 0.85rem":"1.35rem 0.7rem 1.1rem",
+                padding:esMovil?"0.6rem 0.4rem":"0.9rem 0.6rem",
                 cursor:"pointer",
                 textAlign:"center",
                 fontFamily:"inherit",
                 display:"flex",
                 flexDirection:"column",
                 alignItems:"center",
-                justifyContent:"flex-start",
+                justifyContent:"center",
                 gap:0,
                 position:"relative",
                 transform:hover===a.id?"translateY(-2px)":"none",
@@ -165,13 +183,13 @@ export function Inicio({onIr,lang}){
               {/* O icono é o protagonista: é o que se recoñece de lonxe e
                   sen ler. A 52 px aproveita a grella de 24 moito mellor
                   que os 25 de antes. */}
-              <Icona nome={a.icona} size={esMovil?38:52} cor={cor}/>
+              <Icona nome={a.icona} size={szIcona} cor={cor}/>
 
               <span style={{
                 ...TYPE.h3,color:T.text,fontWeight:800,
-                fontSize:esMovil?"0.82rem":"0.95rem",
+                fontSize:altoT>180?"1.05rem":altoT>130?"0.95rem":"0.82rem",
                 letterSpacing:"-0.02em",lineHeight:1.2,
-                marginTop:esMovil?"0.65rem":"0.85rem",
+                marginTop:altoT>180?"1rem":"0.7rem",
               }}>
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>

@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useLang, useTheme, CAT_ICONS, ls, mkS, LANGS } from '../core.jsx';
 import { SelectorTemas } from './SelectorTemas.jsx';
+import { SelectorIconos } from './SelectorIconos.jsx';
 
 export function TabAjustes(){
   const {T}=useTheme();const S=mkS(T);
@@ -39,9 +40,10 @@ export function TabAjustes(){
   const maxCat=topCats[0]?.[1]||1;const maxDin=topDins[0]?.[1]||1;
   return(<div>
     <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem"}}>
-      {[["tema","🎨 Tema"],["stats","📊 Estadísticas"],["backup","💾 Backup"],["idioma","🌐 Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
+      {[["tema","Tema"],["iconos","Iconos"],["stats","Estatísticas"],["backup","Copia"],["idioma","Idioma"]].map(([v,l])=>(<button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.accent:T.bg3,view===v?"#fff":T.text2),flex:1,fontSize:"0.8rem"}}>{l}</button>))}
     </div>
     {view==="tema"&&<SelectorTemas/>}
+    {view==="iconos"&&<SelectorIconos/>}
     {view==="stats"&&<div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.5rem",marginBottom:"1.25rem"}}>
         {[{label:"Generados",val:stats.total||0,col:T.accent},{label:"Minutos entrenados",val:stats.mins||0,col:T.info},{label:"En Guía",val:(ls.get("impro_dinamicas_v2",[])||[]).length,col:T.ok}].map((s,i)=>(

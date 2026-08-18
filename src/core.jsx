@@ -356,14 +356,25 @@ export const BP = { movil:520, tablet:900, tabletH:1180 };
 // Hook de tamaño de pantalla, para adaptar layouts que clamp() non cobre
 export function useViewport(){
   const [w,setW]=useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
+  // O ALTO fai falta para que a botonera encha a pantalla sen desprazar.
+  // Sen el hai que adiviñar o tamaño das tarxetas, e nun iPad horizontal
+  // sobraba media pantalla baleira.
+  // `|| 800` non é redundante: nun webview ou nun render fóra do
+  // navegador `window` existe pero `innerHeight` pode ser undefined, e
+  // entón todo o cálculo da botonera daba NaN e non se debuxaba nada.
+  const [h,setH]=useState(()=>(typeof window!=="undefined"&&window.innerHeight)||800);
   useEffect(()=>{
     let raf=null;
-    const onR=()=>{if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>setW(window.innerWidth));};
+    const onR=()=>{if(raf)cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{
+      setW(window.innerWidth||1200);setH(window.innerHeight||800);});};
     window.addEventListener("resize",onR);
-    return()=>{window.removeEventListener("resize",onR);if(raf)cancelAnimationFrame(raf);};
+    window.addEventListener("orientationchange",onR);
+    return()=>{window.removeEventListener("resize",onR);
+      window.removeEventListener("orientationchange",onR);
+      if(raf)cancelAnimationFrame(raf);};
   },[]);
   return {
-    w,
+    w, h,
     esMovil:  w<BP.movil,
     esTablet: w>=BP.movil&&w<BP.tablet,
     esPC:     w>=BP.tablet,

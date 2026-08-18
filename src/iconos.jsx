@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 // ═══════════════════════════════════════════════════════════════════
 // ICONOS
 // ═══════════════════════════════════════════════════════════════════
@@ -21,7 +23,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 
-const FORMAS = {
+const BASE = {
 
   // ── Áreas da botonera ──
   generar: (
@@ -288,14 +290,351 @@ const FORMAS = {
   ),
 };
 
-export const NOMES_ICONA = Object.keys(FORMAS);
 
-export function hayIcona(nome) {
-  return Object.prototype.hasOwnProperty.call(FORMAS, nome);
+// ═══════════════════════════════════════════════════════════════════
+// ESTILOS ALTERNATIVOS
+// ═══════════════════════════════════════════════════════════════════
+// ⚠️ NINGÚN ESTÁ COMPLETO. A app usa 18 iconos (11 áreas + 7 de
+// cabeceira) e cada estilo alternativo trae de momento 2 deles.
+// Por iso `Icona` cae ao estilo base cando falta un: un menú con dous
+// iconos dun estilo e nove doutro sería peor que non ter selector.
+//
+// O selector de Axustes só deixa escoller os estilos COMPLETOS; os
+// demais aparecen como «en preparación» coa súa cobertura. En canto
+// chegue un set enteiro, faise seleccionable só, sen tocar código.
+
+const ALTERNATIVOS = {
+  geometrico: {
+    aviso: (
+      <><path d="M12 3.5L21 20H3L12 3.5zm-1 5v6h2v-6h-2zm0 8v2h2v-2h-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M4.5 12.5l4.2 4.2L19.8 6.8l-2-2.1-9.1 8.3-2.2-2.4z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M4 5h16v11H9l-4.5 3 .9-3H4V5z" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><path d="M12 3.2l2.6 5.2 5.8.8-4.2 4.1 1 5.7-5.2-2.7L6.8 19l1-5.7-4.2-4.1 5.8-.8L12 3.2z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M4 7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7zm3 1h2v2H7V8zm6 6h2v2h-2v-2z" fill="currentColor" fillRule="evenodd"/><path d="M19 3l.7 1.6L21.5 5l-1.8.6L19 7.2l-.7-1.6L16.5 5l1.8-.4z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M7 5h10v8H7V5zm1 9h8v2H8v-2zM6 16h2v4H6v-4zm10 0h2v4h-2v-4z" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14z" fill="currentColor" fillRule="evenodd"/><path d="M11 7h2v5.3l3.5 2-1 1.8-4.5-2.6V7z" fill="currentColor"/></>
+    ),
+    sonido: (
+      <><rect x="4" y="5" width="3" height="14" rx="1" fill="currentColor"/><rect x="10.5" y="5" width="3" height="14" rx="1" fill="currentColor"/><rect x="17" y="5" width="3" height="14" rx="1" fill="currentColor"/><rect x="3" y="8" width="5" height="3" rx="1" fill="currentColor"/><rect x="9.5" y="13" width="5" height="3" rx="1" fill="currentColor"/><rect x="16" y="7" width="5" height="3" rx="1" fill="currentColor"/></>
+    ),
+  },
+  linea: {
+    aviso: (
+      <><path d="M12 4L21 20H3L12 4zM12 9v5M12 17.3v.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    confirmar: (
+      <><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    dialogo: (
+      <><path d="M4 5.5h16v10.5H9.2L5 19l.8-3H4V5.5z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    favorito: (
+      <><path d="M12 3.5l2.5 5.1 5.6.8-4 3.9.9 5.5-5-2.6-5 2.6.9-5.5-4-3.9 5.6-.8L12 3.5z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    generar: (
+      <><rect x="4.2" y="5.2" width="13.6" height="13.6" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8.2" cy="9.2" r=".9" fill="currentColor"/><circle cx="13.8" cy="14.8" r=".9" fill="currentColor"/><path d="M19 3.5v3M17.5 5h3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    logo: (
+      <><path d="M7 5.5h10v8H7v-8zM8 13.5v2.5h8v-2.5M7 16v4M17 16v4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    reloxo: (
+      <><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7.5v4.8l3.7 2.1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></>
+    ),
+    sonido: (
+      <><path d="M6 5v14M12 5v14M18 5v14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><rect x="4" y="8" width="4" height="3" rx="1" fill="none" stroke="currentColor" strokeWidth="1.8"/><rect x="10" y="13" width="4" height="3" rx="1" fill="none" stroke="currentColor" strokeWidth="1.8"/><rect x="16" y="7" width="4" height="3" rx="1" fill="none" stroke="currentColor" strokeWidth="1.8"/></>
+    ),
+  },
+  cubista: {
+    aviso: (
+      <><path d="M12 3l9 17-11-4z" fill="currentColor"/><path d="M12 3L3 20l7-4z" fill="currentColor" fillOpacity=".6"/><path d="M10 16l11 4H3z" fill="currentColor" fillOpacity=".3"/><path d="M11 8h2v6h-2zm0 8h2v2h-2z" fill="currentColor"/></>
+    ),
+    confirmar: (
+      <><path d="M4 12l5 5 4-4-3-3-2 2-2-2z" fill="currentColor" fillOpacity=".6"/><path d="M9 17L20 7l-3-3-9 9z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M4 6l8-3v11l-8 2z" fill="currentColor"/><path d="M12 3l8 4-3 8-5-1z" fill="currentColor" fillOpacity=".6"/><path d="M4 16l8-2 5 1-8 1-4 4z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    favorito: (
+      <><path d="M12 3l2 6 6 .5-5 4 2 6-5-3z" fill="currentColor"/><path d="M12 3L9 9l-6 .5 5 4-1 6 5-3z" fill="currentColor" fillOpacity=".6"/><path d="M8 13.5l4 3 5 3-1-6z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    generar: (
+      <><path d="M4 7l7-3 7 3-4 5H6z" fill="currentColor"/><path d="M4 7l2 12 6-5-1-10z" fill="currentColor" fillOpacity=".6"/><path d="M18 7l1 10-7-3 2-2z" fill="currentColor" fillOpacity=".3"/><circle cx="8" cy="10" r="1" fill="currentColor"/><circle cx="14.5" cy="15.5" r="1" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M6 6l6-3v10H6z" fill="currentColor"/><path d="M12 3l6 3-2 8-4-1z" fill="currentColor" fillOpacity=".6"/><path d="M8 14h8l-1 3H9zM6 17h3v4H6zm9 0h3v4h-3z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    reloxo: (
+      <><path d="M12 3l7 4-5 5-2-9z" fill="currentColor"/><path d="M19 7l2 8-7-3z" fill="currentColor" fillOpacity=".6"/><path d="M21 15l-7 6v-9zM14 21L4 17l10-5zM4 17L3 8l11 4zM3 8l9-5 2 9z" fill="currentColor" fillOpacity=".3"/><path d="M11 7h2v5l4 2-1 2-5-3z" fill="currentColor"/></>
+    ),
+    sonido: (
+      <><path d="M4 6l5-2v16l-5-2z" fill="currentColor"/><path d="M9 4l6 3v11l-6 2z" fill="currentColor" fillOpacity=".6"/><path d="M15 7l5-2v14l-5-1z" fill="currentColor" fillOpacity=".3"/><path d="M3 9l7-1v3l-7 1zM9 13l7 1v3l-7-1zM14 8l7-2v3l-7 2z" fill="currentColor"/></>
+    ),
+  },
+  viscoso: {
+    aviso: (
+      <><path d="M10 5c1-2 3-2 4 0l7 12c1 2 0 3-2 3H5c-2 0-3-1-2-3l7-12zm1 4v6c0 2 2 2 2 0V9c0-2-2-2-2 0zm1 8c-1 0-1 2 0 2s1-2 0-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M5 12c1-1 2-1 3 0l2 2 6-7c1-1 3-1 3 1 0 1-1 2-2 3l-5 6c-1 2-3 2-4 1l-3-3c-1-1-1-2 0-3z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M5 5c-2 1-2 3-2 5v3c0 3 2 5 5 5h2l-3 3c4 0 6-1 8-3h2c3 0 4-2 4-5v-3c0-3-2-5-5-5H8c-1 0-2 0-3 0z" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><path d="M10 5c1-3 3-3 4 0l1 3c0 1 1 1 2 1h2c3 0 3 2 1 4l-2 2c-1 1-1 1-1 2l1 2c1 3-1 4-3 2l-2-1c-1-1-2-1-3 0l-2 1c-2 2-4 1-3-2l1-2c0-1 0-1-1-2l-2-2c-2-2-1-4 1-4h3c1 0 1 0 2-1l1-3z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M5 7c0-2 2-3 4-2 2-2 6-1 7 1 2 1 3 3 2 5 1 3-1 7-4 7-2 2-6 1-7-1-3 0-4-3-2-5-1-2-1-4 0-5zm2.3 1.1c-.8.8-.3 2.3.9 2.4 1.2.1 2-1.3 1.3-2.2-.5-.7-1.5-.8-2.2-.2zm6.1 5.2c-.8.8-.3 2.3.9 2.4 1.2.1 2-1.3 1.3-2.2-.5-.7-1.5-.8-2.2-.2z" fill="currentColor" fillRule="evenodd"/><path d="M19 4c.4 1 .8 1.4 1.8 1.8-1 .4-1.4.8-1.8 1.8-.4-1-.8-1.4-1.8-1.8 1-.4 1.4-.8 1.8-1.8z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M8 5c-2 0-3 2-3 4v3c0 2 1 3 3 3h8c2 0 3-1 3-3V8c0-2-1-3-3-3H8zm0 11c-1 0-2 1-2 2v2h3v-3h6v3h3v-2c0-1-1-2-2-2H8z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    reloxo: (
+      <><path d="M12 3c5 0 9 4 9 9 0 6-4 9-9 9-6 0-9-4-9-9 0-5 4-9 9-9zm-1 4c0-1 2-1 2 0v5l3 2c2 1 1 3-1 2l-4-2c-1 0-1-1-1-2l1-5z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    sonido: (
+      <><path d="M5 5c1-1 2 0 2 1v3c1 1 1 3 0 4v5c0 2-3 2-3 0v-5c-1-1-1-3 0-4V6c0-1 0-1 1-1zm7 0c1-1 2 0 2 1v7c1 1 1 3 0 4v1c0 2-3 2-3 0v-1c-1-1-1-3 0-4V6c0-1 0-1 1-1zm6 0c1-1 2 0 2 1v2c1 1 1 3 0 4v6c0 2-3 2-3 0v-6c-1-1-1-3 0-4V6c0-1 0-1 1-1z" fill="currentColor"/></>
+    ),
+  },
+  papel: {
+    aviso: (
+      <><path d="M11.5 3.3l9.8 16.2-18.5.7 8.7-16.9zm-.5 5.5l.2 6 2-.1-.1-6-2.1.1zm.2 8.2l.1 2 2-.1-.1-1.9-2 .0z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M4.6 11.7l4.2 4.6 10-10.8 2 2.1L9 19 3.2 13.4l1.4-1.7z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M3.8 5.2l16.3-.4.2 11-10.9.5-4.5 3.2.8-3.1-1.6-.1-.3-11.1z" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><path d="M11.7 3.1l2.7 5.4 5.9.3-4.1 4.4 1.5 5.6-5.5-2.2-5 3.1.4-5.9-4.4-3.7 5.7-1.4 2.8-5.6z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M4.5 6.2L16.8 4.8l2 12.5L6 19.2 4.5 6.2zm2.8 1.9l2-.2.2 2-2 .2-.2-2zm5.8 5.6l2-.2.2 2-2 .2-.2-2z" fill="currentColor" fillRule="evenodd"/><path d="M18.5 3l.8 1.4 1.7.5-1.5.8-.2 1.7-.9-1.4-1.6-.2 1.2-1z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M6.5 5.2l10.7-.4.3 8.5-10.6.3-.4-8.4zm1.2 9.3l8.6-.1.2 2.2-8.6.1-.2-2.2zm-1 2.8l2.3-.2.1 3.7-2.2.1-.2-3.6zm8.3-.1l2.4.1-.2 3.6-2.3-.1.1-3.6z" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><path d="M12.4 3.1c5.1.1 8.8 4 8.6 9-.2 5-4 8.8-9 8.7-5-.1-8.9-4-8.8-9 .2-5 4.2-8.8 9.2-8.7zm-1.5 4.3l2.3-.2-.1 5 3.7 2.3-1.3 1.9-4.7-2.9.1-6.1z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    sonido: (
+      <><path d="M4.3 4.8l2.6.3-.2 14-2.7.1.3-14.4zm6.5.2l2.6-.2.2 14-2.8.2V5zm6.5-.1l2.8.2-.3 13.8-2.6.2.1-14.2zM3.3 8.4l4.7-.3.2 3.1-5 .2.1-3zm6.4 4.8l5-.2.1 3.2-5.2-.1.1-2.9zm6.4-6.2l5 .2-.1 3.1-5.1.1.2-3.4z" fill="currentColor"/></>
+    ),
+  },
+  pixel: {
+    aviso: (
+      <><rect x="11" y="3" width="2" height="2" fill="currentColor"/><rect x="10" y="5" width="2" height="2" fill="currentColor"/><rect x="12" y="5" width="2" height="2" fill="currentColor"/><rect x="9" y="7" width="2" height="2" fill="currentColor"/><rect x="13" y="7" width="2" height="2" fill="currentColor"/><rect x="8" y="9" width="2" height="2" fill="currentColor"/><rect x="14" y="9" width="2" height="2" fill="currentColor"/><rect x="7" y="11" width="2" height="2" fill="currentColor"/><rect x="15" y="11" width="2" height="2" fill="currentColor"/><rect x="6" y="13" width="2" height="2" fill="currentColor"/><rect x="16" y="13" width="2" height="2" fill="currentColor"/><rect x="5" y="15" width="2" height="2" fill="currentColor"/><rect x="17" y="15" width="2" height="2" fill="currentColor"/><rect x="4" y="17" width="16" height="3" fill="currentColor"/><rect x="11" y="8" width="2" height="6" fill="currentColor"/><rect x="11" y="15" width="2" height="2" fill="currentColor"/></>
+    ),
+    confirmar: (
+      <><rect x="4" y="11" width="3" height="3" fill="currentColor"/><rect x="6" y="13" width="3" height="3" fill="currentColor"/><rect x="8" y="15" width="3" height="3" fill="currentColor"/><rect x="10" y="13" width="3" height="3" fill="currentColor"/><rect x="12" y="11" width="3" height="3" fill="currentColor"/><rect x="14" y="9" width="3" height="3" fill="currentColor"/><rect x="16" y="7" width="3" height="3" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><rect x="4" y="5" width="16" height="11" fill="currentColor"/><rect x="6" y="16" width="5" height="2" fill="currentColor"/><rect x="6" y="18" width="2" height="2" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><rect x="10" y="3" width="4" height="3" fill="currentColor"/><rect x="9" y="6" width="6" height="3" fill="currentColor"/><rect x="4" y="9" width="16" height="3" fill="currentColor"/><rect x="6" y="12" width="12" height="3" fill="currentColor"/><rect x="7" y="15" width="4" height="4" fill="currentColor"/><rect x="13" y="15" width="4" height="4" fill="currentColor"/></>
+    ),
+    generar: (
+      <><rect x="4" y="5" width="14" height="2" fill="currentColor"/><rect x="4" y="17" width="14" height="2" fill="currentColor"/><rect x="4" y="7" width="2" height="10" fill="currentColor"/><rect x="16" y="7" width="2" height="10" fill="currentColor"/><rect x="7" y="9" width="2" height="2" fill="currentColor"/><rect x="13" y="14" width="2" height="2" fill="currentColor"/><rect x="19" y="3" width="1" height="4" fill="currentColor"/><rect x="17" y="5" width="5" height="1" fill="currentColor"/></>
+    ),
+    logo: (
+      <><rect x="7" y="5" width="10" height="8" fill="currentColor"/><rect x="8" y="14" width="8" height="2" fill="currentColor"/><rect x="6" y="16" width="3" height="4" fill="currentColor"/><rect x="15" y="16" width="3" height="4" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><rect x="8" y="3" width="8" height="2" fill="currentColor"/><rect x="5" y="5" width="14" height="2" fill="currentColor"/><rect x="3" y="8" width="2" height="8" fill="currentColor"/><rect x="19" y="8" width="2" height="8" fill="currentColor"/><rect x="5" y="17" width="14" height="2" fill="currentColor"/><rect x="8" y="19" width="8" height="2" fill="currentColor"/><rect x="11" y="7" width="2" height="6" fill="currentColor"/><rect x="13" y="12" width="4" height="2" fill="currentColor"/></>
+    ),
+    sonido: (
+      <><rect x="5" y="4" width="2" height="16" fill="currentColor"/><rect x="11" y="4" width="2" height="16" fill="currentColor"/><rect x="17" y="4" width="2" height="16" fill="currentColor"/><rect x="3" y="8" width="6" height="4" fill="currentColor"/><rect x="9" y="13" width="6" height="4" fill="currentColor"/><rect x="15" y="7" width="6" height="4" fill="currentColor"/></>
+    ),
+  },
+  senaletica: {
+    aviso: (
+      <><path d="M12 3l10 18H2L12 3zm-1 6v6h2V9h-2zm0 8v2h2v-2h-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M4 12l3-3 4 4 7-7 3 3-10 10z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M4 5h16v11H9l-4 4v-4H4z" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M5 6h12v12H5V6zm2 2h2v2H7V8zm6 6h2v2h-2v-2z" fill="currentColor" fillRule="evenodd"/><path d="M19 3h2v2h-2zM18 4h4v2h-4z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M7 5h10v9H7zM8 15h8v2H8zM6 17h3v4H6zm9 0h3v4h-3z" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14z" fill="currentColor" fillRule="evenodd"/><path d="M11 6h2v6h4v2h-6V6z" fill="currentColor"/></>
+    ),
+    sonido: (
+      <><path d="M5 4h2v16H5zM11 4h2v16h-2zM17 4h2v16h-2zM3 8h6v4H3zM9 13h6v4H9zM15 6h6v4h-6z" fill="currentColor"/></>
+    ),
+  },
+  constructivista: {
+    aviso: (
+      <><path d="M4 19L13 3l4 3-8 14z" fill="currentColor"/><path d="M9 20l8-14 4 14z" fill="currentColor" fillOpacity=".6"/><rect x="12" y="10" width="2" height="6" transform="rotate(18 13 13)" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    confirmar: (
+      <><path d="M4 13l4-4 4 4-3 3z" fill="currentColor" fillOpacity=".6"/><path d="M8 16L18 5l3 3-10 11z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M4 7l14-3 3 8-12 5-4 4 1-5z" fill="currentColor"/><path d="M8 8l10-2 1 3-10 3z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    favorito: (
+      <><path d="M5 10l6-1 2-6 3 6 6 1-5 4 2 6-6-3-6 3 2-6z" fill="currentColor"/><path d="M3 17l18-10-2 5L5 20z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    generar: (
+      <><path d="M4 8l10-4 5 5-10 4z" fill="currentColor"/><path d="M9 13l10-4-2 9-9 2z" fill="currentColor" fillOpacity=".6"/><circle cx="9" cy="9" r="1" fill="currentColor" fillOpacity=".3"/><circle cx="14" cy="15" r="1.2" fill="currentColor"/><path d="M18 3l4 1-3 2z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M5 8l12-4 3 7-12 4z" fill="currentColor"/><path d="M8 15l10-3-2 5-8 2z" fill="currentColor" fillOpacity=".6"/><path d="M7 17l3-1-1 5-3 1zM15 15l3-1 1 5-3 1z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    reloxo: (
+      <><path d="M4 8l11-5 6 8-6 10-10-3z" fill="currentColor" fillOpacity=".6"/><path d="M12 6l2 1-1 5 5 1-1 2-7-2z" fill="currentColor"/><path d="M3 19l18-14-1 4L6 21z" fill="currentColor" fillOpacity=".3"/></>
+    ),
+    sonido: (
+      <><path d="M4 18L8 4h2L6 19zM10 19l4-14h2l-4 15zM16 20l4-13h2l-4 14z" fill="currentColor"/><path d="M3 10l7-2-1 4-7 2zM9 14l7-2-1 4-7 2zM15 9l7-2-1 4-7 2z" fill="currentColor" fillOpacity=".6"/></>
+    ),
+  },
+  tinta: {
+    aviso: (
+      <><path d="M10.4 4.5c.8-1.5 2.3-1.6 3.2-.1L21 17.2c1 1.7.2 2.9-1.7 2.9H4.7c-1.9 0-2.7-1.2-1.7-2.9l7.4-12.7zm.6 4.2l.2 6.4h2l.2-6.4H11zm.1 8.1v2h2v-2h-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M4.4 11.4c.7-.7 1.5-.6 2.2.1l3 3.2L17.5 6c.7-.8 1.6-.9 2.4-.2.8.7.7 1.7 0 2.5L11 18.2c-.8.9-1.8.9-2.7.1l-4-4.3c-.8-.8-.7-1.8.1-2.6z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M5.1 5c4.1-.8 9-.7 13 .1 2 .4 3.1 1.9 2.8 4l-.6 4.3c-.3 2-1.7 3.1-3.7 3.2l-6.3.2-4.8 3.4 1.4-3.5c-2.4-.4-3.6-1.8-3.6-4.1V9c0-2.2.8-3.6 1.8-4z" fill="currentColor"/></>
+    ),
+    favorito: (
+      <><path d="M10.4 4.3c.6-1.4 2.5-1.5 3.2-.1l1.8 4 4.4.7c1.5.2 2.1 1.9 1 3l-3.2 3.1.8 4.4c.3 1.5-1.2 2.5-2.5 1.8L12 19.1l-3.9 2.1c-1.4.8-2.9-.3-2.5-1.8l.8-4.4-3.2-3.1c-1.1-1.1-.5-2.8 1-3l4.4-.7 1.8-3.9z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M5 7c1-2 3-2 5-2l7 1c2 0 3 2 2 4l-2 7c-.4 1.6-1.8 2.4-3.5 2.2l-7-1c-1.8-.3-2.7-1.6-2.4-3.3L5 7zm2 2c0 .8.6 1.5 1.4 1.5S10 9.8 10 9s-.7-1.5-1.5-1.5S7 8.2 7 9zm6 5.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5-.7-1.5-1.5-1.5-1.5.7-1.5 1.5z" fill="currentColor" fillRule="evenodd"/><path d="M18 3.3c.7 1.2 1.4 1.8 2.6 2.2-1.3.3-2 .9-2.7 2 .1-1.4-.3-2.2-1.4-3.1 1.4.2 2.1-.1 3.1-1.1z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M7.2 5.1c3.1-.5 6.6-.5 9.7 0 1.3.2 2.1 1.2 2 2.6l-.4 4.1c-.1 1.4-1 2.2-2.4 2.3l-8.1.1c-1.4 0-2.3-.8-2.4-2.2l-.3-4.1c-.1-1.4.6-2.4 1.9-2.8zm.6 10.3h8.5c1 0 1.6.6 1.7 1.5l.2 3H15l-.2-2.6H9.1l-.2 2.6H5.8l.3-3c.1-.9.7-1.5 1.7-1.5z" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><path d="M12.4 3.2c5.2.1 8.7 3.9 8.5 9-.1 5-3.8 8.7-8.9 8.7-5.2-.1-8.9-3.8-8.8-8.9.1-5.1 4-8.9 9.2-8.8zm-1.4 4c0-.9.7-1.5 1.6-1.5.9 0 1.5.7 1.4 1.6l-.3 4.6 3.1 1.8c.8.5 1 1.4.5 2.2-.5.8-1.4 1-2.2.5l-4-2.4c-.6-.3-.9-.9-.8-1.6l.7-5.2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    sonido: (
+      <><path d="M5 4.5c1.1-.2 1.8.5 1.7 1.6L6 19.5H4.4L5 4.5zm6.2.1c1.1-.2 1.8.5 1.7 1.6l-.6 13.3h-1.7l.6-14.9zm6.2-.1c1.1-.2 1.8.5 1.7 1.6l-.6 13.4h-1.7l.6-15zM3.2 8.2l5.4-.5.2 3.1-5.5.6-.1-3.2zm6 5l5.6-.3.2 3.1-5.7.4-.1-3.2zm6.3-6.1l5.3-.5.2 3.1-5.4.6-.1-3.2z" fill="currentColor"/></>
+    ),
+  },
+  escenico: {
+    aviso: (
+      <><path d="M12 3l10 18H2L12 3zm-1 6v6h2V9h-2zm0 8v2h2v-2h-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    confirmar: (
+      <><path d="M3 11h6l2 2 5-7h5L11 20z" fill="currentColor"/></>
+    ),
+    dialogo: (
+      <><path d="M3 5h18v12H10l-5 4 1-4H3V5zm4 4v2h10V9H7z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+    favorito: (
+      <><path d="M12 3l3 6 6 1-4.5 4 1.3 6L12 17l-5.8 3 1.3-6L3 10l6-1z" fill="currentColor"/></>
+    ),
+    generar: (
+      <><path d="M4 6h14v13H4V6zm2 2h4v4H6V8zm6 5h4v4h-4v-4z" fill="currentColor" fillRule="evenodd"/><path d="M18 3h2v2h2v2h-2v2h-2V7h-2V5h2z" fill="currentColor"/></>
+    ),
+    logo: (
+      <><path d="M6 5h12v10H6V5zm2 2v6h8V7H8z" fill="currentColor" fillRule="evenodd"/><path d="M5 16h14v2H5zM6 18h4v3H6zm8 0h4v3h-4z" fill="currentColor"/></>
+    ),
+    reloxo: (
+      <><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 3a6 6 0 1 0 0 12 6 6 0 0 0 0-12z" fill="currentColor" fillRule="evenodd"/><path d="M11 7h2v6h4v2h-6V7z" fill="currentColor"/></>
+    ),
+    sonido: (
+      <><path d="M4 4h4v16H4V4zm1 5v2h2V9H5zM10 4h4v16h-4V4zm1 10v2h2v-2h-2zM16 4h4v16h-4V4zm1 3v2h2V7h-2z" fill="currentColor" fillRule="evenodd"/></>
+    ),
+  },
+};
+
+// Os 18 que a app usa de verdade. É a vara de medir da cobertura.
+export const ICONOS_NECESARIOS = [
+  'generar', 'reto', 'sonido', 'guia', 'sesiones', 'grupos', 'qr',
+  'universo', 'axenda', 'manual', 'ajustes',
+  'admin', 'endirecto', 'proxeccion', 'temporizador', 'idioma', 'tema', 'salir',
+];
+
+const NOMES_ESTILO = {"geometrico": "Xeométrico", "linea": "Liña", "cubista": "Cubista", "viscoso": "Viscoso", "papel": "Papel", "pixel": "Píxel", "senaletica": "Sinalética", "constructivista": "Construtivista", "tinta": "Tinta", "escenico": "Escénico"};
+
+const SETS = { base: BASE, ...ALTERNATIVOS };
+
+export function cobertura(estilo) {
+  const set = SETS[estilo] || {};
+  const teñen = ICONOS_NECESARIOS.filter((k) => set[k]);
+  return { ten: teñen.length, de: ICONOS_NECESARIOS.length, completo: teñen.length === ICONOS_NECESARIOS.length };
 }
 
-export function Icona({ nome, size = 24, cor, style, title }) {
-  const formas = FORMAS[nome];
+export const ESTILOS = Object.keys(SETS).map((id) => ({
+  id,
+  nome: id === 'base' ? 'Xeométrico (actual)' : (NOMES_ESTILO[id] || id),
+  ...cobertura(id),
+}));
+
+// Estilo activo. Vive fóra de React para que `Icona` non precise
+// contexto: son centos de iconos e pasar un provider por todos custa
+// máis do que aforra.
+let ESTILO = 'base';
+const oíntes = new Set();
+
+export function estiloActual() { return ESTILO; }
+
+export function setEstilo(id) {
+  if (!SETS[id]) return false;
+  ESTILO = id;
+  try { localStorage.setItem('impro_estilo_iconos', id); } catch (e) { /* modo privado */ }
+  oíntes.forEach((f) => f(id));
+  return true;
+}
+
+export function subscribirEstilo(f) { oíntes.add(f); return () => oíntes.delete(f); }
+
+// ⚠️ `Icona` le o estilo activo no momento de renderizar, pero React
+// non sabe que cambiou. Este hook úsase UNHA vez na raíz (ImproApp):
+// ao cambiar o estilo forza un render da árbore enteira e todos os
+// iconos collen o novo. Poñelo en cada `Icona` serían centos de
+// subscricións para o mesmo dato.
+export function useEstiloIconos() {
+  const [id, setId] = useState(ESTILO);
+  useEffect(() => subscribirEstilo(setId), []);
+  return id;
+}
+
+try {
+  const g = localStorage.getItem('impro_estilo_iconos');
+  // Só se restaura se o estilo existe E está completo: se non, o menú
+  // quedaría a medias sen que ninguén saiba por que.
+  if (g && SETS[g] && cobertura(g).completo) ESTILO = g;
+} catch (e) { /* modo privado */ }
+
+export const NOMES_ICONA = Object.keys(BASE);
+
+export function hayIcona(nome) {
+  return Object.prototype.hasOwnProperty.call(BASE, nome);
+}
+
+export function Icona({ nome, size = 24, cor, style, title, estilo }) {
+  const set = SETS[estilo || ESTILO] || BASE;
+  // Fallback ao base: un estilo incompleto non pode deixar ocos.
+  const formas = set[nome] || BASE[nome];
   // Un nome que non existe non pode romper unha pantalla enteira: non
   // se debuxa nada e queda o oco. É preferible a un erro de render.
   if (!formas) return null;
