@@ -32,7 +32,8 @@ export function SelectorIconos() {
   return (
     <div>
       <p style={{ ...S.caption, marginTop: 0, marginBottom: '0.9rem' }}>
-        Os iconos toman a cor do tema. Cambiar de estilo non cambia as cores.
+        Os estilos de debuxo toman a cor do tema; os emojis traen a súa propia
+        e non cambian con el.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

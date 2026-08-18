@@ -1,44 +1,48 @@
-# ImproApp · estado completo · substitúe a TODOS os zips anteriores
+# ImproApp · `src/` completo · tres estilos de icono
 
-Se non sabes cales aplicaches e cales non, **usa só este**. Leva o
-`src/` enteiro no estado actual. Non fai falta aplicar ningún zip
-anterior nin en ningunha orde.
+Substitúe a todas as entregas anteriores. Se perdiches o fío, usa só
+esta.
 
-## Como aplicalo
-
-1. Arrastra `src/` sobre `impro/src/` → **FUSIONAR**, nunca substituír.
+## Aplicar
+1. Arrastra `src/` sobre `impro/src/` → **FUSIONAR**, nunca substituír
+   (substituír borra `src/supabase.js`, que non vai aquí).
 2. Copia `eslint.config.js` á raíz.
-3. **BORRA A MAN `src/tabs/TabShow.jsx`.** Un zip non pode eliminar
-   ficheiros. A Cabina desapareceu e ese ficheiro xa non o importa
-   ninguén, pero segue pesando no bundle.
-4. Comproba que `src/supabase.js` segue aí. Non vai neste zip a
-   propósito.
-5. Commit → Push.
+3. **Borra a man `src/tabs/TabShow.jsx`** se aínda existe.
+4. Comproba que `src/supabase.js` NON aparece nos cambios de GitHub
+   Desktop. Se aparece, descarta ese cambio.
 
-## SQL
+## Volveu o de antes, e agora é unha opción
 
-Van os dous ficheiros. **Se xa os executaches, non pasa nada por
-repetilos**: son idempotentes, está comprobado.
+**Por defecto: emojis e descricións**, como che gustaba.
 
-- `supabase_sonido.sql` → debe devolver 7 filas, todas con `rls=true`
-- `supabase_sonido_tags.sql` → 8 · 11 · 10 · 8 etiquetas
+En **Axustes → Iconos** tes tres estilos completos:
 
-## Que hai dentro
+| | |
+|---|---|
+| **Emojis (o de sempre)** | Por defecto. Traen a súa cor e recoñécense sen ler |
+| **Orixinal** | O primeiro set de SVG |
+| **Xeométrico minimal** | O Estilo 2 novo, 18/18 |
 
-**Sonido** (módulo novo, substitúe á Cabina): motor de audio multicapa,
-buses, STOP e FADE, precarga con contador, metrónomo, contadores,
-mesas, escenas, ficheiros do dispositivo en IndexedDB, Explorar con
-etiquetas e busca, e Admin → 🔊 Sons con pegado masivo de URLs.
+Os dez estilos de proba seguen listados coa súa cobertura (2/18), sen
+poder activarse.
 
-**Iconos**: os 34 SVG do set, sen emojis no menú nin na cabeceira.
+⚠️ Os emojis **non collen a cor do tema**: píntaos o sistema operativo.
+É o prezo de que traian a súa propia. Dío o selector.
 
-**Botonera**: iconos a 52 px, sen descrición, botón `?` para amosalas.
+## As descricións
+Volven, **acesas por defecto**, e a preferencia gárdase. O botón `?` da
+portada acéndeas e apágaas. Coas descricións acesas o icono cede sitio
+ao texto; sen elas recupera todo o tamaño.
 
-**Bundle**: 624 kB de arranque. Sonido, Admin e Manual cárganse baixo
-demanda.
+## A reixa segue enchendo a pantalla
+Iso si era unha mellora e queda: 3×4 en iPhone, 4×3 en iPad vertical,
+5×3 en iPad horizontal. Sen desprazar en ningún.
 
-## Verificación desta entrega
-- ESLint: 0 erros
-- 44 ficheiros con todos os compoñentes JSX importados
-- 500+ casos de proba, todos pasando
-- Build correcto
+## Dous fallos atopados nesta sesión
+- `EMOJIS` usábase antes de declaralo.
+- `axuda` usábase no cálculo do tamaño antes de declaralo. **Isto era
+  pantalla branca na portada** e colleuno o harness de render, non o
+  build.
+
+## Bundle
+666 kB. Cando descartes os estilos de proba, recupéranse uns 24.

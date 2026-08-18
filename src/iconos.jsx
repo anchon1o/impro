@@ -25,6 +25,21 @@ import { useState, useEffect } from 'react';
 
 const BASE = {
 
+  // ── Marca · 4 propostas, para escoller ──
+  logo1: (
+    <><path d="M11 2.2 6.8 12h4.1l-1.6 9.8L17.4 10h-4.2l2-7.8Z" fill="currentColor"/> <rect x="2.4" y="11.2" width="3" height="1.2" rx="0.6" fill="currentColor"/> <rect x="18.6" y="11.2" width="3" height="1.2" rx="0.6" fill="currentColor"/> <rect x="4" y="5.2" width="2.8" height="1.2" rx="0.6" transform="rotate(35 5.4 5.8)" fill="currentColor"/> <rect x="17.2" y="17.6" width="2.8" height="1.2" rx="0.6" transform="rotate(35 18.6 18.2)" fill="currentColor"/> <rect x="17.2" y="5.2" width="2.8" height="1.2" rx="0.6" transform="rotate(-35 18.6 5.8)" fill="currentColor"/> <rect x="4" y="17.6" width="2.8" height="1.2" rx="0.6" transform="rotate(-35 5.4 18.2)" fill="currentColor"/> <circle cx="16.8" cy="3.6" r="1.55" fill="currentColor" fillOpacity="0.45"/></>
+  ),
+  logo2: (
+    <><rect x="5" y="4" width="14" height="5.2" rx="0.8" fill="currentColor"/> <rect x="4" y="9" width="2.2" height="5" rx="0.7" fill="currentColor"/> <rect x="17.8" y="9" width="2.2" height="5" rx="0.7" fill="currentColor"/> <rect x="5.6" y="12.4" width="12.8" height="2.2" rx="0.6" fill="currentColor"/> <path d="m7 14.3 2 0 8 6.2h-2.9Zm10 0h-2l-8 6.2h2.9Z" fill="currentColor"/> <circle cx="15.7" cy="3.5" r="1.55" fill="currentColor" fillOpacity="0.45"/></>
+  ),
+  logo3: (
+    <><circle cx="7" cy="7" r="2.4" fill="currentColor"/> <circle cx="17" cy="7" r="2.4" fill="currentColor"/> <path d="M3.6 18.8c0-4.7 1.35-7.3 3.4-7.3s3.4 2.6 3.4 7.3Z" fill="currentColor"/> <path d="M13.6 18.8c0-4.7 1.35-7.3 3.4-7.3s3.4 2.6 3.4 7.3Z" fill="currentColor"/> <circle cx="12" cy="12.6" r="1.75" fill="currentColor" fillOpacity="0.45"/></>
+  ),
+  logo4: (
+    <><path fillRule="evenodd" d="M4 4.2h16v12.4h-8l-4.7 3.6 1.1-3.6H4Zm2 2v8.4h12V6.2Z" fill="currentColor"/> <path d="M11.1 7.2h1.8l2.7 6.2H8.4Z" fill="currentColor"/> <ellipse cx="12" cy="13.8" rx="3.8" ry="1.35" fill="currentColor"/> <circle cx="12" cy="7.1" r="1.35" fill="currentColor" fillOpacity="0.45"/></>
+  ),
+
+
   // ── Áreas da botonera ──
   generar: (
     <>
@@ -304,6 +319,67 @@ const BASE = {
 // chegue un set enteiro, faise seleccionable só, sen tocar código.
 
 const ALTERNATIVOS = {
+  // ── Estilo 2 · xeométrico minimal ──
+  // Primeiro set alternativo COMPLETO: os 18 iconos que usa a app, cos
+  // nomes exactos. Por iso é o primeiro que se pode activar de verdade.
+  // O nodo de acento vai en `fillOpacity` 0.45 do mesmo `currentColor`:
+  // dúas cores serían imposibles cun só color herdado do tema.
+  estilo2: {
+    admin: (
+      <><path fillRule="evenodd" d="M6 10V7a6 6 0 0 1 12 0v3h1.5v11H4.5V10Zm2.1 0h7.8V7a3.9 3.9 0 0 0-7.8 0Zm2.45 5.4a1.45 1.45 0 1 0 2.9 0 1.45 1.45 0 0 0-2.9 0Z" fill="currentColor"/></>
+    ),
+    ajustes: (
+      <><rect x="10.7" y="1.4" width="2.6" height="5.2" rx="0.7" fill="currentColor"/> <rect x="10.7" y="17.4" width="2.6" height="5.2" rx="0.7" fill="currentColor"/> <rect x="1.4" y="10.7" width="5.2" height="2.6" rx="0.7" fill="currentColor"/> <rect x="17.4" y="10.7" width="5.2" height="2.6" rx="0.7" fill="currentColor"/> <rect x="3.5" y="3.5" width="2.6" height="5.2" rx="0.7" transform="rotate(-45 4.8 6.1)" fill="currentColor"/> <rect x="17.9" y="15.3" width="2.6" height="5.2" rx="0.7" transform="rotate(-45 19.2 17.9)" fill="currentColor"/> <rect x="15.3" y="3.5" width="5.2" height="2.6" rx="0.7" transform="rotate(45 17.9 4.8)" fill="currentColor"/> <rect x="3.5" y="15.3" width="5.2" height="2.6" rx="0.7" transform="rotate(45 6.1 16.6)" fill="currentColor"/> <path fillRule="evenodd" d="M12 5.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6Zm0 3.2a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z" fill="currentColor"/> <circle cx="12" cy="12" r="2" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    axenda: (
+      <><path fillRule="evenodd" d="M3 4h18v17H3Zm1.6 4.2v11.2h14.8V8.2Z" fill="currentColor"/> <rect x="3" y="4" width="18" height="4.2" rx="1" fill="currentColor"/> <rect x="6.2" y="2" width="1.4" height="4.2" rx="0.7" fill="currentColor"/> <rect x="16.4" y="2" width="1.4" height="4.2" rx="0.7" fill="currentColor"/> <rect x="6" y="10.4" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <rect x="10.9" y="10.4" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <circle cx="17" cy="11.5" r="1.15" fill="currentColor" fillOpacity="0.45"/> <rect x="6" y="15.1" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <circle cx="12" cy="16.2" r="1.15" fill="currentColor" fillOpacity="0.45"/> <rect x="15.9" y="15.1" width="2.2" height="2.2" rx="0.4" fill="currentColor"/></>
+    ),
+    endirecto: (
+      <><path fillRule="evenodd" d="M12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm0 2.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 0 0 0-11.6Z" fill="currentColor"/> <path d="M10.2 8.8 16 12l-5.8 3.2Z" fill="currentColor"/> <circle cx="18.8" cy="5.2" r="1.35" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    generar: (
+      <><circle cx="12" cy="12" r="3.15" fill="currentColor"/> <circle cx="18.3" cy="6.2" r="1.45" fill="currentColor" fillOpacity="0.45"/> <rect x="10.8" y="2" width="2.4" height="2.4" rx="0.45" fill="currentColor"/> <path d="M5.2 4.9 7 8H3.4Z" fill="currentColor"/> <path d="m18.5 12.8.75 1.5 1.65.24-1.2 1.15.29 1.63-1.49-.77-1.48.77.28-1.63-1.2-1.15 1.66-.24Z" fill="currentColor"/> <path d="m6 15.7 1.9 1.1v2.2L6 20.1 4.1 19v-2.2Z" fill="currentColor"/> <path d="m11.8 19.1 1.7 1.7-1.7 1.7-1.7-1.7Z" fill="currentColor"/> <rect x="6.7" y="2.9" width="2.25" height="0.8" rx="0.4" transform="rotate(-28 6.7 2.9)" fill="currentColor"/> <rect x="15.6" y="3.2" width="2.25" height="0.8" rx="0.4" transform="rotate(27 15.6 3.2)" fill="currentColor"/> <rect x="2.4" y="9.7" width="0.8" height="2.3" rx="0.4" fill="currentColor"/> <rect x="20.8" y="9.7" width="0.8" height="2.3" rx="0.4" fill="currentColor"/></>
+    ),
+    grupos: (
+      <><circle cx="12" cy="6.1" r="2.35" fill="currentColor"/> <circle cx="5.4" cy="7.5" r="1.75" fill="currentColor"/> <circle cx="18.6" cy="7.5" r="1.75" fill="currentColor"/> <path d="M8.7 15.2c0-2.65 1.48-4.7 3.3-4.7s3.3 2.05 3.3 4.7v1.8H8.7Z" fill="currentColor"/> <path d="M2.4 15.5c0-2.1 1.35-3.7 3-3.7s3 1.6 3 3.7V17h-6Z" fill="currentColor"/> <path d="M15.6 15.5c0-2.1 1.35-3.7 3-3.7s3 1.6 3 3.7V17h-6Z" fill="currentColor"/> <circle cx="6.2" cy="20.1" r="0.8" fill="currentColor"/> <circle cx="12" cy="20.1" r="1" fill="currentColor" fillOpacity="0.45"/> <circle cx="17.8" cy="20.1" r="0.8" fill="currentColor"/> <rect x="7.2" y="20.85" width="9.6" height="0.8" rx="0.4" fill="currentColor"/></>
+    ),
+    guia: (
+      <><rect x="3.2" y="3" width="0.8" height="18" rx="0.4" fill="currentColor"/> <circle cx="3.6" cy="5" r="1.2" fill="currentColor"/> <circle cx="3.6" cy="12" r="1.2" fill="currentColor" fillOpacity="0.45"/> <circle cx="3.6" cy="19" r="1.2" fill="currentColor"/> <rect x="7" y="3.3" width="4.1" height="4.1" rx="0.55" fill="currentColor"/> <rect x="12.6" y="3.55" width="8.2" height="0.9" rx="0.45" fill="currentColor"/> <rect x="12.6" y="5.35" width="6.2" height="0.9" rx="0.45" fill="currentColor"/> <rect x="7" y="9.95" width="4.1" height="4.1" rx="0.55" fill="currentColor"/> <rect x="12.6" y="10.2" width="8.2" height="0.9" rx="0.45" fill="currentColor"/> <rect x="12.6" y="12" width="5.1" height="0.9" rx="0.45" fill="currentColor"/> <rect x="7" y="16.6" width="4.1" height="4.1" rx="0.55" fill="currentColor"/> <rect x="12.6" y="16.85" width="8.2" height="0.9" rx="0.45" fill="currentColor"/> <rect x="12.6" y="18.65" width="6.8" height="0.9" rx="0.45" fill="currentColor"/></>
+    ),
+    idioma: (
+      <><path fillRule="evenodd" d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm0 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" fill="currentColor"/> <rect x="4.4" y="10.9" width="15.2" height="2.2" rx="1.1" fill="currentColor"/> <path d="M10.8 4.2h2.4c2.2 2.2 3.2 4.8 3.2 7.8s-1 5.6-3.2 7.8h-2.4c1.9-2.35 2.8-4.95 2.8-7.8s-.9-5.45-2.8-7.8Zm-2.5 0h1.9C8.7 6.65 8 9.25 8 12s.7 5.35 2.2 7.8H8.3C6.55 17.45 5.7 14.85 5.7 12s.85-5.45 2.6-7.8Z" fill="currentColor"/> <circle cx="18.7" cy="16.9" r="1.35" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    manual: (
+      <><path fillRule="evenodd" d="M2.6 4.3c3.9-.7 7.1.05 9.4 2.25 2.3-2.2 5.5-2.95 9.4-2.25V20c-3.6-.55-6.75.12-9.4 2-2.65-1.88-5.8-2.55-9.4-2Zm1.5 1.35v12.7c3-.2 5.45.35 7.15 1.55V7.35c-1.8-1.5-4.2-2.05-7.15-1.7Zm8.65 1.7V19.9c1.7-1.2 4.15-1.75 7.15-1.55V5.65c-2.95-.35-5.35.2-7.15 1.7Z" fill="currentColor"/> <rect x="5.2" y="8.2" width="4.2" height="3.7" rx="0.45" fill="currentColor"/> <rect x="5.2" y="13" width="4.2" height="0.8" rx="0.4" fill="currentColor"/> <rect x="5.2" y="14.7" width="3.3" height="0.8" rx="0.4" fill="currentColor"/> <rect x="14.1" y="8.5" width="4.5" height="0.8" rx="0.4" fill="currentColor"/> <rect x="14.1" y="10.3" width="4.5" height="0.8" rx="0.4" fill="currentColor"/> <rect x="14.1" y="12.1" width="3.9" height="0.8" rx="0.4" fill="currentColor"/> <path d="M16.6 3.2h2.8v4.7L18 7l-1.4.9Z" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    proxeccion: (
+      <><path fillRule="evenodd" d="M4 4h16v9H4Zm2 2v5h12V6Z" fill="currentColor"/> <circle cx="12" cy="8.5" r="1.35" fill="currentColor" fillOpacity="0.45"/> <circle cx="8" cy="17.2" r="1.7" fill="currentColor"/> <circle cx="12" cy="16.6" r="2" fill="currentColor"/> <circle cx="16" cy="17.2" r="1.7" fill="currentColor"/> <path d="M5.5 21c0-1.7 1.1-2.8 2.5-2.8s2.5 1.1 2.5 2.8Zm5.2 0c0-1.95 1.25-3.25 2.8-3.25s2.8 1.3 2.8 3.25Zm5.1 0c0-1.7 1.1-2.8 2.5-2.8s2.5 1.1 2.5 2.8Z" fill="currentColor"/></>
+    ),
+    qr: (
+      <><path fillRule="evenodd" d="M2.5 2.5h7v7h-7Zm1.5 1.5v4h4V4Zm10.5-1.5h7v7h-7ZM16 4v4h4V4ZM2.5 14.5h7v7h-7ZM4 16v4h4v-4Z" fill="currentColor"/> <rect x="12" y="11.2" width="2" height="2" rx="0.25" fill="currentColor"/> <rect x="15.2" y="11.2" width="2" height="4.9" rx="0.25" fill="currentColor"/> <rect x="18.4" y="11.2" width="3.1" height="2" rx="0.25" fill="currentColor"/> <rect x="11.1" y="15.2" width="3" height="2" rx="0.25" fill="currentColor"/> <rect x="12.7" y="18.3" width="4.8" height="2" rx="0.25" fill="currentColor"/> <rect x="18.7" y="16.2" width="2.8" height="4.1" rx="0.25" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    reto: (
+      <><circle cx="7.1" cy="7" r="2.25" fill="currentColor" fillOpacity="0.45"/> <path d="M2.8 19.8 9.2 9.2l4.3 4.8 2-2.4 5.7 8.2Z" fill="currentColor"/> <rect x="10.2" y="2.2" width="0.85" height="8.5" rx="0.42" fill="currentColor"/> <path d="M10.9 2.6h5.1l-1.45 1.65L16 6h-5.1Z" fill="currentColor"/> <path d="M12.8 18.6 18.9 11l2.4.35-.35 2.4-1.25-.2-4.95 6.15Z" fill="currentColor"/> <path d="m15.5 19.9 2.1-2.4 2.4 2.4Z" fill="currentColor"/></>
+    ),
+    salir: (
+      <><path d="M4 4h9v4h-2V6H6v12h5v-2h2v4H4Z" fill="currentColor"/> <path d="M12 10h5.1l-1.9-1.9 1.4-1.4L21 11l-4.4 4.3-1.4-1.4 1.9-1.9H12Z" fill="currentColor"/></>
+    ),
+    sesiones: (
+      <><path fillRule="evenodd" d="M5 2.4a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2Zm0 1.2a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Z" fill="currentColor"/> <rect x="4.7" y="3.9" width="0.6" height="1.45" rx="0.3" fill="currentColor"/> <rect x="4.9" y="4.8" width="1.15" height="0.6" rx="0.3" fill="currentColor"/> <rect x="4.55" y="8.3" width="0.9" height="12.8" rx="0.45" fill="currentColor"/> <circle cx="5" cy="10.3" r="1.05" fill="currentColor"/> <circle cx="5" cy="15.2" r="1.05" fill="currentColor"/> <circle cx="5" cy="20.1" r="1.05" fill="currentColor"/> <rect x="8.2" y="8.9" width="11.5" height="2.8" rx="0.7" fill="currentColor"/> <rect x="8.2" y="13.8" width="8.4" height="2.8" rx="0.7" fill="currentColor"/> <rect x="8.2" y="18.7" width="6.2" height="2.8" rx="0.7" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    sonido: (
+      <><rect x="5.2" y="3" width="1.2" height="18" rx="0.6" fill="currentColor"/> <rect x="11.4" y="3" width="1.2" height="18" rx="0.6" fill="currentColor"/> <rect x="17.6" y="3" width="1.2" height="18" rx="0.6" fill="currentColor"/> <rect x="3.8" y="7.2" width="4" height="2.7" rx="0.65" fill="currentColor"/> <rect x="10" y="13.1" width="4" height="2.7" rx="0.65" fill="currentColor"/> <rect x="16.2" y="8.6" width="4" height="2.7" rx="0.65" fill="currentColor"/> <circle cx="2.4" cy="6.2" r="0.65" fill="currentColor"/> <circle cx="2.4" cy="9.2" r="0.65" fill="currentColor"/> <circle cx="2.4" cy="12.2" r="0.65" fill="currentColor" fillOpacity="0.45"/> <circle cx="2.4" cy="15.2" r="0.65" fill="currentColor"/> <circle cx="21.6" cy="7.2" r="0.65" fill="currentColor"/> <circle cx="21.6" cy="10.2" r="0.65" fill="currentColor"/> <circle cx="21.6" cy="13.2" r="0.65" fill="currentColor" fillOpacity="0.45"/> <circle cx="21.6" cy="16.2" r="0.65" fill="currentColor"/></>
+    ),
+    tema: (
+      <><path fillRule="evenodd" d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm0 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" fill="currentColor"/> <path d="M12 5C8.13 5 5 8.13 5 12s3.13 7 7 7Z" fill="currentColor"/></>
+    ),
+    temporizador: (
+      <><path fillRule="evenodd" d="M12 4a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17Zm0 2.2a6.3 6.3 0 1 0 0 12.6 6.3 6.3 0 0 0 0-12.6Z" fill="currentColor"/> <rect x="10.3" y="1.5" width="3.4" height="2.6" rx="0.7" fill="currentColor"/> <rect x="18.2" y="4.7" width="3.1" height="1.7" rx="0.55" transform="rotate(45 19.75 5.55)" fill="currentColor"/> <path d="M11.4 12.6 15.9 8l1 1-4.5 4.6Z" fill="currentColor"/> <circle cx="12" cy="12.6" r="1.2" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    universo: (
+      <><path fillRule="evenodd" d="M12 6.2a4 4 0 0 1 4 4c0 3.05-4 7.35-4 7.35S8 13.25 8 10.2a4 4 0 0 1 4-4Zm0 2.4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2Z" fill="currentColor"/> <path fillRule="evenodd" d="M4.4 3.2a2.5 2.5 0 0 1 2.5 2.5c0 1.9-2.5 4.6-2.5 4.6S1.9 7.6 1.9 5.7a2.5 2.5 0 0 1 2.5-2.5Zm0 1.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm15.2-.3A2.5 2.5 0 0 1 22.1 7c0 1.9-2.5 4.6-2.5 4.6S17.1 8.9 17.1 7a2.5 2.5 0 0 1 2.5-2.6Zm0 1.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2ZM4.8 15.4a2.4 2.4 0 0 1 2.4 2.4c0 1.8-2.4 4.4-2.4 4.4s-2.4-2.6-2.4-4.4a2.4 2.4 0 0 1 2.4-2.4Zm0 1.4a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" fill="currentColor"/> <circle cx="6.9" cy="11.8" r="0.55" fill="currentColor"/> <circle cx="5.9" cy="13.4" r="0.55" fill="currentColor"/> <circle cx="17.7" cy="12.3" r="0.55" fill="currentColor"/> <circle cx="18.6" cy="14" r="0.55" fill="currentColor"/> <circle cx="8.3" cy="18.9" r="0.7" fill="currentColor" fillOpacity="0.45"/> <circle cx="20.4" cy="18" r="0.9" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+  },
   geometrico: {
     aviso: (
       <><path d="M12 3.5L21 20H3L12 3.5zm-1 5v6h2v-6h-2zm0 8v2h2v-2h-2z" fill="currentColor" fillRule="evenodd"/></>
@@ -575,7 +651,64 @@ export const ICONOS_NECESARIOS = [
 
 const NOMES_ESTILO = {"geometrico": "Xeométrico", "linea": "Liña", "cubista": "Cubista", "viscoso": "Viscoso", "papel": "Papel", "pixel": "Píxel", "senaletica": "Sinalética", "constructivista": "Construtivista", "tinta": "Tinta", "escenico": "Escénico"};
 
-const SETS = { base: BASE, ...ALTERNATIVOS };
+// ═══════════════════════════════════════════════════════════════════
+// ESTILO «EMOJIS»
+// ═══════════════════════════════════════════════════════════════════
+// Non son SVG: son caracteres. Trátanse como un estilo máis para poder
+// comparalos cos outros na propia app, que é onde se decide.
+//
+// ⚠️ O que perden: NON collen a cor do tema (píntaos o sistema
+// operativo), cambian de aspecto entre iOS, Android e Windows, e non
+// se poden escalar con precisión.
+// ⚠️ O que gañan, e non é pouco: traen a súa propia cor e recoñécense
+// sen ler. Un 🎲 di «dado» máis rápido que calquera silueta.
+//
+// Por iso é unha opción, non un erro do pasado.
+const EMOJIS = {
+  generar: '🎲',
+  reto: '⚡',
+  sonido: '🔊',
+  guia: '📖',
+  sesiones: '📋',
+  grupos: '👥',
+  qr: '📱',
+  universo: '🌍',
+  axenda: '📅',
+  manual: '📘',
+  ajustes: '⚙️',
+  admin: '🔐',
+  endirecto: '🎬',
+  proxeccion: '📺',
+  temporizador: '⏱',
+  idioma: '🌐',
+  tema: '🌙',
+  salir: '⏻',
+  favorito: '★',
+  confirmar: '✓',
+  aviso: '⚠️',
+  reloxo: '🕐',
+  dialogo: '💬',
+  buscar: '🔍',
+  editar: '✏️',
+  eliminar: '🗑',
+  engadir: '＋',
+  duplicar: '⧉',
+  compartir: '↗',
+  descargar: '⬇',
+  subir: '⬆',
+  filtro: '⚙',
+  info: 'ℹ️',
+  axuda: '❓',
+  aleatorio: '🎲',
+  microfono: '🎤',
+  volume: '🔊',
+  pantallaCompleta: '⛶',
+};
+
+export function emojiDe(nome) { return EMOJIS[nome] || null; }
+export function esEstiloEmoji(id) { return (id || ESTILO) === 'emojis'; }
+
+const SETS = { base: BASE, estilo2: ALTERNATIVOS.estilo2, emojis: EMOJIS, ...ALTERNATIVOS };
 
 export function cobertura(estilo) {
   const set = SETS[estilo] || {};
@@ -585,14 +718,17 @@ export function cobertura(estilo) {
 
 export const ESTILOS = Object.keys(SETS).map((id) => ({
   id,
-  nome: id === 'base' ? 'Xeométrico (actual)' : (NOMES_ESTILO[id] || id),
+  nome: id === 'base' ? 'Orixinal' : id === 'estilo2' ? 'Xeométrico minimal'
+    : id === 'emojis' ? 'Emojis (o de sempre)' : (NOMES_ESTILO[id] || id),
   ...cobertura(id),
 }));
 
 // Estilo activo. Vive fóra de React para que `Icona` non precise
 // contexto: son centos de iconos e pasar un provider por todos custa
 // máis do que aforra.
-let ESTILO = 'base';
+// Por defecto, os emojis: é o que estaba antes e o que mellor se
+// recoñece sen ler. Os outros dous están a un toque en Axustes.
+let ESTILO = 'emojis';
 const oíntes = new Set();
 
 export function estiloActual() { return ESTILO; }
@@ -625,6 +761,8 @@ try {
   if (g && SETS[g] && cobertura(g).completo) ESTILO = g;
 } catch (e) { /* modo privado */ }
 
+
+
 export const NOMES_ICONA = Object.keys(BASE);
 
 export function hayIcona(nome) {
@@ -632,7 +770,26 @@ export function hayIcona(nome) {
 }
 
 export function Icona({ nome, size = 24, cor, style, title, estilo }) {
-  const set = SETS[estilo || ESTILO] || BASE;
+  const activo = estilo || ESTILO;
+
+  // Os emojis son texto, non SVG: van nun <span> co tamaño equivalente.
+  // NON se lles aplica `cor`: teñen a súa propia e forzala non funciona.
+  if (activo === 'emojis' && EMOJIS[nome]) {
+    return (
+      <span
+        role={title ? 'img' : 'presentation'}
+        aria-hidden={title ? undefined : true}
+        aria-label={title}
+        style={{
+          fontSize: size * 0.86, lineHeight: 1, display: 'block',
+          width: size, height: size, textAlign: 'center', flexShrink: 0,
+          ...style,
+        }}
+      >{EMOJIS[nome]}</span>
+    );
+  }
+
+  const set = SETS[activo] || BASE;
   // Fallback ao base: un estilo incompleto non pode deixar ocos.
   const formas = set[nome] || BASE[nome];
   // Un nome que non existe non pode romper unha pantalla enteira: non

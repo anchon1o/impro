@@ -95,6 +95,19 @@ export function Inicio({onIr,lang}){
   // pantalla. Fixándoas é monótono e predicible.
   // Con iconos grandes e sen descrición caben máis por fila: as once
   // vense dun golpe de vista, sen desprazar.
+  // Persiste, e vén ACESA por defecto: as descricións son o que fai que
+  // alguén que entra por primeira vez saiba que é «Reto» sen probalo.
+  // Quen xa se sabe o menú apágaas e recupera espazo para o icono.
+  const [axuda,setAxudaEstado]=useState(()=>{
+    try{const v=localStorage.getItem("impro_desc_botonera");return v===null?true:v==="1";}
+    catch(e){return true;}
+  });
+  const setAxuda=v=>{
+    const n=typeof v==="function"?v(axuda):v;
+    setAxudaEstado(n);
+    try{localStorage.setItem("impro_desc_botonera",n?"1":"0");}catch(e){/* modo privado */}
+  };
+
   const cols=w<340?2:w<560?3:w<900?4:5;
   const filas=Math.ceil(visibles.length/cols);
   const oco=cols*filas-visibles.length;   // ocos na última fila
@@ -107,12 +120,13 @@ export function Inicio({onIr,lang}){
   const RESERVA=esMovil?150:178;          // cabeceira + título + marxes
   const libre=Math.max(240,(h||800)-RESERVA-GAP*(filas-1));
   const altoT=Math.max(esMovil?92:112,Math.min(300,libre/filas));
-  const szIcona=Math.max(30,Math.min(84,Math.round(altoT*0.42)));
+  // Coas descricións acesas o icono cede sitio ao texto. Sen elas
+  // recupera todo o protagonismo.
+  const szIcona=Math.max(28,Math.min(84,Math.round(altoT*(axuda?0.28:0.42))));
 
   // A descrición sae das tarxetas: engade texto que só se le a primeira
   // vez e rouba o sitio ao icono, que é o que se recoñece de lonxe.
   // Queda detrás do botón de axuda, e completa no Manual.
-  const [axuda,setAxuda]=useState(false);
 
   return(
     <div style={{animation:"slideUp 0.3s ease"}}>
@@ -187,9 +201,9 @@ export function Inicio({onIr,lang}){
 
               <span style={{
                 ...TYPE.h3,color:T.text,fontWeight:800,
-                fontSize:altoT>180?"1.05rem":altoT>130?"0.95rem":"0.82rem",
+                fontSize:altoT>180?(axuda?"0.98rem":"1.05rem"):altoT>130?"0.95rem":"0.82rem",
                 letterSpacing:"-0.02em",lineHeight:1.2,
-                marginTop:altoT>180?"1rem":"0.7rem",
+                marginTop:altoT>180?(axuda?"0.7rem":"1rem"):"0.7rem",
               }}>
                 {TAB_LABELS[lang]?.[a.id]||a.id}
               </span>
@@ -202,9 +216,13 @@ export function Inicio({onIr,lang}){
               }}/>
 
               {axuda&&<span style={{
-                color:T.text3,fontSize:esMovil?"0.68rem":"0.72rem",lineHeight:1.3,
-                marginTop:"0.55rem",display:"-webkit-box",WebkitLineClamp:3,
+                color:T.text3,fontSize:esMovil?"0.68rem":"0.74rem",lineHeight:1.35,
+                marginTop:"0.5rem",display:"-webkit-box",
+                // Recórtase a 3 liñas: a altura da tarxeta é fixa e unha
+                // descrición longa desbordaría por abaixo.
+                WebkitLineClamp:altoT>200?4:3,
                 WebkitBoxOrient:"vertical",overflow:"hidden",
+                maxWidth:"22ch",
               }}>{(DESCS[lang]||DESCS.gl)[a.id]||""}</span>}
             </button>
           );
