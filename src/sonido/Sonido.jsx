@@ -19,6 +19,7 @@ import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
 import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
 import { cargarMesa, gardarMesa } from './mesa.js';
 import { capturarEscena, planificarEscena } from './escenas.js';
+import { Reprodutor } from './Reprodutor.jsx';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
@@ -225,6 +226,7 @@ function Panel({ T, S, titulo, extra, children, sen }) {
 export function Sonido({
   recursos = [], modoFuncion = false, onSairFuncion,
   escenas = [], onGardarEscena, onBorrarEscena,
+  listas = [], listaActiva, onEscollerLista, onCambiarLista, onGardarLista, onBorrarLista,
 }) {
   const { T } = useTheme();
   const S = mkS(T);
@@ -310,6 +312,8 @@ export function Sonido({
   const [nomeEscena, setNomeEscena] = useState('');
   const [verEscenas, setVerEscenas] = useState(false);
   const [avisoEscena, setAvisoEscena] = useState(null);
+  // Mentres soa unha pista externa, o resto da mesa cala.
+  const [exclusivo, setExclusivo] = useState(false);
 
   const aplicarEscena = useCallback((e) => {
     const plan = planificarEscena(e, recursos, m.capas);
@@ -493,9 +497,23 @@ export function Sonido({
   // ── Paneis ─────────────────────────────────────────────────────
   const panelMusica = (
     <Panel T={T} S={S} titulo="🎵 Música"
-      extra={<BusVol T={T} S={S} v={m.volBus.musica} onChange={(x) => m.volumeBus('musica', x)} />}
-      sen={porTipo.musica.length ? null : 'Sen música na mesa.'}>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      extra={<BusVol T={T} S={S} v={m.volBus.musica} onChange={(x) => m.volumeBus('musica', x)} />}>
+      <Reprodutor
+        T={T} S={S} m={m} recursos={recursos}
+        listas={listas} activa={listaActiva}
+        onEscoller={onEscollerLista} onCambiar={onCambiarLista}
+        onGardar={onGardarLista} onBorrar={onBorrarLista}
+        exclusivo={exclusivo} setExclusivo={setExclusivo}
+        modoFuncion={modoFuncion}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column',
+        marginTop: '0.7rem', paddingTop: '0.7rem',
+        borderTopStyle: 'solid', borderTopWidth: 1, borderTopColor: T.border }}>
+        {!porTipo.musica.length && (
+          <p style={{ ...S.t.caption, color: T.text4, margin: 0 }}>
+            Sen música solta na mesa. Podes usar unha lista de reprodución.
+          </p>
+        )}
         {porTipo.musica.map((r) => {
           const c = capaDe(r.id)
             || { on: false, vol: volRecurso[r.id] ?? r.vol, erro: null };
@@ -524,7 +542,8 @@ export function Sonido({
   const panelEfectos = (
     <Panel T={T} S={S} titulo="⚡ Efectos"
       extra={<BusVol T={T} S={S} v={m.volBus.efectos} onChange={(x) => m.volumeBus('efectos', x)} />}
-      sen={porTipo.efecto.length ? null : 'Sen efectos na mesa.'}>
+      sen={porTipo.efecto.length ? null
+        : exclusivo ? 'En silencio mentres soa YouTube.' : 'Sen efectos na mesa.'}>
       <div style={{
         display: 'grid',
         gridTemplateColumns: `repeat(auto-fill,minmax(min(${dobreColumna ? 92 : 78}px,100%),1fr))`,
@@ -532,8 +551,8 @@ export function Sonido({
       }}>
         {porTipo.efecto.map((r) => (
           <BotonSon key={r.id} T={T} S={S} recurso={r} grande={dobreColumna}
-            estado={m.urls[r.url] || 'pendente'}
-            onDisparar={() => m.disparar(r.url, r.vol)} />
+            estado={exclusivo ? 'erro' : (m.urls[r.url] || 'pendente')}
+            onDisparar={() => { if (!exclusivo) m.disparar(r.url, r.vol); }} />
         ))}
       </div>
     </Panel>

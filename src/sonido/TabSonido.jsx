@@ -23,6 +23,7 @@ import {
 } from '../audio/almacen.js';
 import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa } from './mesas.js';
 import { cargarEscenas, gardarEscena, borrarEscenaLocal } from './escenas.js';
+import { cargarPlaylists, gardarPlaylist, borrarPlaylistLocal, playlistBaleira } from './playlists.js';
 import { Explorar } from './Explorar.jsx';
 import { Sonido } from './Sonido.jsx';
 
@@ -62,6 +63,8 @@ export function TabSonido() {
   const [nomeMesa, setNomeMesa] = useState('');
   const [avisoMesa, setAvisoMesa] = useState(null);
   const [escenas, setEscenas] = useState([]);
+  const [listas, setListas] = useState([]);
+  const [listaId, setListaId] = useState(null);
   const [vista, setVista] = useState('mesa');
   const [probando, setProbando] = useState([]);
 
@@ -89,6 +92,7 @@ export function TabSonido() {
     recargarLocais();
     cargarMesas(userId).then((r) => { if (vivo) setMesas(r.mesas); });
     cargarEscenas(userId).then((r) => { if (vivo) setEscenas(r.escenas); });
+    cargarPlaylists(userId).then((r) => { if (vivo) setListas(r.playlists); });
     return () => { vivo = false; };
   }, [recargarLocais, userId]);
 
@@ -142,6 +146,32 @@ export function TabSonido() {
   const { recursos, faltan } = resolverMesa(mesaActiva, todos);
   const baleiro = !cargando && todos.length === 0;
   const bytes = locais.reduce((n, r) => n + (r.bytes || 0), 0);
+
+  const listaActiva = listas.find((l) => l.id === listaId) || null;
+
+  // Os cambios da lista quedan en memoria ata que se garda: editar unha
+  // orde de pistas no medio dunha función non debe escribir na base a
+  // cada movemento.
+  const onCambiarLista = useCallback((nova) => {
+    setListas((ls) => ls.map((l) => (l.id === nova.id ? nova : l)));
+  }, []);
+
+  const onGardarLista = useCallback(async (nomeNovo) => {
+    const pl = nomeNovo ? { ...playlistBaleira(nomeNovo) } : listaActiva;
+    if (!pl) return;
+    const g = await gardarPlaylist(pl, userId);
+    if (!g.ok) return;
+    const r2 = await cargarPlaylists(userId);
+    setListas(r2.playlists);
+    setListaId(g.playlist.id);
+  }, [listaActiva, userId]);
+
+  const onBorrarLista = useCallback(async (l) => {
+    if (l.local) borrarPlaylistLocal(l.id);
+    const r2 = await cargarPlaylists(userId);
+    setListas(r2.playlists);
+    setListaId(null);
+  }, [userId]);
 
   const onGardarEscena = useCallback(async (e) => {
     const g = await gardarEscena(e, userId);
@@ -369,6 +399,12 @@ export function TabSonido() {
       {vista === 'mesa' && <Sonido
         recursos={recursos}
         escenas={escenas}
+        listas={listas}
+        listaActiva={listaActiva}
+        onEscollerLista={setListaId}
+        onCambiarLista={onCambiarLista}
+        onGardarLista={onGardarLista}
+        onBorrarLista={onBorrarLista}
         onGardarEscena={onGardarEscena}
         onBorrarEscena={onBorrarEscena}
         modoFuncion={modoFuncion}

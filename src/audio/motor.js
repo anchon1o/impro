@@ -172,6 +172,39 @@ export function crearMotor(opcions = {}) {
     return c;
   }
 
+  // Pista de playlist: unha soa capa reutilizada no bus de música, sen
+  // bucle e avisando ao rematar. Non se crea unha capa por pista porque
+  // unha lista de 40 deixaría 40 elementos <audio> vivos.
+  const PISTA = '__pista__';
+  function reproducirPista(url, { vol = 0.8, onFin } = {}) {
+    if (!ctx) return false;
+    const previa = capas.get(PISTA);
+    if (previa) {
+      try { previa.el.pause(); } catch (e) { /* xa parada */ }
+      quitarCapa(PISTA);
+    }
+    const c = engadirCapa(PISTA, { url, bus: 'musica', vol, loop: false, tipo: 'musica' });
+    if (!c) return false;
+    c.el.onended = () => { if (onFin) onFin(); };
+    acender(PISTA, true);
+    return true;
+  }
+
+  function pararPista() {
+    const c = capas.get(PISTA);
+    if (!c) return;
+    try { c.el.pause(); c.el.onended = null; } catch (e) { /* nada */ }
+    quitarCapa(PISTA);
+  }
+
+  function pausarPista(si = true) {
+    const c = capas.get(PISTA);
+    if (!c) return false;
+    if (si) { try { c.el.pause(); } catch (e) { /* nada */ } }
+    else { const p = c.el.play(); if (p && p.catch) p.catch(() => {}); }
+    return true;
+  }
+
   function acender(id, si = true) {
     const c = capas.get(id);
     if (!c || !ctx) return false;
@@ -344,6 +377,7 @@ export function crearMotor(opcions = {}) {
   return {
     arrancar, reanudar, destruir, bus,
     engadirCapa, preparar, acender, volCapa, quitarCapa,
+    reproducirPista, pararPista, pausarPista,
     precargar, precargarVarios, estadoDe, disparar,
     volumeBus, pararTodo, fadeTodo,
     instantanea, desfase,
