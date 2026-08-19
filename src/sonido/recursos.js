@@ -179,6 +179,7 @@ function normalizarCol(c) {
     visibilidade: c.visibilidade || 'privado',
     estado: c.estado || 'borrador',
     gardados: c.gardados || 0,
+    grupoId: c.grupo_id || null,
     orixeId: c.orixe_id || null,
     userId: c.user_id || null,
   };
@@ -192,6 +193,7 @@ export async function gardarColeccion(c) {
       tipo: c.tipo, nome: c.nome, descricion: c.descricion || null,
       config: c.config || {}, emoji: c.emoji || null, cor: c.cor || null,
       visibilidade: c.visibilidade || 'privado', estado: c.estado || 'borrador',
+      grupo_id: c.grupoId || null,
       orixe_id: c.orixeId || null, user_id: c.userId || null,
       updated_at: new Date().toISOString(),
     };

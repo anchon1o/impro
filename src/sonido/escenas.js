@@ -64,6 +64,7 @@ export function sanearEscena(e) {
     capas,                                    // id de recurso → volume
     botons: Array.isArray(e.botons) ? e.botons.filter((x) => typeof x === 'string' && x) : [],
     fade: segundosFade(e.fade),               // segundos, tope 8
+    grupoId: e.grupoId || e.grupo_id || null,
     local: e.local !== false,
   };
 }
@@ -130,7 +131,7 @@ export async function cargarEscenas(userId) {
       const items = await getItems(c.id);
       const cfg = c.config || {};
       remotas.push(sanearEscena({
-        id: c.id, nome: c.nome, emoji: c.emoji,
+        id: c.id, nome: c.nome, emoji: c.emoji, grupoId: c.grupoId,
         capas: cfg.capas, fade: cfg.fade,
         botons: items.map((i) => i.recursoId).filter(Boolean),
         local: false,
@@ -159,7 +160,7 @@ export async function gardarEscena(escena, userId) {
 
   const r = await gardarColeccion({
     id: e.id.startsWith('local-') ? undefined : e.id,
-    tipo: 'escena', nome: e.nome, emoji: e.emoji,
+    tipo: 'escena', nome: e.nome, emoji: e.emoji, grupoId: e.grupoId,
     config: { capas: e.capas, fade: e.fade },
     visibilidade: 'privado', estado: 'borrador', userId,
   });
@@ -167,6 +168,12 @@ export async function gardarEscena(escena, userId) {
   const it = await gardarItems(r.coleccion.id, e.botons.map((id) => ({ recursoId: id })));
   if (!it.ok) return it;
   return { ok: true, escena: { ...e, id: r.coleccion.id, local: false } };
+}
+
+// Mesmo criterio que en mesas e escaletas.
+export function filtrarPorGrupo(lista, grupoId) {
+  if (!grupoId) return lista || [];
+  return (lista || []).filter((x) => !x.grupoId || x.grupoId === grupoId);
 }
 
 export function borrarEscenaLocal(id) {

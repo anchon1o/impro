@@ -21,8 +21,10 @@ import {
   dispoñible, gardarFicheiro, listarFicheiros, borrarFicheiro,
   actualizarMeta, estimar, formatarBytes,
 } from '../audio/almacen.js';
-import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa } from './mesas.js';
-import { cargarEscenas, gardarEscena, borrarEscenaLocal } from './escenas.js';
+import { cargarMesas, gardarMesaNomeada, borrarMesaLocal, mesaBaleira, resolverMesa,
+         filtrarPorGrupo as mesasDoGrupo } from './mesas.js';
+import { cargarEscenas, gardarEscena, borrarEscenaLocal,
+         filtrarPorGrupo as escenasDoGrupo } from './escenas.js';
 import { cargarPlaylists, gardarPlaylist, borrarPlaylistLocal, playlistBaleira } from './playlists.js';
 import { Explorar } from './Explorar.jsx';
 import { Sonido } from './Sonido.jsx';
@@ -42,7 +44,7 @@ function tipoPorNome(nome) {
   return 'efecto';
 }
 
-export function TabSonido() {
+export function TabSonido({ grupoActivo }) {
   const { T } = useTheme();
   const S = mkS(T);
   const { perfil } = useAuth();
@@ -72,6 +74,9 @@ export function TabSonido() {
   const [editandoMesa, setEditandoMesa] = useState(false);
   const [nomeMesa, setNomeMesa] = useState('');
   const [avisoMesa, setAvisoMesa] = useState(null);
+  // Mesmo criterio que nas escaletas: filtra, pero pódese quitar sen
+  // ir a Grupos.
+  const [soDoGrupo, setSoDoGrupo] = useState(true);
   const [escenas, setEscenas] = useState([]);
   const [listas, setListas] = useState([]);
   const [listaId, setListaId] = useState(null);
@@ -152,6 +157,9 @@ export function TabSonido() {
   // Un son que veñas de probar desde Explorar súmase á mesa desta
   // sesión. Non se garda: probar non pode ensuciar a túa biblioteca.
   const todos = [...daBd, ...locais, ...probando];
+  const filtraG = grupoActivo && soDoGrupo ? grupoActivo.id : null;
+  const mesasVis = mesasDoGrupo(mesas, filtraG);
+  const escenasVis = escenasDoGrupo(escenas, filtraG);
   // Sen mesa activa vese todo o catálogo; cunha mesa, só o que ela trae.
   const { recursos, faltan } = resolverMesa(mesaActiva, todos);
   const baleiro = !cargando && todos.length === 0;
@@ -184,12 +192,14 @@ export function TabSonido() {
   }, [userId]);
 
   const onGardarEscena = useCallback(async (e) => {
-    const g = await gardarEscena(e, userId);
+    const conGrupo = (grupoActivo && soDoGrupo && !e.grupoId)
+      ? { ...e, grupoId: grupoActivo.id } : e;
+    const g = await gardarEscena(conGrupo, userId);
     if (!g.ok) return g;
     const r2 = await cargarEscenas(userId);
     setEscenas(r2.escenas);
     return g;
-  }, [userId]);
+  }, [userId, grupoActivo, soDoGrupo]);
 
   const onBorrarEscena = useCallback(async (e) => {
     if (e.local) borrarEscenaLocal(e.id);
@@ -210,6 +220,10 @@ export function TabSonido() {
     // activa, iso é o seu contido; se non, o catálogo enteiro.
     const base = mesaActiva ? { ...mesaActiva, nome } : { ...mesaBaleira(nome) };
     base.recursoIds = recursos.map((r) => r.id);
+    // ⚠️ Herda o grupo activo só se é NOVA. Cambiarlle o grupo a unha
+    // mesa xa gardada por ter outro activo sería moverlle o traballo a
+    // alguén sen avisar.
+    if (!mesaActiva && grupoActivo && soDoGrupo) base.grupoId = grupoActivo.id;
     const g = await gardarMesaNomeada(base, userId);
     if (!g.ok) { setAvisoMesa(g.erro); return; }
     const r2 = await cargarMesas(userId);
@@ -218,7 +232,7 @@ export function TabSonido() {
     setEditandoMesa(false);
     setNomeMesa('');
     setAvisoMesa(null);
-  }, [nomeMesa, mesaActiva, recursos, userId]);
+  }, [nomeMesa, mesaActiva, recursos, userId, grupoActivo, soDoGrupo]);
 
   const eliminarMesa = useCallback(async () => {
     if (!mesaActiva) return;
@@ -248,6 +262,14 @@ export function TabSonido() {
           <button onClick={() => setVista('explorar')} style={S.btn(T.bg3, T.text)}>
             🔍 Explorar
           </button>
+          {grupoActivo && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem',
+              color: T.text4, fontSize: '0.74rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={soDoGrupo}
+                onChange={(e) => setSoDoGrupo(e.target.checked)} />
+              Só <b style={{ color: grupoActivo.color || T.accent }}>{grupoActivo.nombre}</b>
+            </label>
+          )}
           <button onClick={() => inputRef.current && inputRef.current.click()}
             style={S.btn(T.bg3, T.text)}>
             ＋ Engadir sons
@@ -283,9 +305,9 @@ export function TabSonido() {
             aria-label="Mesa activa"
             style={{ ...S.input, width: 'auto', flex: '1 1 170px', minHeight: 44 }}>
             <option value="">Todos os sons ({todos.length})</option>
-            {mesas.map((m) => (
+            {mesasVis.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.emoji} {m.nome} ({m.recursoIds.length}){m.local ? ' · local' : ''}
+                {m.emoji} {m.nome} ({m.recursoIds.length}){m.local ? ' · local' : ''}{m.grupoId ? ' · grupo' : ''}
               </option>
             ))}
           </select>
@@ -312,6 +334,8 @@ export function TabSonido() {
           <p style={{ ...S.t.caption, color: T.text3, margin: '0 0 0.5rem' }}>
             Gárdanse os {recursos.length} sons que tes diante agora.
             {userId ? '' : ' Sen conta, a mesa queda neste dispositivo.'}
+            {!mesaActiva && grupoActivo && soDoGrupo
+              ? ` Asignarase ao grupo ${grupoActivo.nombre}.` : ''}
           </p>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             <input value={nomeMesa} onChange={(e) => setNomeMesa(e.target.value)}
@@ -408,7 +432,7 @@ export function TabSonido() {
 
       {vista === 'mesa' && <Sonido
         recursos={recursos}
-        escenas={escenas}
+        escenas={escenasVis}
         listas={listas}
         listaActiva={listaActiva}
         onEscollerLista={setListaId}

@@ -276,7 +276,7 @@ function AppInner({perfil,publico}={}){
         {tab==="reto"&&<TabReto/>}
         {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer} grupoActivo={grupoActivo}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
-        {tab==="sonido"&&<TabSonido/>}
+        {tab==="sonido"&&<TabSonido grupoActivo={grupoActivo}/>}
         {tab==="grupos"&&<LoginGate titulo="Xestiona os teus grupos" descricion="Crea grupos, engade membros e fai seguimento das súas estatísticas."><TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/></LoginGate>}
         {tab==="qr"&&<TabQR/>}
         {tab==="admin"&&<TabAdmin/>}

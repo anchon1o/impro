@@ -44,6 +44,8 @@ export function mesaBaleira(nome = 'Mesa nova') {
     volRecurso: {},
     volBus: { ...VOLS },
     contadores: [],
+    // A que grupo pertence. `null` = persoal, vese sempre.
+    grupoId: null,
     local: true,
   };
 }
@@ -75,6 +77,7 @@ function sanear(m) {
     volRecurso: sanearVols(m.volRecurso),
     volBus: { ...VOLS, ...sanearVols(m.volBus, VOLS) },
     contadores: deserializar(m.contadores),
+    grupoId: m.grupoId || m.grupo_id || null,
     local: m.local !== false,
   };
 }
@@ -123,6 +126,7 @@ export async function cargarMesas(userId) {
         id: c.id,
         nome: c.nome,
         emoji: c.emoji || '🎛',
+        grupoId: c.grupoId,
         recursoIds: items.map((i) => i.recursoId).filter(Boolean),
         volRecurso: cfg.volRecurso,
         volBus: cfg.volBus,
@@ -154,7 +158,7 @@ export async function gardarMesaNomeada(mesa, userId) {
 
   const r = await gardarColeccion({
     id: m.id.startsWith('local-') ? undefined : m.id,
-    tipo: 'mesa', nome: m.nome, emoji: m.emoji,
+    tipo: 'mesa', nome: m.nome, emoji: m.emoji, grupoId: m.grupoId,
     config: {
       volBus: m.volBus,
       volRecurso: m.volRecurso,
@@ -172,6 +176,13 @@ export async function gardarMesaNomeada(mesa, userId) {
 
 export function borrarMesaLocal(id) {
   return escribirLocais(lerLocais().filter((m) => m.id !== id));
+}
+
+// ⚠️ Inclusivo co persoal, igual que nas escaletas: activar un grupo
+// non pode facer desaparecer o teu propio traballo.
+export function filtrarPorGrupo(lista, grupoId) {
+  if (!grupoId) return lista || [];
+  return (lista || []).filter((x) => !x.grupoId || x.grupoId === grupoId);
 }
 
 // Cales das locais poderían subirse. Non se sobe nada só: mesturar sen
