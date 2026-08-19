@@ -16,7 +16,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTheme, mkS, useViewport } from '../core.jsx';
 import { useMotor, useWakeLock, useReloxo } from './useMotor.js';
-import { COMPASES, beatsOf, PRESETS_BPM } from '../audio/metronomo.js';
+
 import { cargarMesa, gardarMesa } from './mesa.js';
 import { capturarEscena, planificarEscena } from './escenas.js';
 import { esMesturable } from '../audio/externo.js';
@@ -34,11 +34,13 @@ const TOQUE = 56;
 // Catro estados, e os catro teñen que verse sen ler nada:
 //   pendente → normal · cargando → atenuado · listo → punto verde
 //   erro → vermello e desactivado
-function BotonSon({ T, S, recurso, estado = 'pendente', onDisparar, grande }) {
+function BotonSon({ T, S, recurso, estado = 'pendente', soando, onDisparar, grande }) {
   const erro = estado === 'erro';
   const cargando = estado === 'cargando';
   const listo = estado === 'listo';
-  const cor = erro ? T.danger : listo ? T.ok : T.bg3;
+  // Un efecto longo que xa soa márcase, porque volver premelo párao:
+  // sen sinal, o segundo toque parecería que non fixo nada.
+  const cor = erro ? T.danger : soando ? T.accent : listo ? T.ok : T.bg3;
   return (
     <button
       onClick={onDisparar}
@@ -46,7 +48,7 @@ function BotonSon({ T, S, recurso, estado = 'pendente', onDisparar, grande }) {
       aria-label={recurso.nome + (erro ? ' (non se puido cargar)' : listo ? ' (listo)' : cargando ? ' (cargando)' : '')}
       style={{
         position: 'relative',
-        background: T.bg3,
+        background: soando ? T.accent + '22' : T.bg3,
         // B24: propiedades longas, nunca a abreviatura.
         borderStyle: 'solid', borderWidth: 1.5, borderColor: cor,
         borderRadius: 12,
@@ -62,7 +64,7 @@ function BotonSon({ T, S, recurso, estado = 'pendente', onDisparar, grande }) {
         transition: 'opacity 0.15s, border-color 0.15s',
       }}
     >
-      {listo && (
+      {listo && !soando && (
         <span aria-hidden style={{
           position: 'absolute', top: 5, right: 5, width: 6, height: 6,
           borderRadius: '50%', background: T.ok,
@@ -452,6 +454,21 @@ export function Sonido({
       borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
       borderRadius: 14, padding: '0.6rem 0.75rem',
     }}>
+      {/* MASTER. Faltaba, e é o control máis básico dunha mesa: baixar
+          todo de golpe sen tocar cada bus. Vai na barra, ao lado do
+          STOP, que é onde se busca cando algo vai mal. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+        <span style={{ ...S.t.label, color: T.text3, letterSpacing: '0.08em' }}>MASTER</span>
+        <input type="range" min="0" max="1" step="0.02"
+          value={m.volBus.master ?? 0.8}
+          onChange={(e) => m.volumeBus('master', parseFloat(e.target.value))}
+          aria-label="Volume xeral"
+          style={{ width: dobreColumna ? 130 : 96, height: 32, accentColor: T.accent, background: 'transparent' }} />
+        <span style={{ ...S.t.numeric, fontSize: '0.72rem', color: T.text2, minWidth: 26, textAlign: 'right' }}>
+          {Math.round((m.volBus.master ?? 0.8) * 100)}
+        </span>
+      </div>
+
       {/* Precargar antes do show é a diferenza entre premer un botón e
           que soe, ou premelo e agardar a que se descargue. */}
       <button onClick={() => m.precargarTodo(recursos)} disabled={!!m.progreso}
@@ -567,7 +584,8 @@ export function Sonido({
         {porTipo.efecto.map((r) => (
           <BotonSon key={r.id} T={T} S={S} recurso={r} grande={dobreColumna}
             estado={exclusivo ? 'erro' : (m.urls[r.url] || 'pendente')}
-            onDisparar={() => { if (!exclusivo) m.disparar(r.url, r.vol); }} />
+            soando={m.soando.includes(r.url)}
+            onDisparar={() => { if (!exclusivo) m.alternarEfecto(r.url, r.vol); }} />
         ))}
       </div>
     </Panel>
@@ -697,45 +715,41 @@ export function Sonido({
 
   // ── Metrónomo ──────────────────────────────────────────────────
   // Vén da Cabina co seu 🥁. Discreto: colapsado ata que se abre.
+  // Compacto a propósito: nunha mesa de son o metrónomo é un
+  // accesorio, non o protagonista. Fóra o selector de compás — abonda
+  // co número de pulsos — e os puntos van grandes, que é o que se mira
+  // de lonxe mentres se toca outra cousa.
   const panelMetro = (
     <Panel T={T} S={S} titulo="🥁 Metrónomo"
       extra={
         <button onClick={m.alternarMetro}
-          style={{ ...S.btn(m.metroOn ? T.danger : T.info, m.metroOn ? '#fff' : '#000'), minHeight: 40 }}>
-          {m.metroOn ? '⏹ Parar' : '▶ Iniciar'}
+          style={{ ...S.btn(m.metroOn ? T.danger : T.info, m.metroOn ? '#fff' : '#000'),
+            minHeight: 36, padding: '0.3rem 0.7rem', fontSize: '0.78rem' }}>
+          {m.metroOn ? '⏹' : '▶'}
         </button>
       }>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flexWrap: 'wrap' }}>
-        <div style={{ ...S.t.numeric, fontSize: '2rem', color: m.metroOn ? T.info : T.text2, minWidth: 62 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <div style={{ ...S.t.numeric, fontSize: '1.5rem', color: m.metroOn ? T.info : T.text2, minWidth: 48 }}>
           {m.bpm}
         </div>
-        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-          {Array.from({ length: m.beats }).map((_, i) => (
-            <div key={i} style={{
-              width: i === 0 ? 13 : 10, height: i === 0 ? 13 : 10, borderRadius: '50%',
-              background: m.metroOn && m.pulso === i ? T.info : T.bg4,
-              transition: 'background 0.05s',
-            }} />
-          ))}
-        </div>
-        <select value={COMPASES.find((c) => beatsOf(c) === m.beats) || '4/4'}
-          onChange={(e) => m.setBeats(beatsOf(e.target.value))}
-          aria-label="Compás"
-          style={{ ...S.input, width: 'auto', flex: '0 0 auto' }}>
-          {COMPASES.map((c) => <option key={c} value={c}>{c}</option>)}
+        <input type="range" min={30} max={240} value={m.bpm}
+          onChange={(e) => m.setBpm(Number(e.target.value))}
+          aria-label="Pulsos por minuto"
+          style={{ flex: 1, minWidth: 90, height: 30, accentColor: T.info, background: 'transparent' }} />
+        <select value={m.beats} onChange={(e) => m.setBeats(Number(e.target.value))}
+          aria-label="Pulsos por compás"
+          style={{ ...S.input, width: 'auto', flex: '0 0 auto', minHeight: 36, padding: '0.25rem 0.4rem' }}>
+          {[2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
-      <input type="range" min={30} max={240} value={m.bpm}
-        onChange={(e) => m.setBpm(Number(e.target.value))}
-        aria-label="Pulsos por minuto"
-        style={{ width: '100%', height: 30, accentColor: T.info, background: 'transparent', marginTop: '0.4rem' }} />
-      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-        {PRESETS_BPM.map((b) => (
-          <button key={b} onClick={() => m.setBpm(b)} aria-label={b + ' bpm'}
-            style={{
-              ...S.btn(m.bpm === b ? T.info : T.bg3, m.bpm === b ? '#000' : T.text2),
-              minHeight: 36, padding: '0.3rem 0.6rem', fontSize: '0.75rem',
-            }}>{b}</button>
+      <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', marginTop: '0.55rem' }}>
+        {Array.from({ length: m.beats }).map((_, i) => (
+          <div key={i} style={{
+            width: i === 0 ? 20 : 15, height: i === 0 ? 20 : 15, borderRadius: '50%',
+            background: m.metroOn && m.pulso === i ? T.info : T.bg4,
+            boxShadow: m.metroOn && m.pulso === i ? `0 0 12px ${T.info}` : 'none',
+            transition: 'background 0.04s, box-shadow 0.04s',
+          }} />
         ))}
       </div>
     </Panel>

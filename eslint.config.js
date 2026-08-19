@@ -24,6 +24,7 @@ export default [
         Image: 'readonly', Audio: 'readonly', React: 'readonly',
         URLSearchParams: 'readonly', crypto: 'readonly', location: 'readonly',
         indexedDB: 'readonly', IDBKeyRange: 'readonly', MediaMetadata: 'readonly',
+        CustomEvent: 'readonly', Event: 'readonly',
       },
     },
     plugins: { react },

@@ -42,6 +42,9 @@ export function crearMotor(opcions = {}) {
   // dicirlle a ninguén se un botón vai soar ao premelo ou vai quedar
   // calado mentres se descarga.
   const estadoUrl = new Map();
+  // url → Set de nodos que están soando agora. Fai falta para poder
+  // PARAR un efecto: sen isto, cada disparo era irrecuperable.
+  const vivos = new Map();
   let estado = 'parado';
   let volBus = { musica: 0.8, ambientes: 0.8, efectos: 0.8, master: 0.8 };
   let refWall = 0, refAudio = 0;
@@ -54,6 +57,7 @@ export function crearMotor(opcions = {}) {
       desfase: desfase(),
       volBus: { ...volBus },
       urls: Object.fromEntries(estadoUrl),
+      soando: [...vivos.entries()].filter(([, s2]) => s2.size).map(([u]) => u),
       listos: [...estadoUrl.values()].filter((x) => x === 'listo').length,
       cargando: [...estadoUrl.values()].filter((x) => x === 'cargando').length,
       capas: [...capas.entries()].map(([id, c]) => ({
@@ -336,8 +340,44 @@ export function crearMotor(opcions = {}) {
     s.buffer = buf;
     g.gain.value = Math.min(1, Math.max(0, vol));
     s.connect(g); g.connect(busNodes.efectos);
+
+    if (!vivos.has(url)) vivos.set(url, new Set());
+    const set = vivos.get(url);
+    const nodo = { s, g };
+    set.add(nodo);
+    // Cando remata só, sae da lista. Sen isto un efecto curto quedaría
+    // marcado como «soando» para sempre.
+    s.onended = () => { set.delete(nodo); cambiou(); };
     s.start();
+    cambiou();
     return true;
+  }
+
+  // Parar un efecto en marcha. Cun fundido moi curto: un corte seco nun
+  // buffer a media reprodución produce un chasquido audible.
+  function pararEfecto(url) {
+    const set = vivos.get(url);
+    if (!set || !set.size) return false;
+    const fin = ctx.currentTime + 0.06;
+    for (const nodo of [...set]) {
+      try {
+        nodo.g.gain.cancelScheduledValues(ctx.currentTime);
+        nodo.g.gain.setValueAtTime(nodo.g.gain.value, ctx.currentTime);
+        nodo.g.gain.linearRampToValueAtTime(0.0001, fin);
+        nodo.s.stop(fin);
+      } catch (e) { /* xa parado */ }
+      set.delete(nodo);
+    }
+    cambiou();
+    return true;
+  }
+
+  // Premer outra vez para. É o que se espera dun ambiente longo posto
+  // nun botón de efecto; nun efecto curto non chega a notarse.
+  function alternarEfecto(url, vol = 1) {
+    const set = vivos.get(url);
+    if (set && set.size) return pararEfecto(url);
+    return disparar(url, vol);
   }
 
   // ── GLOBAIS ──────────────────────────────────────────────────────
@@ -350,6 +390,7 @@ export function crearMotor(opcions = {}) {
   }
 
   function pararTodo() {
+    for (const [url] of vivos) pararEfecto(url);
     for (const [id] of capas) acender(id, false);
     for (const [, c] of capas) c.fade = false;
     rexistrar('STOP TODO');
@@ -405,7 +446,7 @@ export function crearMotor(opcions = {}) {
     arrancar, reanudar, destruir, bus,
     engadirCapa, preparar, acender, volCapa, quitarCapa,
     reproducirPista, pararPista, pausarPista,
-    precargar, precargarVarios, estadoDe, disparar,
+    precargar, precargarVarios, estadoDe, disparar, pararEfecto, alternarEfecto,
     volumeBus, pararTodo, fadeTodo,
     instantanea, desfase,
     get estado() { return estado; },

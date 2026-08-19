@@ -197,6 +197,9 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     quitarCapa: motor.quitarCapa,
     disparar: motor.disparar,
     precargar: motor.precargar,
+    alternarEfecto: motor.alternarEfecto,
+    pararEfecto: motor.pararEfecto,
+    soando: snap.soando || [],
     // Reprodución de listas: unha soa capa reutilizada no bus de música.
     reproducirPista: motor.reproducirPista,
     pararPista: motor.pararPista,

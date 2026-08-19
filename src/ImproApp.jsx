@@ -73,6 +73,17 @@ export const TABS=[
 ];
 
 function AppInner({perfil,publico}={}){
+  // Modo función de Sonido: a mesa pide a pantalla enteira. Avísao por
+  // un evento e non por props porque Sonido vai baixo demanda e está
+  // tres niveis por debaixo; menos cableado que un contexto novo para
+  // un só booleano.
+  const [pantallaChea,setPantallaChea]=useState(false);
+  useEffect(()=>{
+    const f=e=>setPantallaChea(!!(e&&e.detail));
+    window.addEventListener("impro:pantallaChea",f);
+    // Se se sae da pestana sen apagalo, a cabeceira volve igual.
+    return()=>{window.removeEventListener("impro:pantallaChea",f);};
+  },[]);
   const {dark,toggle,T}=useTheme();
   const {logueado,pedirLogin,esAdmin,migrando}=useAuth();
   const {esMovil,esTablet,esPC}=useViewport();
@@ -137,7 +148,7 @@ function AppInner({perfil,publico}={}){
     `}</style>
     {modoShow&&<ModoShow audio={audio} onClose={()=>setModoShow(false)} onStimulus={s=>setPubStimulus(s)} rundown={pubRundown} setRundown={setPubRundown}/>}
     {pubOpen&&<PantallaPublica stimulus={pubStimulus} timerDisplay={pubTimerDisplay} timerRunning={pubTimerRunning} rundown={pubRundown} onClose={()=>setPubOpen(false)}/>}
-    <header style={{borderBottom:`1px solid ${T.navBorder}`,padding:"0.8rem 1rem 0",background:T.nav,position:"sticky",top:0,zIndex:100,transition:"background 0.3s,border-color 0.3s"}}>
+    {!pantallaChea&&<header style={{borderBottom:`1px solid ${T.navBorder}`,padding:"0.8rem 1rem 0",background:T.nav,position:"sticky",top:0,zIndex:100,transition:"background 0.3s,border-color 0.3s"}}>
       <div style={{maxWidth:960,margin:"0 auto"}}>
         {/* IM-B02 / IM-M01. A fila anterior era un flex space-between sen
             flexWrap nin minWidth:0, con logo + selector de idioma (3 botóns)
@@ -238,7 +249,7 @@ function AppInner({perfil,publico}={}){
           </button>))}
         </nav>}
       </div>
-    </header>
+    </header>}
     {!supabaseConfigured&&<div style={{background:T.danger+"22",borderBottom:`1px solid ${T.danger}55`,padding:"0.55rem 1rem",textAlign:"center"}}>
       <span style={{color:T.danger,fontSize:"0.82rem",fontWeight:700}}>⚠️ Sen conexión a Supabase — faltan as credenciais (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY). Login e datos en tempo real non funcionarán.</span>
     </div>}

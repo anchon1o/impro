@@ -55,6 +55,16 @@ export function TabSonido() {
   const [xestor, setXestor] = useState(false);
   const [erroLocal, setErroLocal] = useState(null);
   const [modoFuncion, setModoFuncion] = useState(false);
+
+  // Modo función pide a pantalla enteira. Avísase por evento porque a
+  // cabeceira vive tres niveis por riba.
+  // ⚠️ A limpeza é obrigatoria: se se sae da pestana en modo función
+  // sen avisar, a cabeceira quedaría oculta no resto da app e non
+  // habería como recuperala.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('impro:pantallaChea', { detail: modoFuncion }));
+    return () => window.dispatchEvent(new CustomEvent('impro:pantallaChea', { detail: false }));
+  }, [modoFuncion]);
   const inputRef = useRef(null);
   const urls = useRef([]);
   const [mesas, setMesas] = useState([]);
