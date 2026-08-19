@@ -72,7 +72,7 @@ export function ModoPomodoroImpro({onClose,audio}){
   </div>);
 }
 
-export function TabSesiones({onLaunchTimer}){
+export function TabSesiones({onLaunchTimer,grupoActivo}){
   const [tiposSes,setTiposSes]=useState([]);
   const cargarT=()=>cargarTiposDinamica().then(r=>setTiposSes((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));
   useEffect(()=>{cargarT();return aoCambiarTipos(cargarT);},[]);
@@ -110,7 +110,7 @@ export function TabSesiones({onLaunchTimer}){
     </div>
     {/* ⚠️ Este é o ÚNICO sitio onde se edita unha escaleta. Son e
         En directo impórtana en modo lectura. */}
-    <EditorEscaleta/>
+    <EditorEscaleta grupoActivo={grupoActivo}/>
   </div>);
 
   if(view==="historial")return(<div>

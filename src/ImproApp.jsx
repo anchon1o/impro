@@ -159,6 +159,17 @@ function AppInner({perfil,publico}={}){
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.55rem",gap:"0.5rem",minWidth:0}}>
           <button onClick={()=>{setMenuAberto(false);changeTab("inicio");}} title="Inicio" style={{display:"flex",alignItems:"center",gap:"0.45rem",minWidth:0,overflow:"hidden",background:"none",border:"none",padding:0,cursor:"pointer",color:"inherit",fontFamily:"inherit"}}>
             <span style={{fontWeight:800,fontSize:esMovil?"0.98rem":"1.08rem",letterSpacing:"-0.03em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>impro<span style={{color:T.accent}}>App</span></span>
+            {/* ⚠️ O grupo activo era invisible: só se sabía entrando en
+                Grupos. Se non se ve, ninguén sabe por que a lista de
+                escaletas aparece filtrada. */}
+            {grupoActivo&&<button onClick={()=>changeTab("grupos")}
+              title={"Grupo activo: "+grupoActivo.nombre}
+              style={{background:(grupoActivo.color||T.accent)+"1A",borderStyle:"solid",borderWidth:1,
+                borderColor:(grupoActivo.color||T.accent)+"66",borderRadius:20,padding:"0.15rem 0.6rem",
+                color:grupoActivo.color||T.accent,fontSize:"0.7rem",fontWeight:700,cursor:"pointer",
+                fontFamily:"inherit",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              {grupoActivo.nombre}
+            </button>}
             {!esMovil&&<span style={{background:T.accent+"22",color:T.accent,borderRadius:4,padding:"0.06rem 0.38rem",fontSize:"0.62rem",fontWeight:700,flexShrink:0}}>v10</span>}
           </button>
           <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexShrink:0}}>
@@ -263,7 +274,7 @@ function AppInner({perfil,publico}={}){
         {tab==="inicio"&&<Inicio lang={lang} onIr={id=>changeTab(id)}/>}
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="reto"&&<TabReto/>}
-        {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer}/></LoginGate>}
+        {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer} grupoActivo={grupoActivo}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
         {tab==="sonido"&&<TabSonido/>}
         {tab==="grupos"&&<LoginGate titulo="Xestiona os teus grupos" descricion="Crea grupos, engade membros e fai seguimento das súas estatísticas."><TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/></LoginGate>}

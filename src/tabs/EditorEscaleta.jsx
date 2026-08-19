@@ -13,18 +13,18 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme, mkS, useAuth, useDinamicas, colorTipo, TYPE } from '../core.jsx';
-import { cargarTiposDinamica, aoCambiarTipos } from '../db.js';
+import { cargarTiposDinamica, aoCambiarTipos, getGrupos } from '../db.js';
 import { filtrarEOrdenar } from '../dinamicasBusca.js';
 import {
   escaletaBaleira, crearBloque, crearItem, sanear,
   engadirBloque, quitarBloque, moverBloque,
   engadirItem, quitarItem, moverItem, editarItem,
   minutosBloque, minutosTotais, resumo, duplicar,
-  cargarEscaletas, gardarEscaleta, borrarEscaleta,
+  cargarEscaletas, gardarEscaleta, borrarEscaleta, filtrarPorGrupo,
   TIPOS_ESCALETA,
 } from '../escaleta.js';
 
-export function EditorEscaleta() {
+export function EditorEscaleta({ grupoActivo }) {
   const { T } = useTheme();
   const S = mkS(T);
   const { perfil } = useAuth();
@@ -38,6 +38,13 @@ export function EditorEscaleta() {
   const [escollendo, setEscollendo] = useState(null);   // id do bloque
   const [busca, setBusca] = useState('');
   const [sucia, setSucia] = useState(false);
+  const [grupos, setGrupos] = useState([]);
+  // Mentres hai un grupo activo, a lista fíltrase. Pódese quitar sen
+  // ir a Grupos: obrigar a cambiar de pestana para ver o teu traballo
+  // sería o xeito de que ninguén use os grupos.
+  const [soDoGrupo, setSoDoGrupo] = useState(true);
+
+  useEffect(() => { getGrupos().then((g) => setGrupos(Array.isArray(g) ? g : [])); }, []);
 
   const cargarT = useCallback(() => cargarTiposDinamica().then((r) => (
     setTipos((Array.isArray(r) ? r : (r?.tipos || [])).filter((t) => t.activo !== false))
@@ -96,6 +103,16 @@ export function EditorEscaleta() {
 
         {msg && <p style={{ ...TYPE.caption, color: T.info, margin: '0 0 0.6rem' }}>{msg}</p>}
 
+        {grupoActivo && (
+          <label style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            color: T.text4, fontSize: '0.76rem', marginBottom: '0.7rem', cursor: 'pointer',
+          }}>
+            <input type="checkbox" checked={soDoGrupo} onChange={(e) => setSoDoGrupo(e.target.checked)} />
+            Só as de <b style={{ color: grupoActivo.color || T.accent }}>{grupoActivo.nombre}</b> e as persoais
+          </label>
+        )}
+
         {!lista.length && (
           <div style={{ ...S.panel, textAlign: 'center', padding: '2rem 1rem' }}>
             <p style={{ ...TYPE.bodySm, color: T.text3, margin: '0 0 0.3rem', fontWeight: 650 }}>
@@ -109,7 +126,7 @@ export function EditorEscaleta() {
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(260px,100%),1fr))', gap: '0.55rem' }}>
-          {lista.map((e) => {
+          {(grupoActivo && soDoGrupo ? filtrarPorGrupo(lista, grupoActivo.id) : lista).map((e) => {
             const r = resumo(e);
             return (
               <button key={e.id} onClick={() => { setActual(e); setSucia(false); }}
@@ -122,6 +139,11 @@ export function EditorEscaleta() {
                     {r.minutos} min · {r.itens} dinámicas
                   </span>
                   {e.local && <span style={{ ...TYPE.caption, color: T.text4 }}>· local</span>}
+                  {e.grupoId && (
+                    <span style={{ ...TYPE.caption, color: (grupos.find((g) => g.id === e.grupoId) || {}).color || T.text4 }}>
+                      · {(grupos.find((g) => g.id === e.grupoId) || {}).nombre || 'grupo'}
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontWeight: 700, color: T.text, fontSize: '0.92rem' }}>{e.nome}</div>
                 {e.notas && (
@@ -169,6 +191,15 @@ export function EditorEscaleta() {
           <input value={actual.notas} onChange={(e) => editar((a) => ({ ...a, notas: e.target.value }))}
             placeholder="Data, lugar, espectáculo…" aria-label="Notas"
             style={{ ...S.input, flex: '2 1 160px', width: 'auto' }} />
+          {grupos.length > 0 && (
+            <select value={actual.grupoId || ''}
+              onChange={(e) => editar((a) => ({ ...a, grupoId: e.target.value || null }))}
+              aria-label="Grupo"
+              style={{ ...S.input, width: 'auto', flex: '0 0 auto' }}>
+              <option value="">Persoal</option>
+              {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+            </select>
+          )}
         </div>
         <p style={{ ...TYPE.caption, color: T.text3, margin: '0.55rem 0 0' }}>
           {r.bloques} bloques · {r.itens} dinámicas · <b>{r.minutos} min</b>

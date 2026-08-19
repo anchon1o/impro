@@ -56,6 +56,8 @@ export function escaletaBaleira(nome = 'Escaleta nova', tipo = 'ensaio') {
     notas: '',
     tipo: TIPOS_ESCALETA.some((t) => t.id === tipo) ? tipo : 'ensaio',
     bloques: [],
+    // A que grupo pertence. `null` = persoal, visible sempre.
+    grupoId: null,
     local: true,
   };
 }
@@ -89,6 +91,7 @@ export function sanear(e) {
     nome: typeof e.nome === 'string' && e.nome.trim() ? e.nome.trim() : 'Sen nome',
     notas: typeof e.notas === 'string' ? e.notas : '',
     tipo: TIPOS_ESCALETA.some((t) => t.id === e.tipo) ? e.tipo : 'ensaio',
+    grupoId: e.grupoId || e.grupo_id || null,
     bloques: bloques.filter((b) => b && typeof b === 'object').map((b) => ({
       id: b.id || novoId('b'),
       tipoId: b.tipoId || null,
@@ -262,6 +265,7 @@ export async function gardarEscaleta(escaleta, userId) {
   const fila = {
     nome: e.nome, notas: e.notas || null, tipo: e.tipo,
     bloques: e.bloques, minutos: minutosTotais(e),
+    grupo_id: e.grupoId || null,
     user_id: userId, updated_at: new Date().toISOString(),
   };
   try {
@@ -287,6 +291,14 @@ export async function borrarEscaleta(escaleta, userId) {
     if (error) throw error;
     return { ok: true };
   } catch (e) { return { ok: false, erro: e.message || String(e) }; }
+}
+
+// ⚠️ O filtro por grupo é INCLUSIVO co persoal: unha escaleta sen grupo
+// vese sempre. Se non, activar un grupo faría desaparecer o traballo
+// propio e semellaría que se perdeu.
+export function filtrarPorGrupo(lista, grupoId) {
+  if (!grupoId) return lista || [];
+  return (lista || []).filter((e) => !e.grupoId || e.grupoId === grupoId);
 }
 
 // Duplicar: útil para «o show do mes pasado pero cambiando dous xogos».
