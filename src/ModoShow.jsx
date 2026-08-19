@@ -5,8 +5,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth, useTheme, useEstimulos, CAT_ICONS, FMT, pick, ls, trackGen, mkS, QRCode, FONT_UI, FONT_MONO } from './core.jsx';
-import { PLAYLISTS_DEFAULT, EFECTOS_DEFAULT } from './datos.js';
-import { getPlaylists, getEfectos, abrirSala, cerrarSala, getPropostas, subscribeToPropostas, trackGenSupa } from './db.js';
+import { EFECTOS_DEFAULT } from './datos.js';
+import { abrirSala, cerrarSala, getPropostas, subscribeToPropostas, trackGenSupa } from './db.js';
+import { SelectorEscaleta, aRundown } from './tabs/SelectorEscaleta.jsx';
 
 export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   const {T}=useTheme();const S=mkS(T);
@@ -27,8 +28,17 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
 
   // Audio
   const [pistas,setPistas]=useState([]);
-  const [playlists,setPlaylists]=useState(()=>ls.get("impro_playlists_v2",PLAYLISTS_DEFAULT));
-  const [efectos,setEfectos]=useState(()=>ls.get("impro_efectos_v2",EFECTOS_DEFAULT));
+  // ⚠️ Os efectos rápidos son SINTETIZADOS (aplausos, campá, buzzer):
+  // non precisan ficheiro nin rede, e por iso funcionan sempre nun
+  // local sen cobertura. Veñen da constante, non da base de datos.
+  //
+  // Antes leríanse de `playlists` e `efectos` en Supabase, e iso tiña
+  // dous problemas: a consulta non filtraba por usuario, e se a táboa
+  // estaba baleira CADA usuario escribía 16 filas sen `user_id` só por
+  // abrir esta pantalla. Como as URLs por defecto están todas baleiras,
+  // aquelas táboas non aportaban nada. A música e os efectos con
+  // ficheiro viven agora en Sonido.
+  const efectos = EFECTOS_DEFAULT;
   const pistaId=useRef(0);
 
   // QR
@@ -36,7 +46,6 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   const [propostas,setPropostas]=useState([]);
   const unsubRef=useRef(null);
 
-  useEffect(()=>{getPlaylists(PLAYLISTS_DEFAULT).then(setPlaylists);getEfectos(EFECTOS_DEFAULT).then(setEfectos);},[]);
 
   useEffect(()=>{
     if(corre&&restante>0){tRef.current=setInterval(()=>setRestante(r=>{
@@ -122,6 +131,7 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
   // para engadir unha actuación que faltaba.
   const [novaAct,setNovaAct]=useState("");
   const [editando,setEditando]=useState(false);
+  const [importando,setImportando]=useState(false);
   const engadirAct=()=>{
     const nome=novaAct.trim(); if(!nome)return;
     setRundown([...(rundown||[]),{id:Date.now()+Math.random(),nombre:nome,activa:false,hecho:false}]);
@@ -213,11 +223,6 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
             </div>
             {p.isYt&&<iframe src={p.url} width="100%" height="40" frameBorder="0" allow="autoplay; encrypted-media" style={{borderRadius:5,marginTop:"0.3rem",display:"block"}} title={p.label}/>}
           </div>))}
-          <div style={{display:"flex",gap:"0.25rem",flexWrap:"wrap",marginTop:pistas.length?"0.4rem":0}}>
-            {playlists.map(pl=>pl.urls.map((u,idx)=>u.url&&(
-              <button key={pl.id+idx} onClick={()=>addPista(pl,idx)} style={{background:pl.color+"1a",border:`1px solid ${pl.color}44`,color:pl.color,borderRadius:6,padding:"0.2rem 0.5rem",fontSize:"0.68rem",cursor:"pointer",fontFamily:"inherit"}}>+ {pl.emoji} {u.label||pl.nombre}</button>
-            )))}
-          </div>
         </div>
       </div>
 
@@ -231,12 +236,27 @@ export function ModoShow({audio,onClose,onStimulus,rundown,setRundown}){
         {panel==="rundown"&&<div style={{background:T.bg2,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"0.7rem",flex:1,overflowY:"auto",minHeight:0}}>
           {seguinte&&!editando&&<button onClick={avanzar} style={{...S.btn(T.info,"#000"),width:"100%",marginBottom:"0.6rem",padding:"0.5rem"}}>⏭ Seguinte: {seguinte.nombre}</button>}
 
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem",gap:"0.4rem"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem",gap:"0.4rem",flexWrap:"wrap"}}>
             <span style={{color:T.text4,fontSize:"0.7rem",fontFamily:FONT_MONO,letterSpacing:"0.06em",textTransform:"uppercase"}}>Escaleta</span>
-            <button onClick={()=>setEditando(e=>!e)} style={{...S.btn(editando?T.accent:T.bg3,editando?"#fff":T.text3),fontSize:"0.72rem",padding:"0.28rem 0.7rem",minHeight:32}}>
+            <div style={{flex:1}}/>
+            <button onClick={()=>{setImportando(v=>!v);setEditando(false);}} style={{...S.btn(importando?T.accent:T.bg3,importando?"#fff":T.text3),fontSize:"0.72rem",padding:"0.28rem 0.7rem",minHeight:32}}>
+              ⬇ Importar
+            </button>
+            <button onClick={()=>{setEditando(e=>!e);setImportando(false);}} style={{...S.btn(editando?T.accent:T.bg3,editando?"#fff":T.text3),fontSize:"0.72rem",padding:"0.28rem 0.7rem",minHeight:32}}>
               {editando?"✓ Feito":"✎ Editar"}
             </button>
           </div>
+
+          {importando&&<div style={{marginBottom:"0.6rem"}}>
+            <SelectorEscaleta compacto onPechar={()=>setImportando(false)}
+              onEscoller={(e,plano)=>{
+                // ⚠️ Substitúe: mesturar dúas escaletas nunha función é
+                // peor que empezar de novo, e desfacelo no directo non
+                // hai como.
+                setRundown(aRundown(plano));
+                setImportando(false);
+              }}/>
+          </div>}
 
           {editando&&<div style={{display:"flex",gap:"0.35rem",marginBottom:"0.6rem"}}>
             <input value={novaAct} onChange={e=>setNovaAct(e.target.value)}

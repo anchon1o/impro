@@ -37,15 +37,8 @@ export const POMO_PRESETS=[
 // Un fallback no código volvería agochar ese fallo, que é exactamente o
 // que fixo que B17 tardase tanto en verse.
 
-export const PLAYLISTS_DEFAULT=[
-  {id:"tension",nombre:"Tensión",emoji:"😤",color:"#ff6e40",urls:[{label:"Suspenso",url:""},{label:"Mi MP3...",url:""}]},
-  {id:"comedia",nombre:"Comedia",emoji:"😂",color:"#ffd740",urls:[{label:"Alegre",url:""}]},
-  {id:"drama",nombre:"Drama",emoji:"😢",color:"#40c4ff",urls:[{label:"Dramático",url:""}]},
-  {id:"accion",nombre:"Acción",emoji:"⚡",color:"#69f0ae",urls:[{label:"Épico",url:""}]},
-  {id:"misterio",nombre:"Misterio",emoji:"🌙",color:"#e040fb",urls:[{label:"Misterioso",url:""}]},
-  {id:"romance",nombre:"Romance",emoji:"💜",color:"#f48fb1",urls:[{label:"Romántico",url:""}]},
-  {id:"silencio",nombre:"Ambiente",emoji:"🌿",color:"#78909c",urls:[{label:"Naturaleza",url:""}]},
-];
+// PLAYLISTS_DEFAULT borrouse: as 8 URLs estaban baleiras e ningunha
+// pantalla a usaba. A música vive agora en Sonido.
 
 export const EFECTOS_DEFAULT=[
   {id:"aplausos",nombre:"Aplausos",emoji:"👏",url:""},

@@ -21,6 +21,7 @@ import { cargarMesa, gardarMesa } from './mesa.js';
 import { capturarEscena, planificarEscena } from './escenas.js';
 import { esMesturable } from '../audio/externo.js';
 import { Reprodutor } from './Reprodutor.jsx';
+import { SelectorEscaleta } from '../tabs/SelectorEscaleta.jsx';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
@@ -322,6 +323,12 @@ export function Sonido({
   const [avisoEscena, setAvisoEscena] = useState(null);
   // Mentres soa unha pista externa, o resto da mesa cala.
   const [exclusivo, setExclusivo] = useState(false);
+  // Escaleta importada de Sesións, en modo lectura. Non se garda: é o
+  // guión desta función, non contido novo.
+  const [escaleta, setEscaleta] = useState(null);
+  const [plano, setPlano] = useState([]);
+  const [importando, setImportando] = useState(false);
+  const [feitos, setFeitos] = useState([]);
 
   const aplicarEscena = useCallback((e) => {
     const plan = planificarEscena(e, recursos, m.capas);
@@ -646,6 +653,76 @@ export function Sonido({
     </Panel>
   );
 
+  // ── Escaleta ───────────────────────────────────────────────────
+  // O guión da función, cos tempos acumulados. Serve para saber en que
+  // punto vas sen ter que mirar outro dispositivo — que era o motivo de
+  // que Son teña os seus propios contadores.
+  const panelEscaleta = (
+    <Panel T={T} S={S} titulo="📋 Escaleta"
+      extra={!modoFuncion && (
+        <IconBtn T={T} label={escaleta ? 'Cambiar escaleta' : 'Importar escaleta'}
+          onClick={() => setImportando((v) => !v)}>{importando ? '✕' : '⬇'}</IconBtn>
+      )}
+      sen={escaleta || importando ? null : 'Importa unha escaleta de Sesións para seguir a función.'}>
+      {importando && !modoFuncion && (
+        <div style={{ marginBottom: '0.6rem' }}>
+          <SelectorEscaleta compacto onPechar={() => setImportando(false)}
+            onEscoller={(e, pl) => {
+              setEscaleta(e); setPlano(pl); setFeitos([]); setImportando(false);
+            }} />
+        </div>
+      )}
+
+      {escaleta && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ ...S.t.bodySm, color: T.text, fontWeight: 650 }}>{escaleta.nome}</span>
+            {escaleta.notas && (
+              <span style={{ ...S.t.caption, color: T.text4 }}>{escaleta.notas}</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', maxHeight: 230, overflowY: 'auto' }}>
+            {plano.map((x) => {
+              const feito = feitos.includes(x.id);
+              const bloque = x.tipo === 'bloque';
+              return (
+                <button key={x.id}
+                  onClick={() => setFeitos((f) => (feito ? f.filter((i) => i !== x.id) : [...f, x.id]))}
+                  aria-label={(feito ? 'Desmarcar ' : 'Marcar ') + x.nome}
+                  style={{
+                    display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%',
+                    background: bloque ? T.bg3 : 'transparent',
+                    borderStyle: 'solid', borderWidth: 0, borderLeftWidth: bloque ? 3 : 0,
+                    borderLeftColor: T.accent,
+                    borderRadius: 6, padding: bloque ? '0.35rem 0.5rem' : '0.28rem 0.5rem 0.28rem 1.1rem',
+                    cursor: 'pointer', fontFamily: S.font, textAlign: 'left',
+                    opacity: feito ? 0.45 : 1,
+                  }}>
+                  {/* Os tempos son ACUMULADOS: o que importa nun show é
+                      «en que minuto vou», non canto dura cada cousa. */}
+                  <span style={{ ...S.t.numeric, fontSize: '0.68rem', color: T.text4, minWidth: 34 }}>
+                    {x.desde}′
+                  </span>
+                  <span style={{
+                    flex: 1, minWidth: 0, fontSize: bloque ? '0.8rem' : '0.76rem',
+                    fontWeight: bloque ? 700 : 400,
+                    color: feito ? T.text4 : bloque ? T.text : T.text2,
+                    textDecoration: feito ? 'line-through' : 'none',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{x.nome}</span>
+                  <span style={{ ...S.t.caption, color: T.text4 }}>{x.minutos}′</span>
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ ...S.t.caption, color: T.text4, margin: '0.5rem 0 0' }}>
+            {feitos.length} de {plano.length} · marcar aquí non cambia a escaleta gardada.
+          </p>
+        </>
+      )}
+    </Panel>
+  );
+
   // ── Escenas ────────────────────────────────────────────────────
   // Acceso rápido: en directo isto ten que estar a un toque, así que
   // os botóns van grandes e visibles tamén en Modo función.
@@ -788,6 +865,7 @@ export function Sonido({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', minWidth: 0 }}>
             {panelEfectos}
             {panelEscenas}
+            {panelEscaleta}
             {panelContadores}
             {!modoFuncion && panelMetro}
           </div>
@@ -795,6 +873,7 @@ export function Sonido({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
           {panelContadores}
+          {panelEscaleta}
           {panelEscenas}
           {panelMusica}
           {panelAmbientes}
