@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme, mkS, UID } from '../core.jsx';
-import { getDinamicas, gardarLoteDinamicas, deleteDinamica, cargarTiposDinamica } from '../db.js';
+import { getDinamicas, gardarLoteDinamicas, deleteDinamica, cargarTiposDinamica, aoCambiarTipos } from '../db.js';
 
 // Edición masiva de dinámicas, en folla de cálculo.
 //
@@ -46,7 +46,8 @@ export function AdminTablaDinamicas(){
       setCargando(false);
     });
   };
-  useEffect(cargar,[]);
+  // Un tipo creado noutra sección tamén ten que aparecer aquí.
+  useEffect(()=>{cargar();return aoCambiarTipos(cargar);},[]);
 
   const visibles=filas.filter(f=>filtro==='todos'||f.tipo===filtro);
   const estado=f=>!f.id||String(f.id).startsWith('nova-')?'nova'

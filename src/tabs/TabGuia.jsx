@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth, t, useTheme, ls, mkS, colorTipo, rexistrarTipos, EditorDinamica, useDinamicas, AvisoDinamicas, TYPE } from '../core.jsx';
-import { saveDinamica, deleteDinamica, cargarTiposDinamica } from '../db.js';
+import { saveDinamica, deleteDinamica, cargarTiposDinamica, aoCambiarTipos } from '../db.js';
 
 export function TabGuia(){
   const {T}=useTheme();const S=mkS(T);
@@ -15,10 +15,13 @@ export function TabGuia(){
   const [filtro,setFiltro]=useState("todos");
   // Os tipos veñen da BD e son configurables desde Admin.
   const [tipos,setTipos]=useState([]);
-  useEffect(()=>{cargarTiposDinamica().then(r=>{
+  const cargarT=()=>{cargarTiposDinamica().then(r=>{
     const l=Array.isArray(r)?r:(r?.tipos||[]);
     setTipos(l.filter(t=>t.activo!==false)); rexistrarTipos(l);
-  });},[]);
+  });};
+  // Recárgase tamén cando alguén crea ou borra un tipo en Admin:
+  // se non, o desplegable queda coa lista de cando se montou.
+  useEffect(()=>{cargarT();return aoCambiarTipos(cargarT);},[]);
   const [search,setSearch]=useState("");
   const [sel,setSel]=useState(null);
   const [showForm,setShowForm]=useState(false);

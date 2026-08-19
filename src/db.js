@@ -297,55 +297,6 @@ export async function trackMinsSupa(mins) {
 }
 
 // ─────────────────────────────────────────────
-// PLAYLISTS  ⚠️ EN RETIRADA
-// ─────────────────────────────────────────────
-// Só as usa ModoShow. `savePlaylists` e `saveEfectos` xa se borraron:
-// quedaron sen chamantes ao soltar a Cabina.
-//
-// ⚠️ DOUS PROBLEMAS CONFIRMADOS, non arranxados aquí para non tocar
-// En directo na mesma entrega que se solta a Cabina:
-//
-//  1. `.select('*')` NON filtra por usuario. Se a RLS de `playlists`
-//     non filtra tampouco, cada quen ve as dos demais.
-//  2. Se a táboa está baleira, INSERTA os defaults —  sen `user_id` —
-//     para todo o mundo. O primeiro que entra sementa a táboa allea.
-//
-// Ademais `PLAYLISTS_DEFAULT` e `EFECTOS_DEFAULT` teñen as URLs
-// baleiras, así que isto non reproduce nada: é un armazón. Substitúeo
-// `sonido/recursos.js`, que si filtra e non escribe ao ler.
-export async function getPlaylists(defaults) {
-  try {
-    const { data, error } = await supabase.from('playlists').select('*');
-    if (error) throw error;
-    if (data && data.length > 0) {
-      ls.set('impro_playlists_v2', data);
-      return data;
-    }
-    await supabase.from('playlists').insert(defaults);
-    return defaults;
-  } catch {
-    return ls.get('impro_playlists_v2', defaults);
-  }
-}
-
-// ─────────────────────────────────────────────
-// EFECTOS
-// ─────────────────────────────────────────────
-export async function getEfectos(defaults) {
-  try {
-    const { data, error } = await supabase.from('efectos').select('*');
-    if (error) throw error;
-    if (data && data.length > 0) {
-      ls.set('impro_efectos_v2', data);
-      return data;
-    }
-    await supabase.from('efectos').insert(defaults);
-    return defaults;
-  } catch {
-    return ls.get('impro_efectos_v2', defaults);
-  }
-}
-
 // ─────────────────────────────────────────────
 // SALAS QR (substitúe window.storage)
 // ─────────────────────────────────────────────
@@ -488,6 +439,25 @@ export async function cargarTiposDinamica() {
   }
 }
 
+// ⚠️ Cando cambian os tipos hai que avisar a quen os teña cargados.
+// Guía, Sesións e as dúas táboas de Admin cárganos ao montarse; crear
+// un tipo novo non lles chegaba, e o desplegable quedaba coa lista
+// vella. Non se puido reproducir a causa exacta —  caché local ou
+// compoñente que non remonta—  así que se cobren as dúas: bótase a
+// caché e avísase por evento.
+function avisarTiposCambiados() {
+  try { ls.del ? ls.del('impro_tipos_din') : localStorage.removeItem('impro_tipos_din'); }
+  catch (e) { /* modo privado */ }
+  try { window.dispatchEvent(new CustomEvent('impro:tiposDinamica')); }
+  catch (e) { /* fóra do navegador */ }
+}
+
+export function aoCambiarTipos(f) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('impro:tiposDinamica', f);
+  return () => window.removeEventListener('impro:tiposDinamica', f);
+}
+
 export async function gardarTipoDinamica(t) {
   const fila = {
     id: t.id, nome: t.nome, emoji: t.emoji || '🎯',
@@ -496,6 +466,7 @@ export async function gardarTipoDinamica(t) {
   };
   const { error } = await supabase.from('dinamicas_tipos').upsert(fila);
   if (error) console.error('[db] gardarTipoDinamica:', error.message);
+  else avisarTiposCambiados();
   return !error;
 }
 
@@ -505,6 +476,7 @@ export async function borrarTipoDinamica(id) {
     .from('dinamicas').select('id', { count: 'exact', head: true }).eq('tipo', id);
   if (count > 0) return { ok: false, motivo: `Hai ${count} dinámicas deste tipo.` };
   const { error } = await supabase.from('dinamicas_tipos').delete().eq('id', id);
+  if (!error) avisarTiposCambiados();
   return { ok: !error, motivo: error?.message };
 }
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useTheme, useAuth, mkS } from '../core.jsx';
+import { useTheme, useAuth, mkS, useLang} from '../core.jsx';
 import { TIPOS_EVENTO, tipoEvento, listarEventos, gardarEvento, borrarEvento,
          formatarData, agruparPorMes, hoxeISO,
-         semanasDoMes, eventosDoDia, MESES, DIAS_SEMANA } from '../eventos.js';
+         semanasDoMes, eventosDoDia, meses as nomesMes, diasSemana } from '../eventos.js';
 import { cargarUniverso } from '../universo.js';
 
 // Axenda de eventos. Área propia no menú principal.
@@ -23,10 +23,14 @@ export function TabAxenda({ entradas: entradasProp }) {
   const [erro,setErro]=useState('');
   const [filtro,setFiltro]=useState('todos');
   const [pasados,setPasados]=useState(false);
+  const {lang}=useLang();
   const [edit,setEdit]=useState(null);
   const [msg,setMsg]=useState('');
   const [entradas,setEntradas]=useState(entradasProp||[]);
-  const [vista,setVista]=useState('lista');            // lista | calendario
+  // ⚠️ O calendario é a vista por defecto. A lista só compensa cando
+  // hai moitas cousas cargadas; para ver «que hai este mes», o
+  // calendario responde dun golpe de vista.
+  const [vista,setVista]=useState('calendario');       // calendario | lista
   const hoxe=new Date();
   const [mes,setMes]=useState({ano:hoxe.getFullYear(),mes:hoxe.getMonth()});
   const [diaSel,setDiaSel]=useState(null);
@@ -39,16 +43,28 @@ export function TabAxenda({ entradas: entradasProp }) {
 
   const cargar=()=>{
     setCargando(true);
-    listarEventos({incluirPasados:pasados}).then(r=>{
+    // ⚠️ Cárganse sempre TODOS. O calendario ten que amosar os pasados
+    // —  un mes con ocos onde houbo cousas non ten sentido—  e a lista
+    // filtra despois. Antes a consulta xa viña filtrada e por iso un
+    // evento pasado non aparecía en ningures.
+    listarEventos({incluirPasados:true}).then(r=>{
       setEventos(Array.isArray(r)?r:(r?.eventos||[]));
       setErro(r?.erro||'');
       setCargando(false);
     });
   };
-  useEffect(cargar,[pasados]);
+  useEffect(cargar,[]);
 
   const ficha=id=>(entradas||[]).find(e=>e.id===id);
-  const lista=eventos.filter(e=>filtro==='todos'||e.tipo===filtro);
+  const porTipo=eventos.filter(e=>filtro==='todos'||e.tipo===filtro);
+  // ⚠️ A LISTA amosa só os próximos salvo que se marque a casa; o
+  // CALENDARIO amosa sempre todos. Un mes con ocos onde houbo cousas
+  // sería enganoso, e é o que facía que un evento pasado parecese
+  // perdido.
+  // ⚠️ `hoxeISO` xa vén de eventos.js e é unha FUNCIÓN. Declarar aquí
+  // unha constante co mesmo nome tapábaa e rompía o resto do ficheiro.
+  const dataDe=e=>e.dataInicio||e.data_inicio||e.data||e.fecha||'';
+  const lista=pasados?porTipo:porTipo.filter(e=>dataDe(e)>=hoxeISO());
   const meses=agruparPorMes(lista);
   const podeEditar=e=>esAdmin||(user&&e.userId===user.id);
 
@@ -91,14 +107,17 @@ export function TabAxenda({ entradas: entradasProp }) {
     </div>
 
     <div style={{display:'flex',gap:2,background:T.bg3,borderRadius:10,padding:3,marginBottom:'0.7rem',width:'fit-content'}}>
-      {[['lista','Lista'],['calendario','🗓 Calendario']].map(([id,lab])=>(
+      {[['calendario','🗓 Calendario'],['lista','Lista']].map(([id,lab])=>(
         <button key={id} onClick={()=>setVista(id)} style={{...S.btn(vista===id?T.bg2:'transparent',vista===id?T.text:T.text3),borderRadius:8,padding:'0.32rem 0.8rem',fontSize:'0.78rem'}}>{lab}</button>))}
     </div>
 
-    <label style={{display:'flex',alignItems:'center',gap:'0.4rem',color:T.text4,fontSize:'0.76rem',marginBottom:'0.8rem',cursor:'pointer'}}>
+    {vista==='lista'&&<label style={{display:'flex',alignItems:'center',gap:'0.4rem',color:T.text4,fontSize:'0.76rem',marginBottom:'0.8rem',cursor:'pointer'}}>
       <input type="checkbox" checked={pasados} onChange={e=>setPasados(e.target.checked)}/>
       Amosar tamén os que xa pasaron
-    </label>
+    </label>}
+    {vista==='calendario'&&<p style={{color:T.text4,fontSize:'0.72rem',margin:'0 0 0.8rem'}}>
+      No calendario vense todos os eventos, tamén os pasados.
+    </p>}
 
     {erro&&<div style={{background:T.danger+'12',borderStyle:'solid',borderWidth:1,borderColor:T.danger+'44',borderRadius:8,padding:'0.8rem',marginBottom:'0.8rem'}}>
       <p style={{color:T.danger,fontWeight:700,fontSize:'0.82rem',margin:'0 0 0.25rem'}}>Non se puido cargar a axenda</p>
@@ -182,13 +201,13 @@ export function TabAxenda({ entradas: entradasProp }) {
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
         <button onClick={()=>setMes(m=>m.mes===0?{ano:m.ano-1,mes:11}:{ano:m.ano,mes:m.mes-1})}
           style={{...S.btn(T.bg3,T.text2),padding:'0.3rem 0.7rem'}}>‹</button>
-        <p style={{color:T.text,fontWeight:800,fontSize:'0.95rem',margin:0}}>{MESES[mes.mes]} {mes.ano}</p>
+        <p style={{color:T.text,fontWeight:800,fontSize:'0.95rem',margin:0}}>{nomesMes(lang)[mes.mes]} {mes.ano}</p>
         <button onClick={()=>setMes(m=>m.mes===11?{ano:m.ano+1,mes:0}:{ano:m.ano,mes:m.mes+1})}
           style={{...S.btn(T.bg3,T.text2),padding:'0.3rem 0.7rem'}}>›</button>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:2}}>
-        {DIAS_SEMANA.map((d,i)=><div key={i} style={{textAlign:'center',color:T.text4,fontSize:'0.68rem',fontWeight:700,padding:'0.3rem 0'}}>{d}</div>)}
+        {diasSemana(lang).map((d,i)=><div key={i} style={{textAlign:'center',color:T.text4,fontSize:'0.68rem',fontWeight:700,padding:'0.3rem 0'}}>{d}</div>)}
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>

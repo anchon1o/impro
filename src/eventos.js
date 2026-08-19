@@ -190,4 +190,28 @@ export function eventosDoDia(eventos, iso) {
 
 export const MESES = ['Xaneiro','Febreiro','Marzo','Abril','Maio','Xuño','Xullo',
                       'Agosto','Setembro','Outubro','Novembro','Decembro'];
-export const DIAS_SEMANA = ['L','M','X','X','V','S','D'];
+// ⚠️ A versión vella era ['L','M','X','X','V','S','D']: dous «X» para
+// mércores e xoves. Nin en galego se distinguían.
+// Dúas letras, que é o mínimo para que non haxa ambigüidade en ningún
+// dos tres idiomas.
+export const DIAS_SEMANA_LANG = {
+  gl: ['Lu', 'Ma', 'Mé', 'Xo', 'Ve', 'Sá', 'Do'],
+  es: ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'],
+  en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+};
+
+export const MESES_LANG = {
+  gl: ['Xaneiro', 'Febreiro', 'Marzo', 'Abril', 'Maio', 'Xuño',
+       'Xullo', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Decembro'],
+  es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June',
+       'July', 'August', 'September', 'October', 'November', 'December'],
+};
+
+export const diasSemana = (lang) => DIAS_SEMANA_LANG[lang] || DIAS_SEMANA_LANG.gl;
+export const meses = (lang) => MESES_LANG[lang] || MESES_LANG.gl;
+
+// Compatibilidade: quen aínda importe as constantes vellas segue tendo
+// galego, en vez de romper.
+export const DIAS_SEMANA = DIAS_SEMANA_LANG.gl;

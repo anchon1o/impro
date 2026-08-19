@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { t, useTheme, UID, FMT, ls, mkS, colorTipo } from '../core.jsx';
 import { POMO_PRESETS, PLANTILLAS } from '../datos.js';
-import { getSesiones, saveSesion, trackMinsSupa, cargarTiposDinamica } from '../db.js';
+import { getSesiones, saveSesion, trackMinsSupa, cargarTiposDinamica, aoCambiarTipos } from '../db.js';
 
 export const BTOK={trabajo:"accent",descanso:"ok",longo:"info",trabalho:"accent"};
 export const bcol=(T,k)=>T[BTOK[k]]||T.accent;
@@ -73,7 +73,8 @@ export function ModoPomodoroImpro({onClose,audio}){
 
 export function TabSesiones({onLaunchTimer}){
   const [tiposSes,setTiposSes]=useState([]);
-  useEffect(()=>{cargarTiposDinamica().then(r=>setTiposSes((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));},[]);
+  const cargarT=()=>cargarTiposDinamica().then(r=>setTiposSes((Array.isArray(r)?r:(r?.tipos||[])).filter(t=>t.activo!==false)));
+  useEffect(()=>{cargarT();return aoCambiarTipos(cargarT);},[]);
   const {T}=useTheme();const S=mkS(T);
   if(!onLaunchTimer)onLaunchTimer=()=>{};
   const [view,setView]=useState("plantillas");
