@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth, t, useTheme, ls, mkS, colorTipo, rexistrarTipos, EditorDinamica, useDinamicas, AvisoDinamicas, TYPE } from '../core.jsx';
+import { filtrarEOrdenar, onde, ORDES } from '../dinamicasBusca.js';
 import { saveDinamica, deleteDinamica, cargarTiposDinamica, aoCambiarTipos } from '../db.js';
 
 export function TabGuia(){
@@ -13,6 +14,10 @@ export function TabGuia(){
   // Fonte única: a base de datos. Ver useDinamicas en core.jsx (A04).
   const {dinamicas,setDinamicas,cargando,motivo,recargar}=useDinamicas();
   const [filtro,setFiltro]=useState("todos");
+  // A orde gárdase: quen prefire ver as curtas primeiro adoita
+  // preferilo sempre.
+  const [orde,setOrde]=useState(()=>ls.get("impro_guia_orde","relevancia"));
+  const cambiarOrde=v=>{setOrde(v);ls.set("impro_guia_orde",v);};
   // Os tipos veñen da BD e son configurables desde Admin.
   const [tipos,setTipos]=useState([]);
   const cargarT=()=>{cargarTiposDinamica().then(r=>{
@@ -34,7 +39,11 @@ export function TabGuia(){
   const filtros=["todos","★ Favoritas",...new Set(dinamicas.map(d=>d.tipo))];
   // `descripcion` pode vir nula nunha dinámica creada desde a táboa masiva:
   // sen o ?? "" a busca tiraba a pestana enteira.
-  const lista=dinamicas.filter(d=>(filtro==="★ Favoritas"?isFav(d.id):(filtro==="todos"||d.tipo===filtro))&&(!search||String(d.nombre??"").toLowerCase().includes(search.toLowerCase())||String(d.descripcion??"").toLowerCase().includes(search.toLowerCase())));
+  // A busca entra en TODO o texto da dinámica —  pasos, obxectivo,
+  // variantes, autoría—  e ignora acentos. Antes miraba só o nome e a
+  // descrición, e o que máis se busca está nos pasos.
+  const usos=(ls.get("impro_stats",{}).dins)||{};
+  const lista=filtrarEOrdenar(dinamicas,{busca:search,filtro,orde,favs:favDins,usos});
   const openNew=()=>{if(!logueado){pedirLogin();return;}setEditId(null);setForm(FORM0);setShowForm(true);setSel(null);};
   const openEdit=d=>{setEditId(d.id);setForm({...d,pasos:(d.pasos||[]).join("\n"),variantes:(d.variantes||[]).join("\n")});setShowForm(true);setSel(null);};
   const saveForm=async()=>{
@@ -84,6 +93,10 @@ export function TabGuia(){
       <button onClick={recargar} title="Recargar da base de datos" style={{...S.btn(T.bg3,T.text4),...TYPE.caption}}>↺</button>
     </div>
     <div style={{display:"flex",gap:"0.3rem",marginBottom:"1rem",flexWrap:"wrap"}}>
+      <select value={orde} onChange={e=>cambiarOrde(e.target.value)} aria-label="Ordenar por"
+        style={{...S.input,width:"auto",minHeight:32,padding:"0.25rem 0.5rem",fontSize:"0.74rem"}}>
+        {ORDES.map(o=><option key={o.id} value={o.id}>{o.nome}</option>)}
+      </select>
       {filtros.map(t=><button key={t} onClick={()=>setFiltro(t)} style={{background:filtro===t?(colorTipo(T,t)||T.accent):T.bg3,color:filtro===t?"#000":T.text3,border:"none",borderRadius:20,padding:"0.3rem 0.8rem",fontSize:"0.74rem",fontWeight:filtro===t?700:400,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}
     </div>
     <AvisoDinamicas motivo={cargando?null:motivo} baleiro={dinamicas.length===0} onRecargar={recargar}/>
@@ -91,11 +104,24 @@ export function TabGuia(){
       <p style={{fontSize:"1.6rem",margin:"0 0 0.5rem"}}>📖</p>
       <p style={{...TYPE.bodySm,color:T.text4,margin:0}}>Cargando o catálogo…</p>
     </div>}
+    {!cargando&&dinamicas.length>0&&lista.length===0&&
+      <div style={{...S.panel,textAlign:"center",padding:"1.8rem 1rem"}}>
+        <p style={{...TYPE.bodySm,color:T.text3,margin:"0 0 0.3rem",fontWeight:650}}>Sen resultados</p>
+        <p style={{...TYPE.caption,color:T.text4,margin:0}}>
+          {search?`Ningunha das ${dinamicas.length} dinámicas menciona «${search}».`:"Proba a quitar o filtro."}
+        </p>
+      </div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(240px,100%),1fr))",gap:"0.55rem"}}>
       {lista.map(d=>(<button key={d.id} onClick={()=>setSel(d)} style={{...S.panel,borderStyle:"solid",borderWidth:"1.5px 1.5px 1.5px 4px",borderTopColor:T.border,borderRightColor:T.border,borderBottomColor:T.border,borderLeftColor:colorTipo(T,d.tipo),cursor:"pointer",textAlign:"left",width:"100%"}}>
         <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.4rem",alignItems:"center"}}><span style={S.tag(colorTipo(T,d.tipo))}>{d.tipo}</span><span style={{color:T.text4,fontSize:"0.7rem"}}>⏱{d.duracion}min</span></div>
         <div style={{fontWeight:700,color:T.text,marginBottom:"0.22rem",fontSize:"0.9rem"}}>{d.nombre}</div>
         <div style={{color:T.text3,fontSize:"0.76rem",lineHeight:1.4}}>{d.descripcion}</div>
+        {/* De onde vén a coincidencia. Sen isto, unha dinámica que
+            aparece porque a palabra está no paso 4 semella un erro. */}
+        {search&&onde(d,search)&&onde(d,search)!=="nome"&&
+          <div style={{color:T.text4,fontSize:"0.68rem",marginTop:"0.35rem"}}>
+            atopado en {onde(d,search)}
+          </div>}
       </button>))}
     </div>
   </div>);
