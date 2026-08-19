@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { t, useTheme, UID, FMT, ls, mkS, colorTipo } from '../core.jsx';
 import { POMO_PRESETS, PLANTILLAS } from '../datos.js';
 import { getSesiones, saveSesion, trackMinsSupa, cargarTiposDinamica, aoCambiarTipos } from '../db.js';
+import { EditorEscaleta } from './EditorEscaleta.jsx';
 
 export const BTOK={trabajo:"accent",descanso:"ok",longo:"info",trabalho:"accent"};
 export const bcol=(T,k)=>T[BTOK[k]]||T.accent;
@@ -77,7 +78,7 @@ export function TabSesiones({onLaunchTimer}){
   useEffect(()=>{cargarT();return aoCambiarTipos(cargarT);},[]);
   const {T}=useTheme();const S=mkS(T);
   if(!onLaunchTimer)onLaunchTimer=()=>{};
-  const [view,setView]=useState("plantillas");
+  const [view,setView]=useState("escaletas");
   const [sesion,setSesion]=useState(null);
   const [editMode,setEditMode]=useState(false);
   const [showPomodoro,setShowPomodoro]=useState(false);
@@ -100,6 +101,18 @@ export function TabSesiones({onLaunchTimer}){
   };
 
   if(showPomodoro)return(<ModoPomodoroImpro onClose={()=>setShowPomodoro(false)} audio={{playBell:()=>{try{const ctx=new(window.AudioContext||window.webkitAudioContext)();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(0.5,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.5);o.start();o.stop(ctx.currentTime+1.5);}catch(e){}}}}/>);
+  if(view==="escaletas")return(<div>
+    <div style={{display:"flex",gap:"0.5rem",marginBottom:"1rem",flexWrap:"wrap",alignItems:"center"}}>
+      <span style={{fontWeight:800,color:T.text,fontSize:"0.95rem"}}>Escaletas</span>
+      <div style={{flex:1}}/>
+      <button onClick={()=>setView("plantillas")} style={S.btn(T.bg3,T.text2)}>Plantillas rápidas</button>
+      <button onClick={()=>setShowPomodoro(true)} style={S.btn(T.bg3,T.text2)}>🍅 Modo ensaio</button>
+    </div>
+    {/* ⚠️ Este é o ÚNICO sitio onde se edita unha escaleta. Son e
+        En directo impórtana en modo lectura. */}
+    <EditorEscaleta/>
+  </div>);
+
   if(view==="historial")return(<div>
     <div style={{display:"flex",gap:"0.6rem",marginBottom:"1rem"}}><button onClick={()=>setView("plantillas")} style={S.btn(T.bg3,T.text2)}>← Plantillas</button><span style={{fontWeight:700,color:T.text}}>Historial</span></div>
     {historial.length===0&&<p style={{color:T.text4}}>Sen sesións gardadas.</p>}
@@ -160,6 +173,7 @@ export function TabSesiones({onLaunchTimer}){
       <button onClick={()=>{setSesion({id:UID(),nombre:"Mi sesión",bloques:[]});setView("sesion");setEditMode(true);}} style={S.btn(T.accent)}>+ Nueva sesión</button>
         <button onClick={()=>setShowPomodoro(true)} style={S.btn(T.bg3,T.text2)}>🍅 Modo ensayo</button>
       <button onClick={()=>setView("historial")} style={S.btn(T.bg3,T.text2)}>📋 Historial ({historial.length})</button>
+      <button onClick={()=>setView("escaletas")} style={S.btn(T.bg3,T.text2)}>← Escaletas</button>
     </div>
     <p style={S.ptitle(T.text3)}>Plantillas</p>
     <div style={{display:"flex",flexDirection:"column",gap:"0.6rem"}}>
