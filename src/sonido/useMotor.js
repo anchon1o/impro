@@ -21,7 +21,19 @@ import { crearMetronomo } from '../audio/metronomo.js';
 
 const BALEIRO = { estado: 'parado', desfase: 0, volBus: {}, capas: [] };
 
+// Preferencias que sobreviven a recargar: son axustes de mesa, non
+// estado de sesión.
+function lerPref(k, d) {
+  try { const v = localStorage.getItem(k); return v === null ? d : v === '1'; }
+  catch (e) { return d; }
+}
+function gardarPref(k, v) {
+  try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) { /* privado */ }
+}
+
 export function useMotor({ maxRexistro = 60 } = {}) {
+  const [normalizar, setNorm] = useState(() => lerPref('impro_son_normalizar', true));
+  const [duckOn, setDuckOn] = useState(() => lerPref('impro_son_duck', true));
   const ref = useRef(null);
   const metro = useRef(null);
   const [pulso, setPulso] = useState(-1);
@@ -52,8 +64,15 @@ export function useMotor({ maxRexistro = 60 } = {}) {
   }, [maxRexistro]);
 
   if (!ref.current) {
-    ref.current = crearMotor({ onCambio: agrupar, onLog: anotar });
+    ref.current = crearMotor({
+      onCambio: agrupar, onLog: anotar,
+      normalizar, duck: duckOn,
+    });
   }
+  // As opcións lense en cada disparo, así que cambialas ten efecto
+  // inmediato sen recrear o motor —  que cortaría o son.
+  ref.current.opcions.normalizar = normalizar;
+  ref.current.opcions.duck = duckOn;
   if (!metro.current) {
     metro.current = crearMetronomo(
       () => ref.current.ctx,
@@ -189,6 +208,10 @@ export function useMotor({ maxRexistro = 60 } = {}) {
     descartarAviso,
 
     metroOn, bpm, beats, pulso, alternarMetro, setBpm, setBeats,
+
+    normalizar, duckOn,
+    setNormalizar: (v) => { setNorm(v); gardarPref('impro_son_normalizar', v); },
+    setDuck: (v) => { setDuckOn(v); gardarPref('impro_son_duck', v); },
 
     arrancar,
     acender: motor.acender,

@@ -1,48 +1,38 @@
-# ImproApp · `src/` completo · tres estilos de icono
+# ImproApp · `src/` completo · T16 + C11 + C12
 
-Substitúe a todas as entregas anteriores. Se perdiches o fío, usa só
-esta.
+Entrega completa. Fusionar, nunca substituír. Sen migracións novas.
 
-## Aplicar
-1. Arrastra `src/` sobre `impro/src/` → **FUSIONAR**, nunca substituír
-   (substituír borra `src/supabase.js`, que non vai aquí).
-2. Copia `eslint.config.js` á raíz.
-3. **Borra a man `src/tabs/TabShow.jsx`** se aínda existe.
-4. Comproba que `src/supabase.js` NON aparece nos cambios de GitHub
-   Desktop. Se aparece, descarta ese cambio.
+⚠️ **Esta entrega inclúe tamén o R05 anterior** (nivelado e duck), que
+non chegaches a aplicar. Con esta xa vai todo.
 
-## Volveu o de antes, e agora é unha opción
+## T16 · `Sonido.jsx` dividido
+De **921 a 726 liñas**. Saíron dous ficheiros:
 
-**Por defecto: emojis e descricións**, como che gustaba.
+- `src/sonido/pezas.jsx` — os compoñentes que se repiten:
+  `BotonSon`, `Canle`, `CanleVertical`, `Contador`, `IconBtn`,
+  `Panel`, `BusVol`, `ReixaEfectos`
+- `src/sonido/medidas.js` — a constante `TOQUE`
 
-En **Axustes → Iconos** tes tres estilos completos:
+**Os 102 casos da mesa pasaron sen tocar un só**: a división non cambiou
+comportamento, que é o que había que comprobar.
 
-| | |
-|---|---|
-| **Emojis (o de sempre)** | Por defecto. Traen a súa cor e recoñécense sen ler |
-| **Orixinal** | O primeiro set de SVG |
-| **Xeométrico minimal** | O Estilo 2 novo, 18/18 |
+## C11 · Faders verticais en modo función
+Móvense mellor co polgar e caben moitas máis canles á vista: en
+horizontal cada unha come todo o ancho e non entran nin catro.
 
-Os dez estilos de proba seguen listados coa súa cobertura (2/18), sen
-poder activarse.
+⚠️ Faise con `writingMode: vertical-lr`, non con `rotate`. Rotado deixa
+de responder ben ao dedo en iOS.
 
-⚠️ Os emojis **non collen a cor do tema**: píntaos o sistema operativo.
-É o prezo de que traian a súa propia. Dío o selector.
+Fóra de modo función seguen horizontais.
 
-## As descricións
-Volven, **acesas por defecto**, e a preferencia gárdase. O botón `?` da
-portada acéndeas e apágaas. Coas descricións acesas o icono cede sitio
-ao texto; sen elas recupera todo o tamaño.
+## C12 · Botonera de efectos con páxinas
+- **12** por páxina en móbil, **24** en tablet, **40** en modo función,
+  que é onde a mesa ten a pantalla enteira.
+- ⚠️ **O paxinador só aparece se sobran efectos.** Uns poucos non poden
+  quedar detrás dun control que non fai falta.
+- Se a lista encolle —cambiar de mesa, filtrar por grupo— a páxina
+  actual axústase soa. Se non, a reixa quedaría en branco.
 
-## A reixa segue enchendo a pantalla
-Iso si era unha mellora e queda: 3×4 en iPhone, 4×3 en iPad vertical,
-5×3 en iPad horizontal. Sen desprazar en ningún.
-
-## Dous fallos atopados nesta sesión
-- `EMOJIS` usábase antes de declaralo.
-- `axuda` usábase no cálculo do tamaño antes de declaralo. **Isto era
-  pantalla branca na portada** e colleuno o harness de render, non o
-  build.
-
-## Bundle
-666 kB. Cando descartes os estilos de proba, recupéranse uns 24.
+## Verificación
+- eslint 0 · 22 pantallas · **696 casos** (10 novos)
+- Build limpo. Sonido pasa de 75 a 78 kB; o arranque non se move (672).

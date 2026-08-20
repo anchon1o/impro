@@ -22,211 +22,19 @@ import { capturarEscena, planificarEscena } from './escenas.js';
 import { esMesturable } from '../audio/externo.js';
 import { Reprodutor } from './Reprodutor.jsx';
 import { SelectorEscaleta } from '../tabs/SelectorEscaleta.jsx';
+import { Canle, CanleVertical, Contador, IconBtn, Panel, BusVol, ReixaEfectos } from './pezas.jsx';
+import { TOQUE } from './medidas.js';
 import {
   crearContador, segundos, alternar, reiniciar, aviso,
   formatar, horaActual, CORES,
 } from './contadores.js';
 
-// Alto mínimo dun botón que hai que acertar sen mirar, cun dedo,
-// durante unha función. Por debaixo de 56 fállase.
-const TOQUE = 56;
 
 // ── Peza base: botón de son ──────────────────────────────────────
 // Catro estados, e os catro teñen que verse sen ler nada:
 //   pendente → normal · cargando → atenuado · listo → punto verde
 //   erro → vermello e desactivado
-function BotonSon({ T, S, recurso, estado = 'pendente', soando, onDisparar, grande }) {
-  const erro = estado === 'erro';
-  const cargando = estado === 'cargando';
-  const listo = estado === 'listo';
-  // Un efecto longo que xa soa márcase, porque volver premelo párao:
-  // sen sinal, o segundo toque parecería que non fixo nada.
-  const cor = erro ? T.danger : soando ? T.accent : listo ? T.ok : T.bg3;
-  return (
-    <button
-      onClick={onDisparar}
-      disabled={erro}
-      aria-label={recurso.nome + (erro ? ' (non se puido cargar)' : listo ? ' (listo)' : cargando ? ' (cargando)' : '')}
-      style={{
-        position: 'relative',
-        background: soando ? T.accent + '22' : T.bg3,
-        // B24: propiedades longas, nunca a abreviatura.
-        borderStyle: 'solid', borderWidth: 1.5, borderColor: cor,
-        borderRadius: 12,
-        color: erro ? T.danger : T.text,
-        minHeight: grande ? TOQUE + 12 : TOQUE,
-        padding: '0.4rem 0.3rem',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: '0.15rem',
-        cursor: erro ? 'not-allowed' : 'pointer',
-        opacity: cargando ? 0.45 : 1,
-        fontFamily: S.font,
-        touchAction: 'manipulation',
-        transition: 'opacity 0.15s, border-color 0.15s',
-      }}
-    >
-      {listo && !soando && (
-        <span aria-hidden style={{
-          position: 'absolute', top: 5, right: 5, width: 6, height: 6,
-          borderRadius: '50%', background: T.ok,
-        }} />
-      )}
-      <span style={{ fontSize: grande ? '1.5rem' : '1.25rem', lineHeight: 1 }}>
-        {recurso.emoji || '🔊'}
-      </span>
-      <span style={{
-        ...S.t.caption, color: 'inherit', maxWidth: '100%',
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}>
-        {erro ? 'non carga' : cargando ? '…' : recurso.nome}
-      </span>
-    </button>
-  );
-}
 
-// ── Peza base: canle continua (ambiente ou música) ───────────────
-function Canle({ T, S, capa, recurso, onAcender, onVol }) {
-  const cor = capa.erro ? T.danger : capa.on ? T.ok : T.text4;
-  return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: 'auto 1fr auto',
-      gap: '0.6rem', alignItems: 'center',
-      padding: '0.5rem 0',
-      borderBottomStyle: 'solid', borderBottomWidth: 1, borderBottomColor: T.border,
-    }}>
-      <button
-        onClick={onAcender}
-        aria-label={(capa.on ? 'Apagar ' : 'Acender ') + recurso.nome}
-        style={{
-          background: capa.on ? T.ok + '22' : T.bg3,
-          borderStyle: 'solid', borderWidth: 1.5, borderColor: cor,
-          borderRadius: 10, minWidth: 52, minHeight: 46,
-          fontSize: '1.2rem', cursor: 'pointer', color: T.text,
-          touchAction: 'manipulation',
-        }}
-      >
-        {recurso.emoji || '🎚'}
-      </button>
-
-      <div style={{ minWidth: 0 }}>
-        <div style={{
-          ...S.t.bodySm, color: T.text, fontWeight: 600,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {recurso.nome}
-          {capa.cargando && !capa.erro && (
-            <span style={{ ...S.t.caption, color: T.text4, fontWeight: 400 }}> · descargando…</span>
-          )}
-        </div>
-        {capa.erro ? (
-          <div style={{ ...S.t.caption, color: T.danger }}>Non se puido cargar</div>
-        ) : (
-          /* O control de volume queda SEMPRE, aínda descargando: deixar
-             o volume posto mentres baixa o ficheiro é xusto o que se
-             quere facer, e agochalo obrigaba a agardar para nada. */
-          <input
-            type="range" min="0" max="1" step="0.02" value={capa.vol}
-            onChange={(e) => onVol(parseFloat(e.target.value))}
-            aria-label={'Volume de ' + recurso.nome}
-            style={{ width: '100%', height: 30, accentColor: T.accent, background: 'transparent' }}
-          />
-        )}
-      </div>
-
-      <div style={{
-        ...S.t.numeric, fontSize: '0.72rem', color: T.text3,
-        minWidth: 34, textAlign: 'right',
-      }}>
-        {capa.erro ? '—' : Math.round(capa.vol * 100)}
-      </div>
-    </div>
-  );
-}
-
-// ── Peza base: contador ──────────────────────────────────────────
-function Contador({ T, S, c, agora, onAccion, compacto }) {
-  const col = T[c.cor] || T.ok;
-  const nivel = aviso(c, agora);
-  const val = c.tipo === 'reloxo' ? horaActual(agora) : formatar(segundos(c, agora));
-  const alarmado = nivel === 'urxente' || nivel === 'pasado';
-
-  return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem', alignItems: 'center',
-      background: alarmado ? T.danger + '18' : T.bg3,
-      borderLeftStyle: 'solid', borderLeftWidth: 4,
-      borderLeftColor: alarmado ? T.danger : col,
-      borderRadius: '0 10px 10px 0',
-      padding: '0.4rem 0.55rem 0.4rem 0.65rem',
-    }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{
-          ...S.t.caption, color: T.text3,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {c.etiqueta}{c.tipo !== 'reloxo' && !c.correndo ? ' · pausa' : ''}
-        </div>
-        <div style={{
-          ...S.t.numeric,
-          fontSize: compacto ? '1.15rem' : '1.45rem',
-          color: alarmado ? T.danger : col, lineHeight: 1.15,
-        }}>
-          {val}
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '0.25rem' }}>
-        {c.tipo !== 'reloxo' && (
-          <>
-            <IconBtn T={T} label={c.correndo ? 'Pausar' : 'Seguir'}
-              onClick={() => onAccion(c.id, 'alternar')}>{c.correndo ? '⏸' : '▶'}</IconBtn>
-            <IconBtn T={T} label="Reiniciar" onClick={() => onAccion(c.id, 'reiniciar')}>↺</IconBtn>
-          </>
-        )}
-        <IconBtn T={T} label="Eliminar" onClick={() => onAccion(c.id, 'eliminar')}>✕</IconBtn>
-      </div>
-    </div>
-  );
-}
-
-function IconBtn({ T, children, onClick, label }) {
-  return (
-    <button
-      onClick={onClick} aria-label={label} title={label}
-      style={{
-        width: 34, height: 34, padding: 0, borderRadius: 8,
-        background: T.bg4, borderStyle: 'solid', borderWidth: 1, borderColor: T.border,
-        color: T.text2, fontSize: '0.85rem', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        touchAction: 'manipulation',
-      }}
-    >{children}</button>
-  );
-}
-
-// ── Panel contedor ───────────────────────────────────────────────
-function Panel({ T, S, titulo, extra, children, sen }) {
-  return (
-    <section style={{
-      background: T.bg2,
-      borderStyle: 'solid', borderWidth: 1.5, borderColor: T.border,
-      borderRadius: 14, padding: '0.75rem', minWidth: 0,
-      display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        gap: '0.5rem', marginBottom: '0.55rem',
-      }}>
-        <h2 style={{ ...S.t.label, color: T.text3, margin: 0 }}>{titulo}</h2>
-        {extra}
-      </div>
-      {sen ? <p style={{ ...S.t.caption, color: T.text4, margin: 0 }}>{sen}</p> : children}
-    </section>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// A MESA
-// ═══════════════════════════════════════════════════════════════════
 export function Sonido({
   recursos = [], modoFuncion = false, onSairFuncion,
   escenas = [], onGardarEscena, onBorrarEscena,
@@ -488,6 +296,25 @@ export function Sonido({
           : pendentes ? `⬇ Preparar sons (${pendentes})` : `✓ ${listosN} listos`}
       </button>
 
+      {/* Dous axustes de mesa que se poden apagar se molestan. Non van
+          en Axustes porque se deciden escoitando, e escóitase aquí. */}
+      {!modoFuncion && (
+        <div style={{ display: 'flex', gap: '0.55rem', alignItems: 'center' }}>
+          {[['Nivelar', m.normalizar, m.setNormalizar,
+             'Iguala o volume dos efectos: uns están gravados moito máis baixos ca outros'],
+            ['Duck', m.duckOn, m.setDuck,
+             'Baixa a música e os ambientes mentres soa un efecto']].map(([et, val, poñer, tit]) => (
+            <label key={et} title={tit}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem',
+                color: val ? T.accent : T.text4, fontSize: '0.7rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={val} onChange={(e) => poñer(e.target.checked)}
+                aria-label={et} />
+              {et}
+            </label>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
         <span style={{ ...S.t.caption, color: T.text4 }}>Fade</span>
         {[2, 5, 10].map((s) => (
@@ -567,6 +394,17 @@ export function Sonido({
     <Panel T={T} S={S} titulo="🌧 Ambientes"
       extra={<BusVol T={T} S={S} v={m.volBus.ambientes} onChange={(x) => m.volumeBus('ambientes', x)} />}
       sen={porTipo.ambiente.length ? null : 'Sen ambientes na mesa.'}>
+      {/* C11 · En modo función os faders van verticais: móvense mellor
+          co polgar e caben moitas máis canles á vista. */}
+      {modoFuncion ? (
+        <div style={{ display: 'flex', gap: '0.7rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+          {porTipo.ambiente.map((r) => {
+            const c = capaDe(r.id) || { on: false, vol: volRecurso[r.id] ?? r.vol, erro: null };
+            return <CanleVertical key={r.id} T={T} S={S} capa={c} recurso={r}
+              onAcender={() => alternarCapa(r)} onVol={(v) => cambiarVol(r.id, v)} />;
+          })}
+        </div>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {porTipo.ambiente.map((r) => {
           const c = capaDe(r.id)
@@ -575,6 +413,7 @@ export function Sonido({
             onAcender={() => alternarCapa(r)} onVol={(v) => cambiarVol(r.id, v)} />;
         })}
       </div>
+      )}
     </Panel>
   );
 
@@ -583,18 +422,17 @@ export function Sonido({
       extra={<BusVol T={T} S={S} v={m.volBus.efectos} onChange={(x) => m.volumeBus('efectos', x)} />}
       sen={porTipo.efecto.length ? null
         : exclusivo ? 'En silencio mentres soa YouTube.' : 'Sen efectos na mesa.'}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(auto-fill,minmax(min(${dobreColumna ? 92 : 78}px,100%),1fr))`,
-        gap: '0.45rem',
-      }}>
-        {porTipo.efecto.map((r) => (
-          <BotonSon key={r.id} T={T} S={S} recurso={r} grande={dobreColumna}
-            estado={exclusivo ? 'erro' : (m.urls[r.url] || 'pendente')}
-            soando={m.soando.includes(r.url)}
-            onDisparar={() => { if (!exclusivo) m.alternarEfecto(r.url, r.vol); }} />
-        ))}
-      </div>
+      <ReixaEfectos
+        T={T} S={S} recursos={porTipo.efecto}
+        columnas={dobreColumna ? 92 : 78}
+        // Máis por páxina en modo función: aí a mesa ten a pantalla
+        // enteira e o que se quere é ter todo a man.
+        porPaxina={modoFuncion ? 40 : dobreColumna ? 24 : 12}
+        grande={dobreColumna}
+        bloqueado={exclusivo}
+        estadoDe={(r) => m.urls[r.url] || 'pendente'}
+        soandoDe={(r) => m.soando.includes(r.url)}
+        onDisparar={(r) => m.alternarEfecto(r.url, r.vol)} />
     </Panel>
   );
 
@@ -883,20 +721,6 @@ export function Sonido({
       )}
 
       {barra}
-    </div>
-  );
-}
-
-function BusVol({ T, S, v = 0.8, onChange }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 116 }}>
-      <input type="range" min="0" max="1" step="0.02" value={v}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        aria-label="Volume do grupo"
-        style={{ width: 78, height: 26, accentColor: T.accent, background: 'transparent' }} />
-      <span style={{ ...S.t.numeric, fontSize: '0.68rem', color: T.text3, minWidth: 24, textAlign: 'right' }}>
-        {Math.round(v * 100)}
-      </span>
     </div>
   );
 }

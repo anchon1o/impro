@@ -30,6 +30,8 @@ export const ESTADOS = ['parado', 'listo', 'suspendido', 'erro'];
 const nada = () => {};
 
 export function crearMotor(opcions = {}) {
+  // `normalizar` e `duck` van como opcións para poder apagalos: se un
+  // día molestan, cámbiase un booleano en vez de desfacer código.
   const avisar = opcions.onCambio || nada;
   const rexistrar = opcions.onLog || nada;
 
@@ -45,6 +47,10 @@ export function crearMotor(opcions = {}) {
   // url → Set de nodos que están soando agora. Fai falta para poder
   // PARAR un efecto: sen isto, cada disparo era irrecuperable.
   const vivos = new Map();
+  // url → factor de ganancia para normalizar. Un efecto gravado baixo e
+  // outro gravado alto non poden soar co mesmo volume nominal: é o que
+  // fai que uns non se oian por riba dos ambientes.
+  const ganancia = new Map();
   let estado = 'parado';
   let volBus = { musica: 0.8, ambientes: 0.8, efectos: 0.8, master: 0.8 };
   let refWall = 0, refAudio = 0;
@@ -283,6 +289,7 @@ export function crearMotor(opcions = {}) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const buf = await ctx.decodeAudioData(await r.arrayBuffer());
       buffers.set(url, buf);
+      ganancia.set(url, factorNormalizacion(buf));
       estadoUrl.set(url, 'listo');
       cambiou();
       return buf;
@@ -324,6 +331,60 @@ export function crearMotor(opcions = {}) {
     return estadoUrl.get(url) || 'pendente';
   }
 
+  // ── Normalización ──
+  // Mídese o PICO real do buffer e lévase a un obxectivo común. Non se
+  // usa RMS a propósito: un efecto curto e forte ten RMS baixo, e
+  // normalizar por RMS faríao saturar.
+  const PICO_OBXECTIVO = 0.89;   // deixa marxe para non recortar
+  const TOPE = 6;                // non amplificar máis de 6×: un ficheiro
+                                 // case mudo subiríase co ruído de fondo
+
+  function factorNormalizacion(buf) {
+    if (!buf || !buf.getChannelData || !buf.numberOfChannels) return 1;
+    let pico = 0;
+    // ⚠️ NON se pode mostrear a saltos grandes. O pico dun efecto
+    // percusivo —  un golpe de porta—  dura unhas poucas mostras, e
+    // saltando de 64 en 64 pásase por alto enteiro: o efecto quedaba
+    // sen normalizar sen que nada o indicase.
+    //
+    // Os efectos son curtos, así que se percorren ENTEIROS. Só se
+    // mostrea nos ficheiros longos (ambientes), onde o pico é sostido
+    // e non hai risco de perdelo, e onde percorrer millóns de mostras
+    // conxelaría a pestana.
+    const MAX = 2000000;   // ~45 s a 44,1 kHz
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c);
+      const paso = d.length <= MAX ? 1 : Math.ceil(d.length / MAX);
+      for (let i = 0; i < d.length; i += paso) {
+        const v = Math.abs(d[i]);
+        if (v > pico) pico = v;
+      }
+    }
+    if (!(pico > 0.0001)) return 1;          // silencio ou dato raro
+    return Math.min(TOPE, PICO_OBXECTIVO / pico);
+  }
+
+  // ── Ducking ──
+  // Ao disparar un efecto, baixa o resto un chisco para que se oia. É o
+  // que fai calquera mesa de son, e sen isto un trono queda tapado por
+  // unha tormenta de fondo.
+  let duckAta = 0;
+  function duck(segundos) {
+    if (!ctx || !opcions.duck) return;
+    const ata = ctx.currentTime + Math.min(4, Math.max(0.3, segundos));
+    if (ata <= duckAta) return;              // xa hai un duck máis longo
+    duckAta = ata;
+    for (const b of ['musica', 'ambientes']) {
+      const g = busNodes[b].gain;
+      g.cancelScheduledValues(ctx.currentTime);
+      g.setValueAtTime(g.value, ctx.currentTime);
+      // −6 dB é aproximadamente a metade da amplitude: nótase sen que
+      // pareza que se apagou a música.
+      g.linearRampToValueAtTime(volBus[b] * 0.5, ctx.currentTime + 0.08);
+      g.linearRampToValueAtTime(volBus[b], ata + 0.25);
+    }
+  }
+
   // Cada disparo crea o seu nodo: así solápanse en vez de cortarse.
   function disparar(url, vol = 1) {
     if (!ctx) return false;
@@ -338,7 +399,10 @@ export function crearMotor(opcions = {}) {
     const s = ctx.createBufferSource();
     const g = ctx.createGain();
     s.buffer = buf;
-    g.gain.value = Math.min(1, Math.max(0, vol));
+    // O volume que pon o usuario multiplícase polo factor medido: así
+    // «ao 80 %» significa o mesmo en todos os efectos.
+    const norm = opcions.normalizar === false ? 1 : (ganancia.get(url) || 1);
+    g.gain.value = Math.min(1, Math.max(0, vol)) * norm;
     s.connect(g); g.connect(busNodes.efectos);
 
     if (!vivos.has(url)) vivos.set(url, new Set());
@@ -349,6 +413,7 @@ export function crearMotor(opcions = {}) {
     // marcado como «soando» para sempre.
     s.onended = () => { set.delete(nodo); cambiou(); };
     s.start();
+    duck(buf.duration || 0.5);
     cambiou();
     return true;
   }
@@ -449,6 +514,9 @@ export function crearMotor(opcions = {}) {
     precargar, precargarVarios, estadoDe, disparar, pararEfecto, alternarEfecto,
     volumeBus, pararTodo, fadeTodo,
     instantanea, desfase,
+    factorDe: (url) => ganancia.get(url) || 1,
+    // Expostas para poder cambialas en quente sen recrear o motor.
+    opcions,
     get estado() { return estado; },
     get ctx() { return ctx; },
   };
