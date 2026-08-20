@@ -1,38 +1,50 @@
-# ImproApp · `src/` completo · T16 + C11 + C12
+# ImproApp · `src/` completo · T13 · TabAdmin dividido
 
 Entrega completa. Fusionar, nunca substituír. Sen migracións novas.
 
-⚠️ **Esta entrega inclúe tamén o R05 anterior** (nivelado e duck), que
-non chegaches a aplicar. Con esta xa vai todo.
+⚠️ **Se non aplicaches a anterior, esta xa leva todo**: R05 (nivelado e
+duck), T16 (Sonido dividido), C11 (faders verticais), C12 (páxinas de
+efectos) e agora T13.
 
-## T16 · `Sonido.jsx` dividido
-De **921 a 726 liñas**. Saíron dous ficheiros:
+## T13 · `TabAdmin.jsx` de 727 a 79 liñas
 
-- `src/sonido/pezas.jsx` — os compoñentes que se repiten:
-  `BotonSon`, `Canle`, `CanleVertical`, `Contador`, `IconBtn`,
-  `Panel`, `BusVol`, `ReixaEfectos`
-- `src/sonido/medidas.js` — a constante `TOQUE`
+Queda só coa navegación entre seccións. As once seccións saíron a cinco
+ficheiros, agrupadas por afinidade e non unha por ficheiro:
 
-**Os 102 casos da mesa pasaron sen tocar un só**: a división non cambiou
-comportamento, que é o que había que comprobar.
+| Ficheiro | Seccións |
+|---|---|
+| `AdminUsuarios.jsx` | Usuarios · Grupos |
+| `AdminEstimulos.jsx` | Estímulos · Traducións |
+| `AdminUniverso.jsx` | Universo |
+| `AdminDinamicas.jsx` | Dinámicas |
+| `AdminSistema.jsx` | Estatísticas · Configuración |
 
-## C11 · Faders verticais en modo función
-Móvense mellor co polgar e caben moitas máis canles á vista: en
-horizontal cada unha come todo o ancho e non entran nin catro.
+**Estímulos e Traducións van xuntas** porque as traducións son dos
+propios estímulos: separalas obrigaría a duplicar a carga do corpus.
 
-⚠️ Faise con `writingMode: vertical-lr`, non con `rotate`. Rotado deixa
-de responder ben ao dedo en iOS.
+## ⚠️ Como se comprobou que non rompeu nada
+Ao dividir, o risco real é que unha sección quede sen un import: **o
+build pasaría igual** e a pantalla rebentaría só ao abrila.
 
-Fóra de modo función seguen horizontais.
+Por iso engadín ao harness as **oito seccións por separado**, cada unha
+renderizada soa con `act()`. Antes só se probaba `TabAdmin` enteiro, que
+monta unha sección de cada vez e deixaba as outras sete sen tocar.
 
-## C12 · Botonera de efectos con páxinas
-- **12** por páxina en móbil, **24** en tablet, **40** en modo función,
-  que é onde a mesa ten a pantalla enteira.
-- ⚠️ **O paxinador só aparece se sobran efectos.** Uns poucos non poden
-  quedar detrás dun control que non fai falta.
-- Se a lista encolle —cambiar de mesa, filtrar por grupo— a páxina
-  actual axústase soa. Se non, a reixa quedaría en branco.
+ESLint xa cazou unha: `cargarTiposDinamica` quedara fóra.
+
+## Reexportacións
+`TabAdmin.jsx` segue exportando as seccións, para non romper a quen as
+importase desde alí.
+
+## Estado dos ficheiros grandes
+| Antes | Agora |
+|---|---|
+| `Sonido.jsx` 921 | **726** |
+| `TabAdmin.jsx` 727 | **79** |
+
+Os máis grandes que quedan son `core.jsx` (664) e `iconos.jsx` (556), e
+os dous son listas de datos máis que lóxica.
 
 ## Verificación
-- eslint 0 · 22 pantallas · **696 casos** (10 novos)
-- Build limpo. Sonido pasa de 75 a 78 kB; o arranque non se move (672).
+- eslint 0 · **30 pantallas** renderizadas (antes 22) · 696 casos
+- Build limpo, arranque sen cambio: 672 kB
