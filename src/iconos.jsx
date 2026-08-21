@@ -47,7 +47,8 @@ const MARCA = {
 // ═══════════════════════════════════════════════════════════════════
 // ESTILOS ALTERNATIVOS
 // ═══════════════════════════════════════════════════════════════════
-// ⚠️ NINGÚN ESTÁ COMPLETO. A app usa 18 iconos (11 áreas + 7 de
+// ⚠️ NINGÚN ESTÁ COMPLETO. A app usa 18 iconos (10 áreas, Reto segue
+// aquí como modo de Xerar, + 7 de
 // cabeceira) e cada estilo alternativo trae de momento 2 deles.
 // Por iso `Icona` cae ao estilo base cando falta un: un menú con dous
 // iconos dun estilo e nove doutro sería peor que non ter selector.

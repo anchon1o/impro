@@ -19,7 +19,6 @@ import { invalidarCache } from './estimulos.js';
 import { supabaseConfigured } from './supabase.js';
 
 import { TabGenerar } from './tabs/TabGenerar.jsx';
-import { TabReto } from './tabs/TabReto.jsx';
 import { TabSesiones } from './tabs/TabSesiones.jsx';
 import { TabGuia } from './tabs/TabGuia.jsx';
 import { TabGrupos } from './tabs/TabGrupos.jsx';
@@ -57,9 +56,11 @@ function Cargando({ T }) {
   );
 }
 
+// ⚠️ R10a · «reto» xa non está aquí. Reto é un modo dentro de Xerar, non
+// unha pestana: telo nos dous sitios volvía deixar dúas portas ao mesmo
+// (B16). Se algún día volve, ten que entrar tamén en UI_STRINGS.
 export const TABS=[
   {id:"generar",label:"Generar",icona:"generar"},
-  {id:"reto",label:"Reto",icona:"reto"},
   {id:"sesiones",label:"Sesiones",icona:"sesiones"},
   {id:"guia",label:"Guía",icona:"guia"},
   {id:"sonido",label:"Sonido",icona:"sonido"},
@@ -273,7 +274,6 @@ function AppInner({perfil,publico}={}){
         <Suspense fallback={<Cargando T={T}/>}>
         {tab==="inicio"&&<Inicio lang={lang} onIr={id=>changeTab(id)}/>}
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
-        {tab==="reto"&&<TabReto/>}
         {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer} grupoActivo={grupoActivo}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
         {tab==="sonido"&&<TabSonido grupoActivo={grupoActivo}/>}

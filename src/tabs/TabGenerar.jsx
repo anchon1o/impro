@@ -4,10 +4,12 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useAuth, t, useTheme, useEstimulos, CAT_ICONS, UID, pick, ls, trackGen, mkS, Spotlight, useViewport} from '../core.jsx';
+import { useAuth, t, useLang, useTheme, useEstimulos, CAT_ICONS, UID, pick, ls, trackGen, mkS, Spotlight, useViewport} from '../core.jsx';
 import { PLANTILLAS, PLANTILLAS_BASE } from '../datos.js';
 import { getPlantillas, savePlantilla, deletePlantilla } from '../auth.js';
 import { trackGenSupa } from '../db.js';
+// R10a · Reto xa non é unha área: é un modo máis desta pantalla.
+import { ModoReto } from './ModoReto.jsx';
 
 export function TabGenerar({onStimulus}){
   const {T}=useTheme();const S=mkS(T);
@@ -26,6 +28,10 @@ export function TabGenerar({onStimulus}){
   const [sceneSubview,setSceneSubview]=useState("gen");
   const {logueado,pedirLogin,user}=useAuth();
   const [plantillas,setPlantillas]=useState([]);
+  // A etiqueta do modo Reto si sae de UI_STRINGS: a clave xa existía
+  // cando era área e segue sendo válida. Se non hai LangCtx (algunhas
+  // probas montan a pestana soa), `t()` cae a castelán, non á clave crúa.
+  const {lang}=useLang()||{};
 
   // As once categorías caben nunha pantalla sen desprazar, igual que a
   // botonera de inicio. `h||800` porque `innerHeight` pode ser undefined
@@ -88,7 +94,10 @@ export function TabGenerar({onStimulus}){
     {spotlight&&<Spotlight word={spotlight.word} category={spotlight.cat} onClose={()=>setSpotlight(null)}/>}
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"0.75rem",flexWrap:"wrap",alignItems:"center"}}>
       <div style={{display:"flex",background:T.bg3,borderRadius:10,padding:3,gap:2}}>
-        {[["cats","Categ."],["scene","🎬 Escena"],["favs",`♡ (${favoritos.length})`]].map(([v,l])=>(
+        {/* R10a · Catro modos. Reto vai despois de Escena porque é a
+            mesma escalada: unha palabra → unha escena → un exercicio
+            completo. */}
+        {[["cats","Categ."],["scene","🎬 Escena"],["reto",`⚡ ${t(lang,"reto")}`],["favs",`♡ (${favoritos.length})`]].map(([v,l])=>(
           <button key={v} onClick={()=>setView(v)} style={{...S.btn(view===v?T.bg2:"transparent",view===v?T.text:T.text3),borderRadius:8,padding:"0.35rem 0.6rem",fontSize:"0.78rem",boxShadow:view===v?"0 1px 4px rgba(0,0,0,0.15)":"none"}}>{l}</button>
         ))}
       </div>
@@ -101,6 +110,11 @@ export function TabGenerar({onStimulus}){
       </div>
       {view==="cats"&&<button onClick={generateRandom} style={S.btn(T.accent)}>🎲 Ao chou</button>}
     </div>
+
+    {/* R10a · O nivel e a lista de estímulos veñen de aquí: Reto tiña os
+        seus e podían discrepar cos de Xerar (os engadidos polo usuario
+        non chegaban ao sorteo). */}
+    {view==="reto"&&<ModoReto nivel={nivel} getList={getList}/>}
 
     {view==="favs"&&(<div>
       {favoritos.length===0?<div style={{...S.panel,textAlign:"center",padding:"2rem"}}><p style={{color:T.text4}}>Aínda non gardaches ningún estímulo. Xera un e preme ♡.</p></div>

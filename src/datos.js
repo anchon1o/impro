@@ -62,10 +62,7 @@ export const MANUAL_SECCIONES=[
     {t:"Escena combinada",d:"Pestana 🎬 Escena: combina varias categorías para xerar unha escena completa. Usa plantillas rápidas (Clásica, Conflito, Absurda...) ou escolle manualmente. O botón 🔒 conxela elementos para rexenerar só o resto."},
     {t:"Spotlight",d:"Toca calquera estímulo xerado para mostralo en pantalla completa ao grupo. Ideal para que todos o vexan á vez."},
     {t:"Favoritos",d:"Garda estímulos con ♡. Accede a todos os gardados dende a pestana ♡."},
-  ]},
-  {id:"reto",emoji:"⚡",titulo:"Xerador de retos",intro:"Combina unha dinámica cos seus estímulos nun reto listo para usar de inmediato.",items:[
-    {t:"Como funciona",d:"Selecciona nivel Simple ou Plus e preme Xerar reto. A app escolle unha dinámica aleatoria da biblioteca e asígnalle estímulos compatibles automaticamente."},
-    {t:"O reto",d:"Ves a dinámica, os estímulos asociados e un resumo: 'Fai X usando Y en Z minutos'. Un clic e tes un exercicio completo."},
+    {t:"Reto",d:"Pestana ⚡ Reto: escolle unha dinámica ao chou da biblioteca e asígnalle estímulos do nivel activo. Amosa a dinámica coas súas instrucións, os estímulos e un resumo: 'Fai X usando Y en Z minutos'. Antes era unha área aparte da botonera; agora é un modo máis de Xerar, porque usa os mesmos estímulos."},
   ]},
   {id:"guia",emoji:"📖",titulo:"Biblioteca de dinámicas",intro:"Máis de 85 exercicios e xogos de impro documentados.",items:[
     {t:"Filtros e busca",d:"Filtra por tipo (calentamento, entrenamento, xogo, formato, musical, pausa, peche) ou busca por nome e descrición."},

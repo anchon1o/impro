@@ -4,7 +4,7 @@ import { Icona } from './iconos.jsx';
 
 // IM-M02 — Pantalla de inicio tipo botonera.
 //
-// Antes a app abría directamente en «Generar» e as 11 áreas só eran
+// Antes a app abría directamente en «Generar» e as áreas só eran
 // accesibles desde a tira de pestanas, que en móbil hai que desprazar
 // horizontalmente para descubrir o que hai ao final (Manual, Universo).
 // Esta pantalla dálle a cada área o mesmo peso visual e o mesmo tamaño de
@@ -16,8 +16,7 @@ import { Icona } from './iconos.jsx';
 // as etiquetas viñan de UI_STRINGS, así que ao poñer a app en castelán a
 // botonera mostraba "Generar" cunha descrición en galego.
 export const DESCS={
-  es:{generar:"Estímulos por categoría, escenas combinadas y plantillas propias.",
-      reto:"Una dinámica al azar con estímulos y sus instrucciones.",
+  es:{generar:"Estímulos por categoría, escenas, retos con dinámica y plantillas propias.",
       sonido:"Mesa de sonido táctil: capas simultáneas, efectos y contadores.",
       guia:"Catálogo de dinámicas con pasos, objetivos y variantes.",
       sesiones:"Planifica y guarda tus sesiones de trabajo.",
@@ -28,8 +27,7 @@ export const DESCS={
       manual:"Cómo funciona cada parte de la aplicación.",
       ajustes:"Idioma, tema y preferencias.",
       admin:"Usuarios, estímulos, dinámicas y estadísticas."},
-  gl:{generar:"Estímulos por categoría, escenas combinadas e plantillas propias.",
-      reto:"Unha dinámica ao chou con estímulos, coas súas instrucións.",
+  gl:{generar:"Estímulos por categoría, escenas, retos con dinámica e plantillas propias.",
       sonido:"Mesa de son táctil: capas simultáneas, efectos e contadores.",
       guia:"Catálogo de dinámicas con pasos, obxectivos e variantes.",
       sesiones:"Planifica e garda as túas sesións de traballo.",
@@ -40,8 +38,7 @@ export const DESCS={
       manual:"Como funciona cada parte da aplicación.",
       ajustes:"Idioma, tema e preferencias.",
       admin:"Usuarios, estímulos, dinámicas e estatísticas."},
-  en:{generar:"Prompts by category, combined scenes and your own templates.",
-      reto:"A random exercise with prompts and full instructions.",
+  en:{generar:"Prompts by category, scenes, exercise challenges and your own templates.",
       sonido:"Touch sound desk: simultaneous layers, effects and counters.",
       guia:"Exercise library with steps, goals and variations.",
       sesiones:"Plan and save your training sessions.",
@@ -63,7 +60,6 @@ export const DESCS={
 // percorre AREAS e falla se algunha queda sen icono.
 export const AREAS=[
   {id:"generar",  icona:"generar",  cor:"accent"},
-  {id:"reto",     icona:"reto",     cor:"warn"},
   {id:"sonido",   icona:"sonido",   cor:"accent"},
   {id:"guia",     icona:"guia",     cor:"ok"},
   {id:"sesiones", icona:"sesiones", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
@@ -74,7 +70,7 @@ export const AREAS=[
   {id:"manual",   icona:"manual",   cor:"info"},
   {id:"ajustes",  icona:"ajustes",  cor:"muted"},
 ];
-// V01 · Admin xa non está aquí: subiu á cabeceira. Era a única das doce que
+// V01 · Admin xa non está aquí: subiu á cabeceira. Era a única das áreas que
 // non se usa facendo impro, e ocupaba unha tarxeta enteira para os admins.
 // A descrición mantense en DESCS porque a segue usando o menú ⋯ de móbil.
 
@@ -93,10 +89,10 @@ export function Inicio({onIr,lang}){
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
   // volvía a 3 a partir de 1024, é dicir, a grella empeoraba ao agrandar a
   // pantalla. Fixándoas é monótono e predicible.
-  // Con iconos grandes e sen descrición caben máis por fila: as once
+  // Con iconos grandes e sen descrición caben máis por fila: as dez
   // vense dun golpe de vista, sen desprazar.
   // Persiste, e vén ACESA por defecto: as descricións son o que fai que
-  // alguén que entra por primeira vez saiba que é «Reto» sen probalo.
+  // alguén que entra por primeira vez saiba que é «Universo» sen probalo.
   // Quen xa se sabe o menú apágaas e recupera espazo para o icono.
   const [axuda,setAxudaEstado]=useState(()=>{
     try{const v=localStorage.getItem("impro_desc_botonera");return v===null?true:v==="1";}
@@ -159,8 +155,8 @@ export function Inicio({onIr,lang}){
               style={{
                 background:hover===a.id?cor+"14":T.bg2,
                 height:altoT,
-                // As once áreas non enchen a última fila (con 4 columnas
-                // quedan 4+4+3). En vez de deixar o oco á dereita,
+                // As dez áreas non enchen a última fila (con 4 columnas
+                // quedan 4+4+2). En vez de deixar o oco á dereita,
                 // céntranse: unha fila descentrada lese como un erro.
                 gridColumn:(oco&&idx===visibles.length-(visibles.length%cols||cols))
                   ?`${Math.floor(oco/2)+1} / span 1`:undefined,
