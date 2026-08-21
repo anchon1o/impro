@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { useAuth, t, useTheme, useEstimulos, CAT_ICONS, UID, pick, ls, trackGen, mkS, Spotlight } from '../core.jsx';
+import { useAuth, t, useTheme, useEstimulos, CAT_ICONS, UID, pick, ls, trackGen, mkS, Spotlight, useViewport} from '../core.jsx';
 import { PLANTILLAS, PLANTILLAS_BASE } from '../datos.js';
 import { getPlantillas, savePlantilla, deletePlantilla } from '../auth.js';
 import { trackGenSupa } from '../db.js';
@@ -26,6 +26,18 @@ export function TabGenerar({onStimulus}){
   const [sceneSubview,setSceneSubview]=useState("gen");
   const {logueado,pedirLogin,user}=useAuth();
   const [plantillas,setPlantillas]=useState([]);
+
+  // As once categorías caben nunha pantalla sen desprazar, igual que a
+  // botonera de inicio. `h||800` porque `innerHeight` pode ser undefined
+  // nalgunhas webviews e daría NaN.
+  const {w:anchoG,h:altoG,esMovil}=useViewport();
+  const colsCat=anchoG<340?2:anchoG<560?3:anchoG<900?4:5;
+  const filasCat=Math.ceil((CATS.length||1)/colsCat);
+  const GAPC=esMovil?7:10;
+  const RESERVAC=esMovil?210:250;      // cabeceira + controis de arriba
+  const libreCat=Math.max(200,(altoG||800)-RESERVAC-GAPC*(filasCat-1));
+  const altoCat=Math.max(esMovil?76:88,Math.min(190,libreCat/filasCat));
+  const szCat=`${Math.max(1.3,Math.min(2.6,altoCat*0.026)).toFixed(2)}rem`;
   const [showPlantillaForm,setShowPlantillaForm]=useState(false);
   const [nomePlantilla,setNomePlantilla]=useState("");
 
@@ -204,11 +216,14 @@ export function TabGenerar({onStimulus}){
     </div>)}
 
     {view==="cats"&&(<>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(min(185px,100%),1fr))",gap:"0.5rem"}}>
+      {/* R10 · Mesma idea que a botonera de inicio: o icono é o que se
+          recoñece de lonxe, e a reixa reparte o alto dispoñible en vez
+          de deixar media pantalla baleira. */}
+      <div style={{display:"grid",gridTemplateColumns:`repeat(${colsCat},minmax(0,1fr))`,gap:esMovil?"0.45rem":"0.6rem"}}>
         {CATS.map(cat=>{return(
-          <button key={cat} onClick={()=>generate(cat)} style={{background:sel?.cat===cat?T.accent+"18":T.bg2,border:`1.5px solid ${sel?.cat===cat?T.accent:T.border}`,borderRadius:10,padding:"0.75rem 0.9rem",color:T.text,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:"0.5rem",transition:"all 0.15s"}}>
-            <span>{CAT_ICONS[cat]||"◆"}</span>
-            <span style={{flex:1,fontWeight:600,fontSize:"0.85rem"}}>{cat}</span>
+          <button key={cat} onClick={()=>generate(cat)} style={{background:sel?.cat===cat?T.accent+"18":T.bg2,borderStyle:"solid",borderWidth:1.5,borderColor:sel?.cat===cat?T.accent:T.border,borderRadius:14,padding:esMovil?"0.6rem 0.35rem":"0.85rem 0.5rem",color:T.text,cursor:"pointer",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"0.4rem",height:altoCat,transition:"background 0.15s, border-color 0.15s"}}>
+            <span style={{fontSize:szCat,lineHeight:1}}>{iconOf(cat)}</span>
+            <span style={{fontWeight:700,fontSize:altoCat>110?"0.82rem":"0.72rem",letterSpacing:"-0.01em",lineHeight:1.15}}>{cat}</span>
 
             {(ESTIMULOS[cat]?.plus.length||0)>(ESTIMULOS[cat]?.simple.length||0)&&nivel==="simple"&&<span style={{color:T.accent,fontSize:"0.6rem"}}>⭐</span>}
             <span style={{color:T.text4,fontSize:"0.72rem"}}>{getList(cat).length}</span>
