@@ -70,6 +70,11 @@ export const MANUAL_SECCIONES=[
     {t:"Detalle completo",d:"Cada dinámica ten descrición, pasos numerados, obxectivo pedagóxico e variantes. Toca calquera para ver o detalle completo."},
     {t:"Crear e editar",d:"Engade as túas propias dinámicas con todos os campos. Edita ou elimina as existentes."},
   ]},
+  {id:"plano",emoji:"🎭",titulo:"Plano",intro:"Debuxa o escenario: quen está onde, cara a onde mira e como se move.",items:[
+    {t:"Escénico ou técnico",d:"Ao entrar escóllese sempre modo. Un plano ten as dúas capas sobre o mesmo escenario, pero as ferramentas non se mesturan: no escénico colócanse persoas e obxectos, no técnico micros, monitores e luz."},
+    {t:"Momentos",d:"Un plano cun só momento é un plano estático. Engadindo momentos convértese nunha secuencia, e entre dous momentos hai unha transición. Non todo cambio implica movemento: alguén pode cambiar de mirada sen moverse do sitio."},
+    {t:"Onde se garda",d:"Sen conta, os planos gárdanse neste aparello. Con conta van á nube e podes abrilos noutro. Os locais non se soben sós ao iniciar sesión: dise cales se poderían subir e decides ti."},
+  ]},
   {id:"sesiones",emoji:"📋",titulo:"Planificación de sesións",intro:"Organiza, rexistra e cronometra as túas sesións de ensaio.",items:[
     {t:"Plantillas",d:"4 plantillas predefinidas: Entrenamento estándar 90min, Calentamento rápido 30min, Show Harold 60min e Sesión musical 75min. Cárgaas e modifícaas ao teu gusto."},
     {t:"Bloques",d:"Cada sesión ten bloques con tipo (calentamento, entrenamento, xogo...), título, duración e notas. Marca como completados durante a sesión."},

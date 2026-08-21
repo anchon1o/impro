@@ -44,6 +44,10 @@ import { LimiteErro } from './LimiteErro.jsx';
 const TabSonido = lazy(() => import('./sonido/TabSonido.jsx').then(m => ({ default: m.TabSonido })));
 const TabAdmin  = lazy(() => import('./tabs/TabAdmin.jsx').then(m => ({ default: m.TabAdmin })));
 const TabManual = lazy(() => import('./tabs/TabManual.jsx').then(m => ({ default: m.TabManual })));
+// ⚠️ Plano tamén baixo demanda, e por unha razón máis forte cás outras:
+// vai ser o anaco máis grande do proxecto. O arranque son 673 kB e T10
+// xa quere baixalo; isto non pode subilo.
+const TabPlano  = lazy(() => import('./tabs/TabPlano.jsx').then(m => ({ default: m.TabPlano })));
 
 // Mentres chega o anaco. Non é un spinner animado a propósito: aparece
 // e desaparece nun intre, e un spinner que parpadea molesta máis que
@@ -63,6 +67,7 @@ export const TABS=[
   {id:"generar",label:"Generar",icona:"generar"},
   {id:"sesiones",label:"Sesiones",icona:"sesiones"},
   {id:"guia",label:"Guía",icona:"guia"},
+  {id:"plano",label:"Plano",icona:"plano"},
   {id:"sonido",label:"Sonido",icona:"sonido"},
   {id:"grupos",label:"Grupos",icona:"grupos"},
   {id:"qr",label:"QR",icona:"qr"},
@@ -268,7 +273,8 @@ function AppInner({perfil,publico}={}){
     {migrando&&<div style={{background:T.ok+"15",borderBottom:`1px solid ${T.ok}33`,padding:"0.5rem 1rem",textAlign:"center"}}>
       <span style={{color:T.ok,fontSize:"0.82rem"}}>↻ Sincronizando os teus datos coa conta...</span>
     </div>}
-    <main style={{maxWidth:1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
+    {/* ⚠️ En pantalla chea o escenario non pode topar en 1100 px. */}
+    <main style={{maxWidth:pantallaChea?"none":1100,margin:"0 auto",padding:esMovil?`0.9rem 0.75rem ${timerAberto?"6.5rem":"1.5rem"}`:`1.4rem 1.25rem ${timerAberto?"6rem":"2rem"}`}}>
       <div className="tab-content" key={tab}>
         <LimiteErro onde={tab} T={T}>
         <Suspense fallback={<Cargando T={T}/>}>
@@ -276,6 +282,7 @@ function AppInner({perfil,publico}={}){
         {tab==="generar"&&<TabGenerar onStimulus={s=>setPubStimulus(s)}/>}
         {tab==="sesiones"&&<LoginGate titulo="Garda as túas sesións" descricion="Cunha conta podes gardar o historial de sesións e recuperalo en calquera dispositivo."><TabSesiones onLaunchTimer={launchTimer} grupoActivo={grupoActivo}/></LoginGate>}
         {tab==="guia"&&<TabGuia/>}
+        {tab==="plano"&&<TabPlano/>}
         {tab==="sonido"&&<TabSonido grupoActivo={grupoActivo}/>}
         {tab==="grupos"&&<LoginGate titulo="Xestiona os teus grupos" descricion="Crea grupos, engade membros e fai seguimento das súas estatísticas."><TabGrupos grupoActivo={grupoActivo} setGrupoActivo={setGrupo}/></LoginGate>}
         {tab==="qr"&&<TabQR/>}

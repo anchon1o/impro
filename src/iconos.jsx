@@ -47,9 +47,8 @@ const MARCA = {
 // ═══════════════════════════════════════════════════════════════════
 // ESTILOS ALTERNATIVOS
 // ═══════════════════════════════════════════════════════════════════
-// ⚠️ NINGÚN ESTÁ COMPLETO. A app usa 18 iconos (10 áreas, Reto segue
-// aquí como modo de Xerar, + 7 de
-// cabeceira) e cada estilo alternativo trae de momento 2 deles.
+// ⚠️ NINGÚN ESTÁ COMPLETO. A app usa 19 iconos (11 áreas, máis Reto
+// que segue aquí como modo de Xerar, + 7 de cabeceira) e cada estilo alternativo trae de momento 2 deles.
 // Por iso `Icona` cae ao estilo base cando falta un: un menú con dous
 // iconos dun estilo e nove doutro sería peor que non ter selector.
 //
@@ -69,6 +68,9 @@ const ALTERNATIVOS = {
     ),
     ajustes: (
       <><rect x="10.7" y="1.4" width="2.6" height="5.2" rx="0.7" fill="currentColor"/> <rect x="10.7" y="17.4" width="2.6" height="5.2" rx="0.7" fill="currentColor"/> <rect x="1.4" y="10.7" width="5.2" height="2.6" rx="0.7" fill="currentColor"/> <rect x="17.4" y="10.7" width="5.2" height="2.6" rx="0.7" fill="currentColor"/> <rect x="3.5" y="3.5" width="2.6" height="5.2" rx="0.7" transform="rotate(-45 4.8 6.1)" fill="currentColor"/> <rect x="17.9" y="15.3" width="2.6" height="5.2" rx="0.7" transform="rotate(-45 19.2 17.9)" fill="currentColor"/> <rect x="15.3" y="3.5" width="5.2" height="2.6" rx="0.7" transform="rotate(45 17.9 4.8)" fill="currentColor"/> <rect x="3.5" y="15.3" width="5.2" height="2.6" rx="0.7" transform="rotate(45 6.1 16.6)" fill="currentColor"/> <path fillRule="evenodd" d="M12 5.2a6.8 6.8 0 1 1 0 13.6 6.8 6.8 0 0 1 0-13.6Zm0 3.2a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z" fill="currentColor"/> <circle cx="12" cy="12" r="2" fill="currentColor" fillOpacity="0.45"/></>
+    ),
+    plano: (
+      <><path fillRule="evenodd" d="M2.6 5h18.8v14H2.6Zm1.6 1.6v10.8h15.6V6.6Z" fill="currentColor"/> <rect x="9.1" y="6.6" width="1" height="10.8" fill="currentColor" fillOpacity="0.45"/> <rect x="13.9" y="6.6" width="1" height="10.8" fill="currentColor" fillOpacity="0.45"/> <rect x="4.2" y="9.8" width="15.6" height="1" fill="currentColor" fillOpacity="0.45"/> <rect x="4.2" y="13.2" width="15.6" height="1" fill="currentColor" fillOpacity="0.45"/> <circle cx="7.4" cy="15.2" r="1.7" fill="currentColor"/> <circle cx="16.4" cy="8.6" r="1.7" fill="currentColor"/></>
     ),
     axenda: (
       <><path fillRule="evenodd" d="M3 4h18v17H3Zm1.6 4.2v11.2h14.8V8.2Z" fill="currentColor"/> <rect x="3" y="4" width="18" height="4.2" rx="1" fill="currentColor"/> <rect x="6.2" y="2" width="1.4" height="4.2" rx="0.7" fill="currentColor"/> <rect x="16.4" y="2" width="1.4" height="4.2" rx="0.7" fill="currentColor"/> <rect x="6" y="10.4" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <rect x="10.9" y="10.4" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <circle cx="17" cy="11.5" r="1.15" fill="currentColor" fillOpacity="0.45"/> <rect x="6" y="15.1" width="2.2" height="2.2" rx="0.4" fill="currentColor"/> <circle cx="12" cy="16.2" r="1.15" fill="currentColor" fillOpacity="0.45"/> <rect x="15.9" y="15.1" width="2.2" height="2.2" rx="0.4" fill="currentColor"/></>
@@ -381,9 +383,16 @@ const ALTERNATIVOS = {
   },
 };
 
-// Os 18 que a app usa de verdade. É a vara de medir da cobertura.
+// Os 19 que a app usa de verdade.
+// ⚠️ Os ~40 SÍMBOLOS DE PLANO NON ENTRAN AQUÍ. Este array é a vara de
+// medir da cobertura dos estilos alternativos: hoxe son 19 iconos e
+// cada estilo alternativo trae 2. Meterlle os símbolos do debuxo
+// (micrófono, cadeira, foco…) afundiría a porcentaxe de todos e
+// deixaría I11 en imposible. Ademais non son o mesmo: estes son
+// iconos de INTERFACE; aqueles son CONTIDO do plano, e viven en
+// `plano/iconosPlano.jsx`.
 export const ICONOS_NECESARIOS = [
-  'generar', 'reto', 'sonido', 'guia', 'sesiones', 'grupos', 'qr',
+  'generar', 'plano', 'reto', 'sonido', 'guia', 'sesiones', 'grupos', 'qr',
   'universo', 'axenda', 'manual', 'ajustes',
   'admin', 'endirecto', 'proxeccion', 'temporizador', 'idioma', 'tema', 'salir',
 ];
@@ -405,6 +414,7 @@ const NOMES_ESTILO = {"geometrico": "Xeométrico", "linea": "Liña", "cubista": 
 // Por iso é unha opción, non un erro do pasado.
 const EMOJIS = {
   generar: '🎲',
+  plano: '🎭',
   reto: '⚡',
   sonido: '🔊',
   guia: '📖',

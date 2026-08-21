@@ -17,6 +17,7 @@ import { Icona } from './iconos.jsx';
 // botonera mostraba "Generar" cunha descrición en galego.
 export const DESCS={
   es:{generar:"Estímulos por categoría, escenas, retos con dinámica y plantillas propias.",
+      plano:"Dibuja el escenario: quién está dónde, hacia dónde mira y cómo se mueve.",
       sonido:"Mesa de sonido táctil: capas simultáneas, efectos y contadores.",
       guia:"Catálogo de dinámicas con pasos, objetivos y variantes.",
       sesiones:"Planifica y guarda tus sesiones de trabajo.",
@@ -28,6 +29,7 @@ export const DESCS={
       ajustes:"Idioma, tema y preferencias.",
       admin:"Usuarios, estímulos, dinámicas y estadísticas."},
   gl:{generar:"Estímulos por categoría, escenas, retos con dinámica e plantillas propias.",
+      plano:"Debuxa o escenario: quen está onde, cara a onde mira e como se move.",
       sonido:"Mesa de son táctil: capas simultáneas, efectos e contadores.",
       guia:"Catálogo de dinámicas con pasos, obxectivos e variantes.",
       sesiones:"Planifica e garda as túas sesións de traballo.",
@@ -39,6 +41,7 @@ export const DESCS={
       ajustes:"Idioma, tema e preferencias.",
       admin:"Usuarios, estímulos, dinámicas e estatísticas."},
   en:{generar:"Prompts by category, scenes, exercise challenges and your own templates.",
+      plano:"Draw the stage: who stands where, where they look and how they move.",
       sonido:"Touch sound desk: simultaneous layers, effects and counters.",
       guia:"Exercise library with steps, goals and variations.",
       sesiones:"Plan and save your training sessions.",
@@ -62,6 +65,7 @@ export const AREAS=[
   {id:"generar",  icona:"generar",  cor:"accent"},
   {id:"sonido",   icona:"sonido",   cor:"accent"},
   {id:"guia",     icona:"guia",     cor:"ok"},
+  {id:"plano",    icona:"plano",    cor:"warn"},
   {id:"sesiones", icona:"sesiones", cor:"info", desc:"Planifica e garda as túas sesións de traballo.", conta:true},
   {id:"grupos",   icona:"grupos",   cor:"info", desc:"Xestiona os teus grupos e fai seguimento.", conta:true},
   {id:"qr",       icona:"qr",       cor:"ok", desc:"Abre unha sala e recolle propostas do público en directo.", conta:true},
@@ -89,7 +93,7 @@ export function Inicio({onIr,lang}){
   // franxa aparecía unha descontinuidade: a 900px baixaba a 2 columnas e
   // volvía a 3 a partir de 1024, é dicir, a grella empeoraba ao agrandar a
   // pantalla. Fixándoas é monótono e predicible.
-  // Con iconos grandes e sen descrición caben máis por fila: as dez
+  // Con iconos grandes e sen descrición caben máis por fila: as once
   // vense dun golpe de vista, sen desprazar.
   // Persiste, e vén ACESA por defecto: as descricións son o que fai que
   // alguén que entra por primeira vez saiba que é «Universo» sen probalo.
@@ -155,8 +159,8 @@ export function Inicio({onIr,lang}){
               style={{
                 background:hover===a.id?cor+"14":T.bg2,
                 height:altoT,
-                // As dez áreas non enchen a última fila (con 4 columnas
-                // quedan 4+4+2). En vez de deixar o oco á dereita,
+                // As once áreas non enchen a última fila (con 4 columnas
+                // quedan 4+4+3). En vez de deixar o oco á dereita,
                 // céntranse: unha fila descentrada lese como un erro.
                 gridColumn:(oco&&idx===visibles.length-(visibles.length%cols||cols))
                   ?`${Math.floor(oco/2)+1} / span 1`:undefined,

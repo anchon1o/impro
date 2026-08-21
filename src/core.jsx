@@ -32,9 +32,9 @@ export const useAuth = () => useContext(AuthCtx) || {};
 export const useLang = () => useContext(LangCtx);
 
 export const UI_STRINGS = {
-  es:{generar:"Generar",reto:"Reto",sesiones:"Sesiones",guia:"Guía",sonido:"Sonido",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Agenda"},
-  gl:{generar:"Xerar",reto:"Reto",sesiones:"Sesións",guia:"Guía",sonido:"Son",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Axenda"},
-  en:{generar:"Generate",reto:"Challenge",sesiones:"Sessions",guia:"Guide",sonido:"Sound",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe",axenda:"Calendar"},
+  es:{generar:"Generar",reto:"Reto",plano:"Plano",sesiones:"Sesiones",guia:"Guía",sonido:"Sonido",grupos:"Grupos",qr:"QR",ajustes:"Ajustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Agenda"},
+  gl:{generar:"Xerar",reto:"Reto",plano:"Plano",sesiones:"Sesións",guia:"Guía",sonido:"Son",grupos:"Grupos",qr:"QR",ajustes:"Axustes",manual:"Manual",admin:"Admin",universo:"Universo",axenda:"Axenda"},
+  en:{generar:"Generate",reto:"Challenge",plano:"Stage plan",sesiones:"Sessions",guia:"Guide",sonido:"Sound",grupos:"Groups",qr:"QR",ajustes:"Settings",manual:"Manual",admin:"Admin",universo:"Universe",axenda:"Calendar"},
 };
 
 // ⚠️ O último `|| key` é unha rede de seguridade, non unha tradución: se

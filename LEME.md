@@ -1,109 +1,96 @@
-# ImproApp · `src/` completo — R10a + Plano Fase 0
+# ImproApp · `src/` completo — R10a + Plano (Fase 0 e PL1a)
 
-Entrega completa. **Fusionar, nunca substituír.** Sen migracións novas.
-
-Leva **dúas cousas**: R10a (que xa tiñas sen aplicar) e a Fase 0 de Plano.
-Este zip substitúe ao anterior; se non aplicaches aquel, aplica só este.
+Entrega completa. **Fusionar, nunca substituír.**
+Este zip substitúe aos dous anteriores: aplica só este.
 
 ---
 
-## ⚠️ Un ficheiro que hai que BORRAR A MAN
+## ⚠️ Dúas cousas ANTES de subir o código
 
-Despois de fusionar: **borra `src/tabs/TabReto.jsx`.**
-Substitúeo `src/tabs/ModoReto.jsx`. Un zip non pode borrar nada.
+**1. Executa `supabase_planos.sql` en Supabase.** É a táboa dos planos.
+Idempotente, pódese correr as veces que faga falta. Se subes o código
+sen ela, Plano segue funcionando sen conta (en local) e con conta avisa
+de que non pode ler; non peta, pero non garda na nube.
+
+**2. Borra `src/tabs/TabReto.jsx`** despois de fusionar. Substitúeo
+`ModoReto.jsx`; un zip non pode borrar nada.
 
 ---
 
 ## 1 · R10a — Reto é un modo de Xerar
 
-A botonera baixa a **10 áreas**. Reto vive dentro de Xerar como cuarto
-modo, ao lado de `Categ.`, `🎬 Escena` e `♡`. Fóra de `AREAS`, de
-`TABS`, de `DESCS` e do encamiñamento; a súa sección de Manual fúndese
-coa de Xerar. `UI_STRINGS.reto` queda como etiqueta do modo.
+Xa o tiñas descrito. A botonera baixara a 10 áreas; **con Plano volve a
+11**, que é onde estaba antes. A reixa comprobada nos catro tamaños.
 
-Arranxa de paso que Reto sorteaba doutra lista que Xerar (B56) e que
-unha categoría inexistente no idioma activo pintaba unha fila baleira
-(B57).
+## 2 · Plano · Fase 0 — o motor
 
----
+`plano/xeometria.js` (401 liñas) e `plano/modelo.js` (665). Módulos
+puros, sen React. **218 casos.**
 
-## 2 · Plano · Fase 0 — o motor, sen interface
+## 3 · Plano · PL1a — fontanería e porta de entrada
 
-**Non hai nada que ver na app.** Son dous módulos puros e as súas
-probas. Non se tocou ningún ficheiro existente: nin `Inicio.jsx`, nin
-`ImproApp.jsx`, nin `core.jsx`. Aplicar isto **non cambia nada do que
-xa funciona**.
+| Ficheiro novo | Que |
+|---|---|
+| `plano/paleta.js` | tema → paleta de debuxo, e tres paletas de exportación |
+| `plano/historial.js` | desfacer/refacer con fusión de xestos |
+| `plano/almacen.js` | local + conta, patrón de `mesas.js` |
+| `tabs/TabPlano.jsx` | selector de modo + lista de planos |
+| `supabase_planos.sql` | a táboa |
 
-| Ficheiro | Liñas | Que fai |
-|---|---|---|
-| `src/plano/xeometria.js` | 401 | coordenadas, reixa, 2,5D, trazos, ángulos |
-| `src/plano/modelo.js` | 665 | o documento, validación, momentos, secuencia |
-| `probas/test_plano_xeometria.mjs` | — | **101 casos** |
-| `probas/test_plano_modelo.mjs` | — | **117 casos** |
+**Xa podes** entrar en Plano, escoller escénico ou técnico, e crear,
+renomear, duplicar e borrar planos, sen conta ou con ela.
 
-### As túas seis decisións, implementadas
+### Por que a paleta é un módulo aparte
 
-1. **Momentos**, non «estados». E sen nivel «escena»: *o plano É a escena*.
-2. **Opción B.** Un documento, un escenario, dúas capas (`escenico` /
-   `tecnico`). O modo é estado da interface, **non está no documento**.
-3. Preparado para local + conta (`almacen.js` vai na Fase 1).
-4. **6,00 × 4,50 m**, proporción 4:3. Cotas acesas por defecto.
-5. Fase 0 primeiro. Isto.
-6. I02 despois, por bloques.
+⚠️ **O debuxo non le o tema, le unha paleta.** Se o SVG chamase a
+`useTheme()` por dentro, exportar unha imaxe «en claro» estando en tema
+escuro obrigaría a cambiar o tema da app enteira para xerar o ficheiro,
+e a desfacelo despois. Cunha paleta como parámetro, exportar é pasar
+outra paleta. As cores dos elementos son **tokens** (`ok`, `accent`…),
+nunca hexadecimais: así seguen os catro temas sen tocar nada.
 
-### Como resolvín a colocación coa opción B
+### Superficie de contacto co que xa funciona
 
-Este é o cerne, e non era obvio:
+Como dicía a análise, ~40 liñas: `Inicio.jsx` (área 11 + descricións),
+`ImproApp.jsx` (pestana, `lazy()`, ruta), `core.jsx` (`UI_STRINGS`),
+`iconos.jsx` (**un** icono), `datos.js` (sección de Manual).
 
-- Un elemento **fixo** garda a posición nel mesmo. Un pé de micro non se
-  move durante a función; ter unha copia por momento significaría que
-  movelo obriga a corrixir catro sitios, e esquecer un deixa o micro
-  saltando.
-- Un elemento **non fixo** gárdaa en `momento.colocacion[id]`.
-- Por defecto: escénico → non fixo, técnico → fixo. Pero é unha
-  **propiedade**, non unha consecuencia da capa: un praticable que se
-  move a metade da función pode ser técnico e non fixo.
-- **Lese sempre por `colocacionDe()`.** Ninguén le os campos crus. É o
-  mesmo criterio que `paraDirecto()` nas escaletas: unha soa función que
-  aplana, e todas as vistas ven o mesmo.
+⚠️ Os ~40 símbolos do debuxo **non entran** en `ICONOS_NECESARIOS`:
+afundirían a cobertura de todos os estilos e deixarían I11 imposible.
+Irán en `plano/iconosPlano.jsx`, que é contido, non interface.
 
-### Catro cousas que atopei escribindo as probas
+⚠️ `<main>` xa non topa en 1100 px cando hai pantalla chea. Serve tamén
+para o modo función de Sonido, que xa emitía o evento.
 
-Cada unha destas sería un bug enterrado se empezase pola interface:
+## Catro erros atopados polas probas
 
-1. **Engadir un actor no momento 2 facíao desaparecer no 3.** Poñelo só
-   no momento activo parecía o obvio. Agora persiste cara adiante; nos
-   anteriores segue sen estar, que é o que se quere (é unha entrada).
-2. **Borrar un momento intermedio partía a secuencia.** De 1→2→3, borrar
-   o 2 deixaba o 3 inalcanzable. Agora reconecta a 1→3.
-3. **Borrar un elemento deixaba tres rastros**: a colocación en cada
-   momento, os recorridos asignados e as traxectorias das transicións.
-4. **Interpolar a mirada de 350° a 10° daba a volta longa.** É o bug
-   clásico dos ángulos. Vai polo camiño curto.
+Un por cada módulo novo, e todos serían bugs enterrados:
 
-Ademais quedaron cubertas as trampas xa documentadas do proxecto:
-`Number(null) === 0` (o 0 é o bordo esquerdo, non «sen valor»), un ciclo
-de transicións que conxelaría a pestana, e un trazo de 20.000 puntos que
-desbordaba a pila coa simplificación recursiva.
-
----
+1. **`validar()` estaba borrando os metadatos do almacén.** Devolve unha
+   forma fixa, e `local` e `actualizado` non son do documento: son do
+   almacén. Ían pola billa, e a lista deixaba de saber cales estaban só
+   neste aparello.
+2. **Dous planos gardados no mesmo milisegundo ordenábanse ao chou.**
+   Vese como «o plano que acabo de crear aparece o segundo». A marca de
+   tempo agora é estritamente crecente.
+3. **Un arrastre enchía o historial de 200 entradas.** Desfacer tería
+   que premerse 200 veces para desfacer UN xesto. Os pasos coa mesma
+   etiqueta e próximos no tempo colapsan.
+4. **`motivo: 'erro'` non estaba tratado en `TabPlano`.** Sen a táboa
+   creada, a pantalla quedaba **en branco** en vez de dicir que pasaba.
 
 ## Verificación
 
 - `npx eslint src` → **0**
-- **952 casos** en 22 ficheiros de `probas/` (eran 734)
-- 20 dos 22 ficheiros en verde. Os dous que non (`test_sonido`,
-  `test_usemotor`) fallan **idénticos antes e despois**: é o meu remedo
-  de `AudioContext`, e nada disto toca audio.
+- **1.057 casos** en 24 ficheiros (eran 734 antes de Plano)
+- 22 dos 24 en verde. Os dous que non (`test_sonido`, `test_usemotor`)
+  fallan idénticos antes e despois: é o meu remedo de `AudioContext`.
+- Botonera comprobada nos catro tamaños coas 11 áreas: caben todas sen
+  desprazar.
 
----
+## O seguinte · PL1b
 
-## O seguinte
-
-**Fase 1 de Plano**: o plano estático. Entrada escénico/técnico, lista e
-persistencia local, vista planta, reixa, cotas, actores con mirada,
-obxectos, foco, recorridos a man, undo/redo, vista de público 2,5D,
-vista doble, exportar PNG/SVG, os catro temas e os catro layouts.
-
-Aí si toco `Inicio.jsx`, `ImproApp.jsx`, `core.jsx`, `iconos.jsx` e
-`datos.js` — as ~40 liñas de superficie de contacto que dicía a análise.
+O editor do escenario: vista planta, reixa, cotas, actores con mirada,
+obxectos, foco, selección e arrastre, undo/redo cableado, e os catro
+layouts. Despois PL1c: recorridos a man, vista de público 2,5D, vista
+doble e exportar.
