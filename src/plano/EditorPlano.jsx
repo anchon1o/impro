@@ -28,8 +28,13 @@ import {
   validar, novoElemento, engadirElemento, borrarElemento, establecerColocacion,
   colocacionDe, elementoPorId, seguinteCorActor, seguinteNumeroActor,
   CORES_ACTOR, POSTURAS, elementosDaCapa,
+  engadirRecorrido, borrarRecorrido, mudarRecorrido, recorridoPorId, ESTILOS_LINA,
 } from './modelo.js';
-import { caixaEscenario, aNormalizado, clamp01, MIRADA_PUBLICO, normalizarAngulo } from './xeometria.js';
+import {
+  caixaEscenario, MIRADA_PUBLICO, normalizarAngulo,
+  unidades, aUnidades, camiño, simplificar,
+} from './xeometria.js';
+import { usePunteiro } from './usePunteiro.js';
 
 const NOME_POSTURA = { 'de-pe': 'De pé', sentado: 'Sentado', agachado: 'Agachado', deitado: 'Deitado', elevado: 'Elevado' };
 
@@ -81,7 +86,11 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
   const refExp = useRef(null);
   const [sucio, setSucio] = useState(false);
   const refCaixa = useRef(null);
-  const arrastre = useRef(null);
+  const refTrazo = useRef(null);
+  const trazo = useRef(null);
+  // ⚠️ `ferramenta` é da interface, non do documento.
+  const [ferramenta, setFerramenta] = useState('mover');
+  const [selRec, setSelRec] = useState(null);
 
   const aplicar = useCallback((seguinte, etiqueta = null) => {
     setHist((h) => H.push(h, seguinte, { etiqueta }));
@@ -97,6 +106,12 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
   useEffect(() => {
     if (sel && !elementoPorId(plano, sel)) setSel(null);
   }, [plano, sel]);
+  // ⚠️ E o mesmo co recorrido escollido: desfacer por riba de cando se
+  // debuxou déixao apuntando a algo que xa non existe, e o inspector
+  // queda amosando «Recorrido · 0 puntos» sen nada seleccionado.
+  useEffect(() => {
+    if (selRec && !recorridoPorId(plano, selRec)) setSelRec(null);
+  }, [plano, selRec]);
 
   // ── Oco para o escenario ─────────────────────────────────────────
   // ⚠️ `window.innerHeight` pode ser undefined nalgunhas webviews: sen
@@ -158,47 +173,85 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
   });
   const alternarCotas = () => aplicar({ ...plano, escenario: { ...plano.escenario, cotas: !plano.escenario.cotas } });
 
-  // ── Arrastre ─────────────────────────────────────────────────────
-  // ⚠️ `setPointerCapture` para que o dedo poida saírse do elemento sen
-  // soltalo: sen iso, mover rápido perde o actor a media viaxe.
-  const baixar = (e, id) => {
-    const el = elementoPorId(plano, id);
-    if (!el || el.bloqueado) return;
-    setSel(id);
-    if (v.esMovil) setPanel(true);
-    const c = colocacionDe(plano, momentoId, id);
-    if (!c) return;
-    const r = refCaixa.current && refCaixa.current.getBoundingClientRect
-      ? refCaixa.current.getBoundingClientRect() : null;
-    if (!r || !r.width) return;
-    arrastre.current = { id, r, dx: c.x - (e.clientX - r.left) / r.width, dy: c.y - (e.clientY - r.top) / r.height };
-    if (e.currentTarget && e.currentTarget.setPointerCapture) {
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignórase */ }
+  // ── Punteiro ─────────────────────────────────────────────────────
+  // ⚠️ ARRASTRAR E DEBUXAR PASAN POLA MESMA CAPA (`usePunteiro`). Son o
+  // mesmo problema —dedo que baixa, se move e sae— e telo dúas veces
+  // significaba arranxar cada rareza de iOS dúas veces.
+  const u = unidades(plano.escenario);
+
+  const empezar = (p, st) => {
+    if (st.modo === 'debuxar') {
+      trazo.current = [p];
+      if (refTrazo.current) refTrazo.current.setAttribute('d', '');
+      return;
     }
-    if (e.preventDefault) e.preventDefault();
+    const c = colocacionDe(plano, momentoId, st.elementoId);
+    if (!c) return;
+    st.dx = c.x - p.x;
+    st.dy = c.y - p.y;
   };
 
-  const mover = (e) => {
-    const a = arrastre.current;
-    if (!a) return;
-    const x = clamp01((e.clientX - a.r.left) / a.r.width + a.dx);
-    const y = clamp01((e.clientY - a.r.top) / a.r.height + a.dy);
-    // ⚠️ A etiqueta é o que fai que os 200 eventos dun arrastre sexan
-    // UN só paso de desfacer.
-    mudarPor(a.id, { x, y }, `mover:${a.id}`);
+  const movendo = (p, st) => {
+    if (st.modo === 'debuxar') {
+      const ps = trazo.current;
+      if (!ps) return;
+      // ⚠️ Puntos case pegados non aportan nada e multiplican o
+      // traballo. Sáltanse antes de acumular, non despois.
+      const ult = ps[ps.length - 1];
+      if (Math.hypot(p.x - ult.x, p.y - ult.y) < 0.004) return;
+      ps.push(p);
+      // ⚠️ Escríbese DIRECTO no nodo. Un `setState` por movemento
+      // repintaría o documento enteiro 60 veces por segundo.
+      if (refTrazo.current) refTrazo.current.setAttribute('d', camiño(ps.map((q) => aUnidades(q, u)), 0.5));
+      return;
+    }
+    mudarPor(st.elementoId, {
+      x: Math.min(1, Math.max(0, p.x + (st.dx || 0))),
+      y: Math.min(1, Math.max(0, p.y + (st.dy || 0))),
+    }, `mover:${st.elementoId}`);
+  };
+
+  const rematar = (st) => {
+    if (st.modo === 'debuxar') {
+      const ps = trazo.current || [];
+      trazo.current = null;
+      if (refTrazo.current) refTrazo.current.setAttribute('d', '');
+      // ⚠️ Simplifícase AO SOLTAR, non mentres se debuxa: mentres se
+      // debuxa quérese ver o que fai o dedo. Un trazo nun iPad deixa
+      // entre 300 e 900 puntos e quedan entre 15 e 40.
+      const limpo = simplificar(ps, 0.006);
+      if (limpo.length < 2) return;
+      const seguinte = engadirRecorrido(plano, limpo, { elementoId: sel || null });
+      aplicar(seguinte);
+      const novo = seguinte.recorridos[seguinte.recorridos.length - 1];
+      if (novo) { setSelRec(novo.id); setSel(null); }
+      return;
+    }
+    // Corta a fusión do historial: o seguinte arrastre xa é outro paso.
+    setHist((h) => H.pechar(h));
+  };
+
+  const punteiro = usePunteiro({ refCaixa, onEmpezar: empezar, onMover: movendo, onRematar: rematar });
+
+  const baixarElemento = (e, id) => {
+    const el = elementoPorId(plano, id);
+    if (!el || el.bloqueado) return;
+    // ⚠️ O Pencil debuxa aínda estando en modo mover. Nun iPad iso é a
+    // diferenza entre trazar un recorrido nun intre e pelexar cun modo.
+    const modo = (ferramenta === 'debuxar' || e.pointerType === 'pen') ? 'debuxar' : 'mover';
+    if (modo === 'mover') { setSel(id); setSelRec(null); if (v.esMovil) setPanel(true); }
+    punteiro.baixar(e, { modo, elementoId: id });
+  };
+
+  const baixarFondo = (e) => {
+    const modo = (ferramenta === 'debuxar' || e.pointerType === 'pen') ? 'debuxar' : 'mover';
+    if (modo === 'mover') { setSel(null); setSelRec(null); setPanel(false); return; }
+    punteiro.baixar(e, { modo });
   };
 
   const mudarPor = (id, parcial, etiqueta) => {
     setHist((h) => H.push(h, establecerColocacion(H.actual(h), momentoId, id, parcial), { etiqueta }));
     setSucio(true);
-  };
-
-  const soltar = () => {
-    if (!arrastre.current) return;
-    arrastre.current = null;
-    // Corta a fusión: o seguinte arrastre do mesmo elemento xa é outro
-    // paso de desfacer.
-    setHist((h) => H.pechar(h));
   };
 
   const gardar = async () => { await onGardar(plano); setSucio(false); };
@@ -249,7 +302,7 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
           serializan ben. `position:absolute` con `left:-99999px` si
           existe de verdade. */}
       <div ref={refExp} aria-hidden="true" style={{ position: 'absolute', left: -99999, top: 0, width: 900, height: 700, pointerEvents: 'none' }}>
-        <VistaExp plano={plano} momentoId={momentoId} paleta={PALETAS[expPaleta]} capa={capa} seleccion={null} />
+        <VistaExp plano={plano} momentoId={momentoId} paleta={PALETAS[expPaleta]} capa={capa} seleccion={null} idp="x" />
       </div>
     </div>
   );
@@ -272,6 +325,8 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
         <option value="">＋{capa === 'tecnico' ? '🔧' : '🪑'}</option>
         {nomesSimbolos(capa).map((n) => <option key={n} value={n}>{SIMBOLOS[n].nome}</option>)}
       </select>
+      <Boton T={T} onClick={() => setFerramenta('mover')} activo={ferramenta === 'mover'} title="Mover">✥</Boton>
+      <Boton T={T} onClick={() => setFerramenta('debuxar')} activo={ferramenta === 'debuxar'} cor={T.ok} title="Debuxar recorrido">✎</Boton>
       <Boton T={T} onClick={alternarReixa} activo={plano.escenario.reixa.visible} title="Reixa">▦</Boton>
       <Boton T={T} onClick={alternarCotas} activo={plano.escenario.cotas} title="Cotas">↔</Boton>
       <Boton T={T} onClick={() => setHist(H.desfacer(hist))} disabled={!H.podeDesfacer(hist)} title="Desfacer">↶</Boton>
@@ -280,9 +335,57 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
   );
 
   // ── Inspector ────────────────────────────────────────────────────
-  const inspector = !elSel ? (
+  const recSel = selRec ? recorridoPorId(plano, selRec) : null;
+
+  const inspectorRecorrido = recSel && (
+    <div style={{ display: 'grid', gap: '0.7rem' }}>
+      <p style={{ ...S.ptitle(T.text3), margin: 0 }}>Recorrido · {recSel.puntos.length} puntos</p>
+      <div>
+        <p style={{ ...S.ptitle(T.text3), margin: '0 0 0.35rem' }}>Liña</p>
+        <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+          {ESTILOS_LINA.map((e) => (
+            <Boton key={e} T={T} activo={recSel.estilo === e} onClick={() => aplicar(mudarRecorrido(plano, selRec, { estilo: e }))}>
+              {e === 'punteado' ? '┈┈' : e === 'raiado' ? '╌╌' : '──'}
+            </Boton>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p style={{ ...S.ptitle(T.text3), margin: '0 0 0.35rem' }}>Curvatura</p>
+        <input
+          type="range" min="0" max="100" step="10" value={Math.round(recSel.tension * 100)}
+          onChange={(e) => aplicar(mudarRecorrido(plano, selRec, { tension: Number(e.target.value) / 100 }), `tension:${selRec}`)}
+          style={{ width: '100%' }}
+        />
+      </div>
+      {/* ⚠️ Asignar o recorrido a alguén non é decorativo: a liña colle
+          a súa cor, e na Fase 2 será a traxectoria que siga na
+          transición. Por iso a lista son os actores, non todo. */}
+      <div>
+        <p style={{ ...S.ptitle(T.text3), margin: '0 0 0.35rem' }}>De quen é</p>
+        <select
+          value={recSel.elementoId || ''}
+          onChange={(e) => aplicar(mudarRecorrido(plano, selRec, { elementoId: e.target.value || null }))}
+          style={{ ...S.input, fontSize: '16px' }}
+        >
+          <option value="">De ninguén</option>
+          {plano.elementos.filter((e) => e.tipo === 'actor').map((e) => (
+            <option key={e.id} value={e.id}>{e.nome || `Persoa ${e.numero || ''}`}</option>
+          ))}
+        </select>
+      </div>
+      <div style={{ display: 'flex', gap: '0.3rem' }}>
+        <Boton T={T} activo={recSel.frechaFinal} onClick={() => aplicar(mudarRecorrido(plano, selRec, { frechaFinal: !recSel.frechaFinal }))}>→ Frecha</Boton>
+        <Boton T={T} cor={T.danger} onClick={() => { aplicar(borrarRecorrido(plano, selRec)); setSelRec(null); setPanel(false); }}>🗑</Boton>
+      </div>
+    </div>
+  );
+
+  const inspector = recSel ? inspectorRecorrido : !elSel ? (
     <p style={{ color: T.text4, fontSize: '0.8rem', textAlign: 'center', padding: '1.5rem 0.5rem', margin: 0 }}>
-      Toca algo do escenario para editalo.
+      {ferramenta === 'debuxar'
+        ? 'Debuxa co dedo para trazar un recorrido.'
+        : 'Toca algo do escenario para editalo.'}
     </p>
   ) : (
     <div style={{ display: 'grid', gap: '0.7rem' }}>
@@ -389,15 +492,18 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
     <div
       ref={refCaixa}
       style={{ width: ancho, height: alt, margin: '0 auto', position: 'relative' }}
-      onPointerMove={mover}
-      onPointerUp={soltar}
-      onPointerCancel={soltar}
+      {...punteiro.manexadores}
     >
       <VistaPlanta
         plano={plano} momentoId={momentoId} paleta={paleta} capa={capa}
-        seleccion={sel}
-        onPointerDownElemento={baixar}
-        onPointerDownFondo={() => { setSel(null); setPanel(false); }}
+        seleccion={sel} idp="v" refTrazo={refTrazo}
+        seleccionRecorrido={selRec}
+        onPointerDownElemento={baixarElemento}
+        onPointerDownFondo={baixarFondo}
+        onPointerDownRecorrido={(e, id) => {
+          if (ferramenta === 'debuxar' || e.pointerType === 'pen') { baixarFondo(e); return; }
+          setSelRec(id); setSel(null); if (v.esMovil) setPanel(true);
+        }}
       />
     </div>
   );
@@ -472,7 +578,7 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
       </div>
 
       {/* Inspector flotante — iPad vertical */}
-      {inspAncho === 0 && !v.esMovil && elSel && (
+      {inspAncho === 0 && !v.esMovil && (elSel || recSel) && (
         <div style={{ ...S.panel, padding: '0.75rem' }}>{inspector}</div>
       )}
 
@@ -480,7 +586,7 @@ export function EditorPlano({ planoInicial, capa, onGardar, onSaír }) {
       {v.esMovil && (
         <>
           <div style={{ display: 'flex', gap: '0.3rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>{ferramentas}</div>
-          {panel && elSel && (
+          {panel && (elSel || recSel) && (
             <div style={{
               ...S.panel, padding: '0.75rem',
               borderTopStyle: 'solid', borderTopWidth: 3, borderTopColor: T.accent,

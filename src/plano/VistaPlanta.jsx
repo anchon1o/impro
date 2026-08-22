@@ -21,7 +21,7 @@
 
 import {
   unidades, aUnidades, tamUnidades, liñasReixa, normalizarReixa,
-  centroCela, etiquetaCela, num,
+  centroCela, etiquetaCela, num, camiño,
 } from './xeometria.js';
 import { cor, textoSobre } from './paleta.js';
 import { colocacionDe, elementosDaCapa } from './modelo.js';
@@ -158,12 +158,80 @@ function Elemento({ el, c, u, paleta, seleccionado, onPointerDown }) {
   );
 }
 
+// ── Recorridos ─────────────────────────────────────────────────────
+// ⚠️ O punteado faise con `strokeDasharray`, non debuxando segmento a
+// segmento: un trazo a man de 40 puntos convertido en 40 segmentos son
+// 40 nodos que hai que reconciliar en cada repintado.
+const TRAZOS = { punteado: '14 11', raiado: '30 14', continuo: null };
+
+function Recorridos({ plano, paleta, u, idp, seleccion, onPointerDown }) {
+  const rs = plano.recorridos.filter((r) => r.puntos.length >= 2);
+  if (rs.length === 0) return null;
+  const gr = Math.max(2, u.W * 0.005);
+  return (
+    <g>
+      <defs>
+        {rs.filter((r) => r.frechaFinal).map((r) => (
+          // ⚠️ O id do marcador leva PREFIXO. `url(#id)` resólvese en
+          // todo o documento, non dentro do <svg>: se o debuxo visible
+          // e o agochado de exportar usan o mesmo id, a frecha da imaxe
+          // sae coa cor do tema en vez de coa paleta de exportación.
+          <marker
+            key={r.id} id={`${idp}-f-${r.id}`} markerWidth="6" markerHeight="6"
+            refX="4.6" refY="3" orient="auto" markerUnits="strokeWidth"
+          >
+            <path d="M0 0.6 L5.4 3 L0 5.4 Z" fill={cor(paleta, r.cor || 'muted', paleta.textoTenue)} />
+          </marker>
+        ))}
+      </defs>
+      {rs.map((r) => {
+        const pts = r.puntos.map((p) => aUnidades(p, u));
+        const c = r.elementoId
+          ? cor(paleta, (plano.elementos.find((e) => e.id === r.elementoId) || {}).cor, paleta.textoTenue)
+          : paleta.textoTenue;
+        const dash = TRAZOS[r.estilo];
+        return (
+          <g key={r.id}>
+            {/* Liña grosa invisible por baixo: acertarlle cun dedo a
+                unha liña de 3 px é imposible. Isto dálle 22 px de
+                acerto sen que se vexa. */}
+            {onPointerDown && (
+              <path
+                d={camiño(pts, r.tension)} fill="none" stroke="transparent"
+                strokeWidth={gr * 5} strokeLinecap="round"
+                onPointerDown={(e) => onPointerDown(e, r.id)}
+                style={{ cursor: 'pointer' }}
+              />
+            )}
+            <path
+              d={camiño(pts, r.tension)} fill="none" stroke={c}
+              strokeWidth={seleccion === r.id ? gr * 1.7 : gr}
+              strokeLinecap="round" strokeLinejoin="round"
+              strokeDasharray={dash || undefined}
+              markerEnd={r.frechaFinal ? `url(#${idp}-f-${r.id})` : undefined}
+              opacity={seleccion === r.id ? 1 : 0.9}
+              pointerEvents="none"
+            />
+            {seleccion === r.id && pts.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r={gr * 0.9} fill={paleta.seleccion} pointerEvents="none" />
+            ))}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 
 export function VistaPlanta({
   plano, momentoId, paleta, capa = 'escenico',
   seleccion = null, onPointerDownElemento = null, onPointerDownFondo = null,
   base = 1000, verOutraCapa = true, margeCotas = true,
+  // ⚠️ `idp` distingue os ids de <marker> entre o debuxo visible e o
+  // agochado de exportar. Sen iso, as frechas da imaxe saen coa cor do
+  // tema, porque `url(#id)` resólvese en todo o documento.
+  idp = 'v', refTrazo = null, onPointerDownRecorrido = null, seleccionRecorrido = null,
 }) {
   const u = unidades(plano.escenario, base);
   const cotas = plano.escenario.cotas && margeCotas;
@@ -212,11 +280,29 @@ export function VistaPlanta({
       <Reixa escenario={plano.escenario} u={u} paleta={paleta} />
       {cotas && <Cotas escenario={plano.escenario} u={u} paleta={paleta} />}
 
+      <Recorridos
+        plano={plano} paleta={paleta} u={u} idp={idp}
+        seleccion={seleccionRecorrido} onPointerDown={onPointerDownRecorrido}
+      />
+
       <g opacity="0.28" pointerEvents="none">{daOutra.map((el) => pinta(el, false))}</g>
       <g>{daCapa.map((el) => pinta(el, true))}</g>
 
       {/* O bordo vai ENRIBA de todo: se vai debaixo, un elemento pegado
           ao bordo tápao e o escenario parece aberto por ese lado. */}
+      {/* ⚠️ O TRAZO EN CURSO vai fóra da árbore de React: cada
+          `pointermove` engadindo un punto ao estado repintaría o
+          documento enteiro. Escríbese por `ref` e só ao soltar entra
+          no plano. Non se renderiza ao exportar porque alí non se
+          pasa `refTrazo`. */}
+      {refTrazo && (
+        <path
+          ref={refTrazo} d="" fill="none" stroke={paleta.seleccion}
+          strokeWidth={Math.max(2, u.W * 0.005)} strokeLinecap="round"
+          strokeLinejoin="round" strokeDasharray="14 11" pointerEvents="none"
+        />
+      )}
+
       <rect
         x={0} y={0} width={u.W} height={u.H} fill="none"
         stroke={paleta.chanBorde} strokeWidth={Math.max(1.5, u.W * 0.0035)} pointerEvents="none"

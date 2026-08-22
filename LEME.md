@@ -1,95 +1,101 @@
-# ImproApp · `src/` completo — R10a + Plano (PL0 · PL1a · PL1b · PL1c)
+# ImproApp · `src/` completo — Plano PL1d · **Fase 1 rematada**
 
 Entrega completa. **Fusionar, nunca substituír.**
-Substitúe a todos os zips anteriores: aplica só este.
+Substitúe a todos os zips anteriores.
 
-Xa borraches `TabReto.jsx` e executaches os `.sql`, así que **non hai
-nada que facer á parte de fusionar e subir**. `supabase_planos.sql` vai
-igualmente no zip por se acaso; é idempotente.
+⚠️ **Ao arrastrar a carpeta, FUSIONAR.** Substituíndo lévase por diante
+`src/supabase.js`, que non vai nas miñas entregas. (Se volve pasar: en
+GitHub Desktop, botón dereito no ficheiro vermello → *Discard changes*.)
+
+Non hai SQL novo nin nada que borrar.
 
 ---
 
-## O que hai de novo: PL1c
+## Recorridos debuxados a man
 
-### Vista desde o público, 2,5D
+Ferramenta ✎ na barra. Debuxas co dedo e queda unha liña punteada con
+frecha. No inspector: estilo de liña, curvatura, frecha si/non, e **de
+quen é** — asignalo a alguén non é decorativo, a liña colle a súa cor e
+na Fase 2 será a traxectoria que siga na transición.
 
-`plano/VistaPublico.jsx`. O chan é un trapecio e as figuras encollen
-canto máis ao fondo están.
+Os recorridos vense tamén na **vista de público**, proxectados punto a
+punto. ⚠️ Non se deforma o `path` xa feito: iso daría unha curva
+parecida que pasa *por riba* do trapecio en vez de pousar nel.
 
-⚠️ **Non ten xeometría propia.** Todo pasa por `proxectar25D()`, que
-está en `xeometria.js` e probado desde a Fase 0. Se esta vista fixese
-as súas contas, un actor aparecería nun sitio na planta e noutro aquí,
-e o erro só se vería na vista doble — que é xusto onde se poñen as dúas
-unha ao lado da outra.
+---
 
-⚠️ **É de LECTURA.** Non se arrastra nada alí. Arrastrar en perspectiva
-obriga a decidir se o dedo move en profundidade ou en horizontal, e non
-hai resposta boa: dous xestos distintos para a mesma acción só crean
-erros. Edítase na planta; isto é o espello.
+## O que fixen en vez de agardar por ti
 
-⚠️ **Os debuxos de alzado non son os de planta.** Un símbolo cenital na
-vista de público lese como unha mancha no chan; unha figura de alzado na
-planta parece xente deitada. Son dous debuxos do mesmo dato, e teñen que
-selo. As figuras ancóranse **polos pés**: ancorando polo centro, a
-figura do fondo flota.
+Dixera que agardaba a saber que tal ía o arrastre no iPad antes de facer
+os recorridos. En vez de bloquear, **unifiquei as dúas cousas nunha soa
+capa de punteiro**: `plano/usePunteiro.js`. Arrastrar e debuxar son o
+mesmo problema —un dedo que baixa, se move e sae, sobre unha caixa que
+hai que converter a coordenadas—, e telo por duplicado significaba
+arranxar cada rareza de iOS dúas veces e esquecer a segunda.
 
-⚠️ **A mirada proxéctase no CHAN**, non na figura. Desde a butaca non se
-ve para onde mira alguén de costas; a dirección no chan si é
-inequívoca.
+**Agora, se o arrastre vai mal no teu iPad, o arranxo vale para os dous.**
 
-### Vista doble
+O que resolve esa capa, e que non se ve ata que falla nunha tableta:
 
-As dúas á vez. En pantalla ancha, unha ao lado da outra —comparalas é
-todo o sentido—; **en estreita, apiladas**, porque partir 390 px en dous
-deixa dous selos ilexibles. A planta segue sendo a editable.
+| | |
+|---|---|
+| **Captura do punteiro** | sen ela, mover rápido saca o dedo do elemento e o arrastre córtase a media viaxe |
+| **Só o primario** | apoiar a palma da man ou facer pinza manda dous fluxos ao mesmo xesto e o elemento salta entre os dous dedos |
+| **Pencil vs dedo** | `pointerType === 'pen'` debuxa **sempre**, aínda coa ferramenta de mover activa |
+| **`preventDefault`** | Safari interpreta o arrastre como scroll e o plano móvese enteiro debaixo do dedo |
+| **Un evento por fotograma** | un `pointermove` por píxel dispara máis eventos dos que hai fotogramas |
+| **O último tramo** | procésase o pendente ANTES de rematar, ou a liña acaba antes de onde levantaches o dedo |
+| **Desmontar a media** | cancélase o fotograma pendente, ou queda unha chamada sobre estado que xa non existe |
 
-### Exportar a PNG e SVG
+### E o trazo en curso vai fóra de React
 
-`plano/exportar.js`. Tres paletas: **Claro**, **Negativo** e
-**Transparente**.
+Cada `pointermove` engadindo un punto ao estado repintaría o documento
+enteiro 60 veces por segundo. O `<path>` do trazo escríbese por `ref`
+con `setAttribute`, e **só ao soltar** se simplifica (Douglas-Peucker) e
+entra no plano: un trazo nun iPad deixa entre 300 e 900 puntos e quedan
+entre 15 e 40. Simplifícase ao soltar e non mentres, porque mentres
+debuxas queres ver o que fai o dedo.
 
-⚠️ **Non se serializa o SVG que se ve.** Ese leva a paleta do tema e a
-capa de selección: a imaxe sairía con tiradores punteados arredor do
-actor que tiveses escollido. Renderízase un **segundo debuxo agochado**
-coa paleta de exportación e sen selección, e serialízase ese. Só é
-posible porque as vistas son puras — foi a razón de facelas así.
+---
 
-⚠️ **Vai primeiro a folla de compartir, e só despois a descarga.** En
-iOS `<a download>` nunha WKWebView abre a imaxe nunha pestana en vez de
-gardala, e o portapapeis (`ClipboardItem`) esixe chamada síncrona
-dentro do xesto e falla a miúdo. Compartir SI funciona, e ademais é o
-que se espera nunha tableta: mandar o plano por mensaxe.
+## Dous erros que atoparon as probas
 
-⚠️ **Cancelar a folla de compartir non é un erro** e non dispara a
-descarga: quen cancela non quere o ficheiro.
-
-### Tres fallos silenciosos previstos
-
-1. **Un SVG sen `xmlns` non o abre ningún visor.** Non dá erro: dá un
-   ficheiro «que non se ve». Engádese ao preparar.
-2. **Sen `width`/`height` explícitos**, moitos visores debuxan o SVG a
-   150×150 px aínda tendo `viewBox`.
-3. **O debuxo de exportar vai fóra de pantalla, non con
-   `display:none`**: un nodo sen caixa hai navegadores que nin o
-   serializan ben.
+1. **Os ids de `<marker>` colisionaban.** `url(#id)` resólvese en todo o
+   documento, non dentro do `<svg>`. Como a exportación renderiza un
+   segundo debuxo, as **frechas da imaxe saían coa cor do tema** en vez
+   de coa paleta escollida. Arranxado cun prefixo por debuxo.
+2. **Desfacer por riba dun recorrido deixaba a selección apuntando a un
+   fantasma**, e o inspector amosaba «Recorrido · 0 puntos». É o mesmo
+   fallo que xa cazara co momento activo e cos elementos; agora están
+   os tres cubertos.
 
 ---
 
 ## Verificación
 
 - `npx eslint src` → **0**
-- **1.167 casos** en 26 ficheiros (eran 734 antes de Plano)
-- 24 dos 26 en verde. Os dous que non (`test_sonido`, `test_usemotor`)
+- **1.195 casos** en 26 ficheiros (eran 734 antes de Plano)
+- 24 dos 26 en verde. Os dous de sempre (`test_sonido`, `test_usemotor`)
   fallan idénticos antes e despois: é o meu remedo de `AudioContext`.
-- Novo: `eslint.config.js` engade `XMLSerializer` e `Image` aos globais.
+- O arrastre segue pasando as probas que xa tiña **despois de refacelo
+  sobre a capa nova** — que era todo o sentido de escribilas.
 
 ---
 
-## O que queda de PL1: os recorridos a man
+## Fase 1 rematada
 
-Deixeinos fóra **a propósito**, e non por falta de tempo: o debuxo a man
-alzada usa exactamente o mesmo manexo de punteiro có arrastre que
-acabas de recibir sen probar. Se no iPad o arrastre resulta ir duro,
-perder o dedo ou pelexar co scroll de Safari, o arranxo é o mesmo para
-os dous e prefiro facelo unha vez. **Dime que tal vai arrastrar un
-actor** e fágoos deseguido.
+Plano estático completo: escenario a escala, reixa, cotas, persoas con
+mirada e postura, obxectos e equipos, foco, **recorridos a man**,
+selección e arrastre, desfacer/refacer, vista de planta, **vista de
+público 2,5D**, **vista doble**, **exportar PNG/SVG** con tres paletas,
+local e conta, catro layouts, catro temas.
+
+**A Fase 2 é o movemento**: momentos, transicións, animación, liña de
+tempo, figura de corpo enteiro modular e editor de iconos 32×32. O
+modelo xa a soporta enteira desde a Fase 0 —`momentos`, `transicions`,
+`diferenzas()`, `paraReproducir()` están escritos e probados—, así que é
+case toda interface.
+
+Antes de empezala, **próbao no iPad**. Se o arrastre ou o debuxo van
+mal, quero arranxar a capa de punteiro antes de construírlle nada
+enriba.

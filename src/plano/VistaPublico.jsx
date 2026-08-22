@@ -23,7 +23,7 @@
 
 import {
   proxectar25D, trapecioChan, ordeProfundidade, normalizarReixa,
-  liñasReixa, num,
+  liñasReixa, num, camiño,
 } from './xeometria.js';
 import { cor, textoSobre, conAlfa } from './paleta.js';
 import { colocacionDe, elementosDaCapa } from './modelo.js';
@@ -169,6 +169,27 @@ export function VistaPublico({
           const a = px(proxectar25D({ x: 0, y: hh }, perspectiva));
           const b = px(proxectar25D({ x: 1, y: hh }, perspectiva));
           return <path key={`h${hh}`} d={`M${a.x} ${a.y} L${b.x} ${b.y}`} stroke={paleta.reixa} strokeWidth="1.2" fill="none" />;
+        })}
+      </g>
+
+      {/* ⚠️ Os recorridos proxéctanse PUNTO A PUNTO, non se deforma a
+          liña xa feita. Deformar o `path` da planta daría unha curva
+          parecida pero que non pousa no chan: pasaría por riba do
+          trapecio en vez de por enriba del. */}
+      <g pointerEvents="none">
+        {plano.recorridos.filter((r) => r.puntos.length >= 2).map((r) => {
+          const pts = r.puntos.map((p) => px(proxectar25D(p, perspectiva)));
+          const c = r.elementoId
+            ? cor(paleta, (plano.elementos.find((e) => e.id === r.elementoId) || {}).cor, paleta.textoTenue)
+            : paleta.textoTenue;
+          return (
+            <path
+              key={r.id} d={camiño(pts, r.tension)} fill="none" stroke={c}
+              strokeWidth="4" strokeLinecap="round"
+              strokeDasharray={r.estilo === 'continuo' ? undefined : '11 9'}
+              opacity="0.85"
+            />
+          );
         })}
       </g>
 

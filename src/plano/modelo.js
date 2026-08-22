@@ -663,3 +663,37 @@ export function resumo(plano) {
     segundos: duracionTotal(P),
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// RECORRIDOS · altas e baixas
+// ═══════════════════════════════════════════════════════════════════
+
+export function engadirRecorrido(plano, puntos, extra = {}) {
+  const P = validar(plano);
+  const r = normalizarRecorrido(novoRecorrido(puntos, extra));
+  // ⚠️ Un recorrido dun só punto é un toque accidental, non un trazo.
+  // Se se garda, queda unha mancha no plano que non se ve pero si se
+  // selecciona, e ninguén entende por que se lle abre o inspector ao
+  // tocar no baleiro.
+  if (r.puntos.length < 2) return P;
+  return validar({ ...P, recorridos: [...P.recorridos, r] });
+}
+
+export function borrarRecorrido(plano, id) {
+  const P = validar(plano);
+  return validar({ ...P, recorridos: P.recorridos.filter((r) => r.id !== id) });
+}
+
+export function mudarRecorrido(plano, id, parcial) {
+  const P = validar(plano);
+  return validar({
+    ...P,
+    recorridos: P.recorridos.map((r) => (r.id === id ? normalizarRecorrido({ ...r, ...parcial }) : r)),
+  });
+}
+
+export const recorridoPorId = (plano, id) => lista(plano && plano.recorridos).find((r) => r.id === id) || null;
+
+// Os recorridos dun elemento, ou os que non teñen dono.
+export const recorridosDe = (plano, elementoId) => lista(plano && plano.recorridos)
+  .filter((r) => r.elementoId === (elementoId || null));
