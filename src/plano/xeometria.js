@@ -399,3 +399,37 @@ export const interpolarPunto = (a, b, t) => {
 // Suavizado da animación. Sen isto os actores arrancan e paran de
 // golpe, que nun plano de movemento escénico parece un erro.
 export const suave = (t) => { const v = clamp01(t); return v < 0.5 ? 2 * v * v : 1 - ((-2 * v + 2) ** 2) / 2; };
+
+// ═══════════════════════════════════════════════════════════════════
+// UNIDADES DE DEBUXO
+// ═══════════════════════════════════════════════════════════════════
+// O SVG debúxase nunha `viewBox` en unidades propias, non en píxeles:
+// así o mesmo debuxo vale para a pantalla, para a miniatura da lista e
+// para a exportación, sen recalcular nada.
+//
+// ⚠️ AS UNIDADES SON CADRADAS. `W` e `H` gárdanlle a proporción real ao
+// escenario, así que unha circunferencia de raio 20 é redonda.
+//
+// ⚠️ E POR ISO OS TAMAÑOS DOS ELEMENTOS VAN SOBRE O ANCHO, os dous.
+// `x` é fracción do ancho e `y` é fracción do fondo —eses SI son eixos
+// distintos, porque son posicións—, pero un elemento de 0,075 × 0,075
+// medido un eixo por cabeza sairía OVALADO nun escenario 4:3. Un actor
+// con forma de ovo é o síntoma de mesturar as dúas escalas.
+
+export const BASE_VISTA = 1000;
+
+export function unidades(escenario, base = BASE_VISTA) {
+  const B = Math.max(1, num(base, BASE_VISTA));
+  const anchoM = Math.max(0.1, num(escenario && escenario.anchoM, 6));
+  const fondoM = Math.max(0.1, num(escenario && escenario.fondoM, 4.5));
+  return { W: B, H: B * (fondoM / anchoM) };
+}
+
+// Posición normalizada → unidades da viewBox.
+export const aUnidades = (p, u) => ({
+  x: clamp01(p && p.x) * num(u && u.W, BASE_VISTA),
+  y: clamp01(p && p.y) * num(u && u.H, BASE_VISTA),
+});
+
+// Tamaño normalizado → unidades. SEMPRE sobre o ancho.
+export const tamUnidades = (s, u) => Math.max(0, num(s, 0)) * num(u && u.W, BASE_VISTA);

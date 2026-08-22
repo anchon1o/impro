@@ -1,96 +1,95 @@
-# ImproApp · `src/` completo — R10a + Plano (Fase 0 e PL1a)
+# ImproApp · `src/` completo — R10a + Plano (PL0 · PL1a · PL1b · PL1c)
 
 Entrega completa. **Fusionar, nunca substituír.**
-Este zip substitúe aos dous anteriores: aplica só este.
+Substitúe a todos os zips anteriores: aplica só este.
+
+Xa borraches `TabReto.jsx` e executaches os `.sql`, así que **non hai
+nada que facer á parte de fusionar e subir**. `supabase_planos.sql` vai
+igualmente no zip por se acaso; é idempotente.
 
 ---
 
-## ⚠️ Dúas cousas ANTES de subir o código
+## O que hai de novo: PL1c
 
-**1. Executa `supabase_planos.sql` en Supabase.** É a táboa dos planos.
-Idempotente, pódese correr as veces que faga falta. Se subes o código
-sen ela, Plano segue funcionando sen conta (en local) e con conta avisa
-de que non pode ler; non peta, pero non garda na nube.
+### Vista desde o público, 2,5D
 
-**2. Borra `src/tabs/TabReto.jsx`** despois de fusionar. Substitúeo
-`ModoReto.jsx`; un zip non pode borrar nada.
+`plano/VistaPublico.jsx`. O chan é un trapecio e as figuras encollen
+canto máis ao fondo están.
+
+⚠️ **Non ten xeometría propia.** Todo pasa por `proxectar25D()`, que
+está en `xeometria.js` e probado desde a Fase 0. Se esta vista fixese
+as súas contas, un actor aparecería nun sitio na planta e noutro aquí,
+e o erro só se vería na vista doble — que é xusto onde se poñen as dúas
+unha ao lado da outra.
+
+⚠️ **É de LECTURA.** Non se arrastra nada alí. Arrastrar en perspectiva
+obriga a decidir se o dedo move en profundidade ou en horizontal, e non
+hai resposta boa: dous xestos distintos para a mesma acción só crean
+erros. Edítase na planta; isto é o espello.
+
+⚠️ **Os debuxos de alzado non son os de planta.** Un símbolo cenital na
+vista de público lese como unha mancha no chan; unha figura de alzado na
+planta parece xente deitada. Son dous debuxos do mesmo dato, e teñen que
+selo. As figuras ancóranse **polos pés**: ancorando polo centro, a
+figura do fondo flota.
+
+⚠️ **A mirada proxéctase no CHAN**, non na figura. Desde a butaca non se
+ve para onde mira alguén de costas; a dirección no chan si é
+inequívoca.
+
+### Vista doble
+
+As dúas á vez. En pantalla ancha, unha ao lado da outra —comparalas é
+todo o sentido—; **en estreita, apiladas**, porque partir 390 px en dous
+deixa dous selos ilexibles. A planta segue sendo a editable.
+
+### Exportar a PNG e SVG
+
+`plano/exportar.js`. Tres paletas: **Claro**, **Negativo** e
+**Transparente**.
+
+⚠️ **Non se serializa o SVG que se ve.** Ese leva a paleta do tema e a
+capa de selección: a imaxe sairía con tiradores punteados arredor do
+actor que tiveses escollido. Renderízase un **segundo debuxo agochado**
+coa paleta de exportación e sen selección, e serialízase ese. Só é
+posible porque as vistas son puras — foi a razón de facelas así.
+
+⚠️ **Vai primeiro a folla de compartir, e só despois a descarga.** En
+iOS `<a download>` nunha WKWebView abre a imaxe nunha pestana en vez de
+gardala, e o portapapeis (`ClipboardItem`) esixe chamada síncrona
+dentro do xesto e falla a miúdo. Compartir SI funciona, e ademais é o
+que se espera nunha tableta: mandar o plano por mensaxe.
+
+⚠️ **Cancelar a folla de compartir non é un erro** e non dispara a
+descarga: quen cancela non quere o ficheiro.
+
+### Tres fallos silenciosos previstos
+
+1. **Un SVG sen `xmlns` non o abre ningún visor.** Non dá erro: dá un
+   ficheiro «que non se ve». Engádese ao preparar.
+2. **Sen `width`/`height` explícitos**, moitos visores debuxan o SVG a
+   150×150 px aínda tendo `viewBox`.
+3. **O debuxo de exportar vai fóra de pantalla, non con
+   `display:none`**: un nodo sen caixa hai navegadores que nin o
+   serializan ben.
 
 ---
-
-## 1 · R10a — Reto é un modo de Xerar
-
-Xa o tiñas descrito. A botonera baixara a 10 áreas; **con Plano volve a
-11**, que é onde estaba antes. A reixa comprobada nos catro tamaños.
-
-## 2 · Plano · Fase 0 — o motor
-
-`plano/xeometria.js` (401 liñas) e `plano/modelo.js` (665). Módulos
-puros, sen React. **218 casos.**
-
-## 3 · Plano · PL1a — fontanería e porta de entrada
-
-| Ficheiro novo | Que |
-|---|---|
-| `plano/paleta.js` | tema → paleta de debuxo, e tres paletas de exportación |
-| `plano/historial.js` | desfacer/refacer con fusión de xestos |
-| `plano/almacen.js` | local + conta, patrón de `mesas.js` |
-| `tabs/TabPlano.jsx` | selector de modo + lista de planos |
-| `supabase_planos.sql` | a táboa |
-
-**Xa podes** entrar en Plano, escoller escénico ou técnico, e crear,
-renomear, duplicar e borrar planos, sen conta ou con ela.
-
-### Por que a paleta é un módulo aparte
-
-⚠️ **O debuxo non le o tema, le unha paleta.** Se o SVG chamase a
-`useTheme()` por dentro, exportar unha imaxe «en claro» estando en tema
-escuro obrigaría a cambiar o tema da app enteira para xerar o ficheiro,
-e a desfacelo despois. Cunha paleta como parámetro, exportar é pasar
-outra paleta. As cores dos elementos son **tokens** (`ok`, `accent`…),
-nunca hexadecimais: así seguen os catro temas sen tocar nada.
-
-### Superficie de contacto co que xa funciona
-
-Como dicía a análise, ~40 liñas: `Inicio.jsx` (área 11 + descricións),
-`ImproApp.jsx` (pestana, `lazy()`, ruta), `core.jsx` (`UI_STRINGS`),
-`iconos.jsx` (**un** icono), `datos.js` (sección de Manual).
-
-⚠️ Os ~40 símbolos do debuxo **non entran** en `ICONOS_NECESARIOS`:
-afundirían a cobertura de todos os estilos e deixarían I11 imposible.
-Irán en `plano/iconosPlano.jsx`, que é contido, non interface.
-
-⚠️ `<main>` xa non topa en 1100 px cando hai pantalla chea. Serve tamén
-para o modo función de Sonido, que xa emitía o evento.
-
-## Catro erros atopados polas probas
-
-Un por cada módulo novo, e todos serían bugs enterrados:
-
-1. **`validar()` estaba borrando os metadatos do almacén.** Devolve unha
-   forma fixa, e `local` e `actualizado` non son do documento: son do
-   almacén. Ían pola billa, e a lista deixaba de saber cales estaban só
-   neste aparello.
-2. **Dous planos gardados no mesmo milisegundo ordenábanse ao chou.**
-   Vese como «o plano que acabo de crear aparece o segundo». A marca de
-   tempo agora é estritamente crecente.
-3. **Un arrastre enchía o historial de 200 entradas.** Desfacer tería
-   que premerse 200 veces para desfacer UN xesto. Os pasos coa mesma
-   etiqueta e próximos no tempo colapsan.
-4. **`motivo: 'erro'` non estaba tratado en `TabPlano`.** Sen a táboa
-   creada, a pantalla quedaba **en branco** en vez de dicir que pasaba.
 
 ## Verificación
 
 - `npx eslint src` → **0**
-- **1.057 casos** en 24 ficheiros (eran 734 antes de Plano)
-- 22 dos 24 en verde. Os dous que non (`test_sonido`, `test_usemotor`)
+- **1.167 casos** en 26 ficheiros (eran 734 antes de Plano)
+- 24 dos 26 en verde. Os dous que non (`test_sonido`, `test_usemotor`)
   fallan idénticos antes e despois: é o meu remedo de `AudioContext`.
-- Botonera comprobada nos catro tamaños coas 11 áreas: caben todas sen
-  desprazar.
+- Novo: `eslint.config.js` engade `XMLSerializer` e `Image` aos globais.
 
-## O seguinte · PL1b
+---
 
-O editor do escenario: vista planta, reixa, cotas, actores con mirada,
-obxectos, foco, selección e arrastre, undo/redo cableado, e os catro
-layouts. Despois PL1c: recorridos a man, vista de público 2,5D, vista
-doble e exportar.
+## O que queda de PL1: os recorridos a man
+
+Deixeinos fóra **a propósito**, e non por falta de tempo: o debuxo a man
+alzada usa exactamente o mesmo manexo de punteiro có arrastre que
+acabas de recibir sen probar. Se no iPad o arrastre resulta ir duro,
+perder o dedo ou pelexar co scroll de Safari, o arranxo é o mesmo para
+os dous e prefiro facelo unha vez. **Dime que tal vai arrastrar un
+actor** e fágoos deseguido.

@@ -22,9 +22,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme, useAuth, mkS } from '../core.jsx';
-import { Icona } from '../iconos.jsx';
 import * as almacen from '../plano/almacen.js';
 import { resumo } from '../plano/modelo.js';
+import { EditorPlano } from '../plano/EditorPlano.jsx';
 
 const MODOS = [
   {
@@ -170,6 +170,26 @@ export function TabPlano() {
     recargar();
   };
 
+  if (aberto) {
+    // ⚠️ O editor SUBSTITÚE á lista, non se amosa debaixo. O escenario
+    // ten que coller o 78-80 % do oco; deixar a lista enriba comíallo.
+    return (
+      <EditorPlano
+        planoInicial={aberto}
+        capa={modo}
+        onGardar={async (p) => {
+          const r = await almacen.gardar({ ...p, modoUltimo: modo }, { logueado, userId: user?.id });
+          // ⚠️ Ao gardar por primeira vez na conta, Postgres asígnalle un
+          // uuid distinto do id local. Hai que quedarse co que volve, ou
+          // o seguinte gardado crea unha fila nova cada vez.
+          if (r && r.plano) setAberto(r.plano);
+          recargar();
+        }}
+        onSaír={() => { setAberto(null); recargar(); }}
+      />
+    );
+  }
+
   if (!modo) {
     return (
       <div>
@@ -242,7 +262,7 @@ export function TabPlano() {
           {planos.map((p) => (
             <FichaPlano
               key={p.id} plano={p} T={T} S={S}
-              onAbrir={() => setAberto(p.id)}
+              onAbrir={() => setAberto(p)}
               onRenomear={() => renomear(p)}
               onDuplicar={() => duplicar(p)}
               onBorrar={() => borrar(p)}
@@ -251,16 +271,6 @@ export function TabPlano() {
         </div>
       )}
 
-      {/* PL1b · o editor do escenario entra aquí. */}
-      {aberto && (
-        <div style={{ ...S.panel, marginTop: '0.85rem', textAlign: 'center', borderStyle: 'dashed', borderWidth: 1.5, borderColor: T.border2 }}>
-          <p style={{ color: T.text3, fontSize: '0.85rem', margin: '0 0 0.6rem' }}>
-            <Icona nome="plano" size={22} /><br />
-            O editor do escenario chega na seguinte entrega.
-          </p>
-          <button onClick={() => setAberto(null)} style={{ ...S.btn(T.bg4), minHeight: 38, color: T.text2 }}>Pechar</button>
-        </div>
-      )}
     </div>
   );
 }

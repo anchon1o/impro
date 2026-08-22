@@ -20,6 +20,7 @@ export default [
         setInterval: 'readonly', clearInterval: 'readonly', alert: 'readonly',
         confirm: 'readonly', prompt: 'readonly', Blob: 'readonly', File: 'readonly',
         FileReader: 'readonly', URL: 'readonly', AudioContext: 'readonly',
+        XMLSerializer: 'readonly', Image: 'readonly',
         requestAnimationFrame: 'readonly', cancelAnimationFrame: 'readonly',
         Image: 'readonly', Audio: 'readonly', React: 'readonly',
         URLSearchParams: 'readonly', crypto: 'readonly', location: 'readonly',
